@@ -1,0 +1,17 @@
+{
+  "name": "guestcam",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Event guest camera PWA (codename guestcam)",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": "22"
+  },
+  "workspaces": [
+    "shared",
+    "web",
+    "functions",
+    "rules-tests"
+  ],
+  "scripts": {}
+}
