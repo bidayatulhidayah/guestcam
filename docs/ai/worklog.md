@@ -80,6 +80,7 @@ Rules:
 
 ### Problems, risks, open questions
 - Release step 1 asks for the preview to be checked on a real iPhone and Android. No device results were reported before this release; the release note says "Not yet reported".
+- Update after merge: Hidayah reported iPhone Safari OK; Android Chrome not tested. Recorded in `docs/versions/v0.1.md` before tagging.
 - Port 8080 was still held by the Firestore emulator from the previous test run (PID 39160), so the full `npm test` on `main` waits until it is closed.
 - GitHub does not actually protect `main` (branch protection API returns "Branch not protected"), although VERSIONING.md calls it protected.
 
