@@ -6,7 +6,7 @@ Everything the project needs is defined in files inside the repo, so a new compu
 
 | File | What it pins |
 | --- | --- |
-| `environment.yml` | System tools: Node.js, Java, ffmpeg, Git, Python |
+| `environment.yml` | System tools: Node.js 24, Java 21, ffmpeg, Git, Python |
 | `package.json` + `package-lock.json` (repo root) | All libraries for every workspace (`shared`, `web`, `functions`, `rules-tests`); ONE lock file |
 | `web/.env.example` | Web settings (Firebase web config, public address, footer owner); copy to `web/.env.local` |
 | `functions/.env.example` | Function parameters (`PUBLIC_BASE_URL`); copy to `functions/.env.local` |
@@ -44,7 +44,8 @@ Everything the project needs is defined in files inside the repo, so a new compu
 
 ## Notes
 
-- Always run commands inside `conda activate guestcam`: it provides Node 22 and Java 21. A different global Node (for example v25) is not supported.
+- Always run commands inside `conda activate guestcam`: it provides Node 24 and Java 21. Every package.json requires Node 24 (`engines`), and Cloud Functions run on `nodejs24`. A different global Node (for example v22 or v25) is not supported.
+- Moving an existing computer from Node 22 to 24: `conda env update -f environment.yml --prune`, check `node -v` shows v24, then `npm install -g firebase-tools` again (global tools live inside the env) and `npm ci` at the repo root.
 - On Windows, stopping the emulators with Ctrl+C sometimes leaves a `java.exe` behind holding port 8080. If the next start says "port taken", close it in Task Manager.
 
 - `npm install -g` inside an active conda env installs into that env, not the whole computer, so Firebase CLI stays with the project.

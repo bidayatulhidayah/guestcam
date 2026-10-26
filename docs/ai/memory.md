@@ -8,7 +8,7 @@ Maintenance rules:
 - Keep facts here; keep session-by-session detail in `worklog.md`.
 - No secrets, keys, event codes or guest personal data.
 
-Last updated: 2026-10-27 (Phase 0 skeleton built on `feat/phase-0-skeleton`, unreleased)
+Last updated: 2026-10-27 (Phase 0 skeleton on `feat/phase-0-skeleton`; switched to Node 24; region confirmed)
 
 ---
 
@@ -40,7 +40,8 @@ The couple (hosts) manage everything from an admin dashboard: themes, codes, mod
 | Version | 0.0 released; Phase 0 work (v0.1) unreleased on branch `feat/phase-0-skeleton`, awaiting review/PR |
 | Phase | Phase 0 (skeleton) built: tests pass, emulators run, preview channel deployed. Phase 1 next |
 | Repo | GitHub, private: `bidayatulhidayah/guestcam` |
-| Firebase | Project `guestcam-2026`; emulators use the `demo-guestcam` demo project |
+| Firebase | Project `guestcam-2026`; Firestore and Storage confirmed in `asia-southeast1` (Singapore), 2026-10-27; emulators use the `demo-guestcam` demo project |
+| Runtime | Node 24 (D-055) |
 | Hosting | Free Firebase domain (`guestcam-2026.web.app`) until after the friend's engagement; Phase 0 preview channel `preview` |
 | Product name | Not final. Codename `guestcam`; working favourite **Kenang** (`kenang.app`). Shortlist in the spec |
 | Business | Personal use first; possible business later (pricing explored in a separate chat) |
@@ -126,9 +127,10 @@ Status: **Active** unless marked otherwise. "Why" is the reason at the time of t
 | D-049 | Product name lives only in `web/src/brand.ts` (page title, manifest) and the `appName` i18n key; `config.ts` re-exports it | `vite.config.ts` needs the name without importing env code |
 | D-050 | Firebase JS SDK loaded with a dynamic import (own chunk), not in the first-load bundle | Guest first-load JS budget (< 150 KB gzipped); Phase 0 first load is ~120 KB |
 | D-051 | Service worker updates are applied on the next route change; capture screens call `holdUpdates(true)` | Pitfall A1 without interrupting a recording |
-| D-052 | Rules tests pin `@firebase/rules-unit-testing` 5 + `firebase` 12 (Node 22 compatible); the web app uses `firebase` 13 | Firebase JS SDK 13 requires Node >= 24.12 when run in Node |
+| D-052 | **Superseded by D-055.** Rules tests pin `@firebase/rules-unit-testing` 5 + `firebase` 12 (Node 22 compatible); the web app uses `firebase` 13 | Firebase JS SDK 13 requires Node >= 24.12 when run in Node |
 | D-053 | Root `overrides` pins `@grpc/grpc-js` ^1.14.6 | Firebase's bundled grpc-js 1.9 has known advisories (Node-side only) |
 | D-054 | Default copyright owner "Hidayah" (env `VITE_COPYRIGHT_OWNER`), until per-event owner text exists | Founder's choice, 2026-10-27 |
+| D-055 | **Node 24 everywhere:** conda env `nodejs=24`, `engines.node: "24"` in every package.json, Cloud Functions runtime `nodejs24`, functions bundle targets node24; rules tests use the current SDK (`@firebase/rules-unit-testing` 6, `firebase` 13). Supersedes D-052 | Firebase JS SDK 13 needs Node >= 24.12; one SDK version across the repo; Node 24 is the current LTS with longer support than 22 (Node 22 EOL April 2027, before or around the founder's wedding) |
 
 ### Process
 
@@ -152,6 +154,7 @@ Status: **Active** unless marked otherwise. "Why" is the reason at the time of t
 | S-09 | Original route `/:eventSlug-:code` with two params in one segment | D-036 and `shared/src/entry.ts` |
 | S-10 | 4-digit space numbers (#0000, first other space #0001) | D-042 |
 | S-11 | Seven-item menu without folders (D-007) | D-045 |
+| S-12 | Node 22 (conda env, engines, Functions runtime `nodejs22`) | D-055 |
 
 ## 6. Open questions
 
@@ -159,8 +162,7 @@ Status: **Active** unless marked otherwise. "Why" is the reason at the time of t
 | --- | --- |
 | Final product name | Favourite Kenang; check domain, Instagram handle, MyIPO trademark |
 | Copyright footer owner line | Default "Hidayah" for now (D-054); per-event owner text still to design |
-| Node 22 vs 24 | Firebase JS SDK 13 needs Node >= 24.12 in Node. Decide whether to move the conda env and functions runtime to Node 24 (check Cloud Functions support) before Phase 1 |
-| Windows emulator shutdown | Ctrl+C / emulators:exec can leave `java.exe` (Firestore emulator) holding port 8080; close it in Task Manager. Look for a firebase-tools fix |
+| Windows emulator shutdown | Ctrl+C / `emulators:exec` (so also `npm test`) leaves `java.exe` (Firestore emulator) holding port 8080; still happens on Node 24. Close it in Task Manager before the next run. Look for a firebase-tools fix or a cleanup step in `test:rules` |
 | Friend's engagement date | Sets the deadline for v1.0 |
 | Venue internet at the engagement | Ask for wifi details; print on QR card |
 | Folder direct link | Optional link that opens a folder without PIN (long secret key, can be switched off). Recorded as proposed feature `folderDirectLink`, off by default; awaiting decision |

@@ -55,7 +55,7 @@ guestcam/
 ├── CHANGELOG.md           version history (Keep a Changelog)
 ├── VERSION                current version (A.B)
 ├── LICENSE
-├── environment.yml        conda environment (Node 22, Java 21, ffmpeg, git, gh, Python)
+├── environment.yml        conda environment (Node 24, Java 21, ffmpeg, git, gh, Python)
 ├── shared/                types, paths, URL parsing, limits (web + functions)   [Phase 0]
 ├── web/                   React PWA: guest app and /admin                       [Phase 0]
 ├── functions/             Cloud Functions: media processing, admin, cleanup     [Phase 0]
@@ -78,7 +78,7 @@ Full checklist: [docs/setup/start-here.md](docs/setup/start-here.md).
 **Prerequisites:** Miniconda, Git, a Firebase project on the Blaze plan (region asia-southeast1), and a GitHub account.
 
 ```bash
-# 1. Environment (Node 22, Java 21, ffmpeg, gh, Python)
+# 1. Environment (Node 24, Java 21, ffmpeg, gh, Python)
 conda env create -f environment.yml
 conda activate guestcam
 

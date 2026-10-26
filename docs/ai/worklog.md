@@ -48,6 +48,52 @@ Rules:
 
 ---
 
+## 2026-10-27 01:00 — Switch to Node 24
+
+- **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
+- **Version / branch:** v0.1 (unreleased) / `feat/phase-0-skeleton`
+- **Phase:** Phase 0 (Setup), follow-up
+- **Goal:** Hidayah asked to move from Node 22 to Node 24 everywhere, put the rules tests on the current Firebase SDK, record the decision, then open the Phase 0 PR. She also confirmed Firestore and Storage are in asia-southeast1.
+
+### What changed and why
+- `environment.yml` `nodejs=24`; `engines.node: "24"` in all five package.json files (root, shared, web, functions, rules-tests); `.nvmrc` 24; Functions runtime `nodejs24` in `firebase.json`; esbuild target `node24`.
+- Rules tests moved to `@firebase/rules-unit-testing` 6 + `firebase` 13, the same SDK as the web app (D-052 superseded by D-055).
+- Lock file regenerated under Node 24.22.1 / npm 11.19.1.
+- memory.md: D-055, S-12, Runtime row, region confirmed; Node 22 vs 24 open question removed. new-computer.md: Node 24 note and upgrade steps. AGENTS.md and README: Node 24.
+
+### Files touched
+| File | Change |
+| --- | --- |
+| `environment.yml`, `.nvmrc`, `firebase.json` | modified: Node 24, `nodejs24` |
+| `package.json`, `shared/package.json`, `web/package.json`, `functions/package.json`, `rules-tests/package.json`, `package-lock.json` | modified: engines 24, node24 build target, rules-test SDK 6/13 |
+| `AGENTS.md`, `README.md`, `docs/setup/new-computer.md`, `docs/ai/memory.md`, `docs/ai/worklog.md` | modified |
+
+### Commands run and results
+| Command | Result |
+| --- | --- |
+| `conda env update -n guestcam -f <repo>/environment.yml --prune` (run by Hidayah) | Node v24.22.1. A first run from `C:\Users\User` did nothing because the yml was not in that folder |
+| `npm install` (lock refresh) | firebase 13.1.0 and rules-unit-testing 6.0.0 everywhere; 0 vulnerabilities |
+| `npm ci` | 659 packages, no engine warnings, 0 vulnerabilities |
+| `npm test` | shared 34, web 7, rules 3: all passed |
+| `npm run typecheck` | clean |
+| `npm run build` | web first load 119 KB gzipped; functions bundle 3.3 KB (node24) |
+
+### Decisions
+- D-055: Node 24 everywhere, one Firebase SDK version (supersedes D-052).
+
+### Problems, risks, open questions
+- The first `npm ci` failed with EPERM because the Vite dev server Claude started in the previous session was still running and locking a native file. `TaskStop` on Windows stops only the shell wrapper, not the node/java child. Hidayah ended it manually. Claude will avoid leaving long-lived servers running on this machine.
+- `npm test` again left the Firestore emulator (`java.exe`) on port 8080 after `emulators:exec`, so the Windows leak is not caused by Node 22. Still open in memory.md.
+
+### Next steps
+- [ ] Hidayah: review and squash-merge the Phase 0 PR
+- [ ] Then: release v0.1 (changelog, `docs/versions/v0.1.md`, VERSION, package versions, tag, GitHub Release; no production deploy)
+
+### Commits
+- (this commit) chore: switch to Node 24 and the current Firebase SDK for rules tests
+
+---
+
 ## 2026-10-27 00:30 — Phase 0 skeleton
 
 - **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows

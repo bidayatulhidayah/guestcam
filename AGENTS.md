@@ -102,7 +102,7 @@ Measure on a mid-range Android (~4 GB RAM), Chrome DevTools "Slow 4G" + 4x CPU s
 - Run Lighthouse before each preview deploy; Firebase Performance Monitoring on for real-device data.
 
 ## Environment
-- Always work inside the conda env `guestcam` (`environment.yml`): Node 22, Java 21, ffmpeg, Git, Python.
+- Always work inside the conda env `guestcam` (`environment.yml`): Node 24, Java 21, ffmpeg, Git, Python.
 - New system tools go into `environment.yml`; libraries go into the relevant `package.json`. Commit lock files.
 - New-computer steps live in `docs/setup/new-computer.md`; keep it current.
 
