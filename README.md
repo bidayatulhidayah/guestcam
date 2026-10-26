@@ -4,7 +4,7 @@
 
 > `guestcam` is the project codename. The product name is not final (working name: Kenang).
 
-Status: **v0.0, planning baseline.** No application code yet; Phase 0 (skeleton) is next. See [CHANGELOG.md](CHANGELOG.md).
+Status: **v0.0 released; Phase 0 skeleton (v0.1) in progress, unreleased.** Placeholder pages, tooling and tests only; no guest features yet. See [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
@@ -90,22 +90,23 @@ gh auth login
 # 3. Code
 gh repo clone <owner>/guestcam
 cd guestcam
-npm ci                         # once Phase 0 adds package.json
+npm ci                         # all workspaces, one lock file
 cp web/.env.example web/.env.local   # then fill in the Firebase config
 ```
 
-**Run locally** (available from v0.1):
+**Run locally:**
 
 ```bash
-firebase emulators:start       # Auth, Firestore, Storage, Functions
-npm run dev                    # web app against the emulators
+npm run emulators              # Auth, Firestore, Storage, Functions, Hosting (UI: localhost:4000)
+npm run seed                   # second terminal, once: spaces #00000, #00001, #10001
+npm run dev                    # web app against the emulators (localhost:5173)
 npm test                       # unit tests + security rules tests
 ```
 
 Phone cameras need HTTPS, so test on real phones through a Firebase Hosting preview channel:
 
 ```bash
-firebase hosting:channel:deploy preview
+npm run deploy:preview
 ```
 
 ## Documentation
