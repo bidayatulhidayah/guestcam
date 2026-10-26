@@ -35,6 +35,10 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(appVersion),
     __APP_COMMIT__: JSON.stringify(gitShortHash()),
   },
+  optimizeDeps: {
+    // Pre-bundle the lazily imported SDK so the dev server does not reload on first use.
+    include: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
+  },
   server: {
     host: true,
     port: 5173,

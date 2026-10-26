@@ -19,7 +19,10 @@
     "alias": "Nama ringkas",
     "eventSlug": "Majlis",
     "code": "Kod",
-    "noCode": "Tiada kod"
+    "noCode": "Tiada kod",
+    "firebaseConnecting": "Menyambung ke emulator Firebase...",
+    "firebaseConnected": "Emulator Firebase bersambung. ID tetamu: {{uid}}",
+    "firebaseError": "Tidak dapat sambung ke emulator Firebase. Jalankan npm run emulators."
   },
   "pages": {
     "devIndex": {

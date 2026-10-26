@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { Screen } from '../components/ui';
-import { buildPublicUrl } from '../config';
+import { USE_EMULATORS, buildPublicUrl } from '../config';
 import {
   DEV_ALIAS,
   DEV_EVENT_CODE,
@@ -9,6 +9,7 @@ import {
   DEV_INACTIVE_ALIAS,
   DEV_PUBLIC_ID,
 } from '../features/entry/devFixtures';
+import { DevFirebaseStatus } from './DevFirebaseStatus';
 
 const permanent = `/s/${DEV_PUBLIC_ID}`;
 const alias = `/${DEV_ALIAS}`;
@@ -43,6 +44,7 @@ export function DevIndexPage() {
         ))}
       </ul>
       <p className="text-caption break-all text-ink-2">QR: {buildPublicUrl(permanent)}</p>
+      {USE_EMULATORS ? <DevFirebaseStatus /> : null}
     </Screen>
   );
 }

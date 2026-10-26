@@ -19,7 +19,10 @@
     "alias": "Short name",
     "eventSlug": "Event",
     "code": "Code",
-    "noCode": "No code"
+    "noCode": "No code",
+    "firebaseConnecting": "Connecting to the Firebase emulators...",
+    "firebaseConnected": "Firebase emulators connected. Guest ID: {{uid}}",
+    "firebaseError": "Cannot reach the Firebase emulators. Run npm run emulators."
   },
   "pages": {
     "devIndex": {
