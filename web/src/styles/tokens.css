@@ -1,0 +1,36 @@
+/*
+ * Design tokens (docs/product/design.md). The ONLY place colours are written.
+ * Components use Tailwind utilities mapped to these variables (index.css).
+ * Only --accent changes per event; --accent-press and --accent-tint derive from it.
+ */
+:root {
+  --paper: #f5efe3;
+  --paper-2: #ebe3d2;
+  --ink: #2b2420;
+  --ink-2: #5e554c;
+  --line: #d8cdb8;
+  --on-accent: #fffdf8;
+  --danger: #9e2a2b;
+
+  /* Test event accent: deep olive. Overridden per event from the theme. */
+  --accent: #4b5320;
+
+  --family-body: 'Atkinson Hyperlegible', 'Verdana', sans-serif;
+  --family-display: 'Instrument Serif', 'Georgia', serif;
+}
+
+/* Re-derived wherever --accent is set (root or an event theme wrapper). */
+:root,
+[data-event-theme] {
+  --accent-press: color-mix(in srgb, var(--accent) 85%, black);
+  --accent-tint: color-mix(in srgb, var(--accent) 10%, var(--paper));
+}
+
+/* Older Safari without color-mix(): keep the accent and use the raised paper. */
+@supports not (color: color-mix(in srgb, red, red)) {
+  :root,
+  [data-event-theme] {
+    --accent-press: var(--accent);
+    --accent-tint: var(--paper-2);
+  }
+}

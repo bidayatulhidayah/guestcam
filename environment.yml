@@ -6,7 +6,7 @@ name: guestcam
 channels:
   - conda-forge
 dependencies:
-  - nodejs=22          # Node.js LTS (front end + Cloud Functions runtime)
+  - nodejs=24          # Node.js LTS (front end + Cloud Functions runtime nodejs24)
   - openjdk=21         # required by the Firebase emulators (Firestore, Storage)
   - ffmpeg             # local testing of video / boomerang / voice processing
   - git

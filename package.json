@@ -1,0 +1,37 @@
+{
+  "name": "guestcam",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Event guest camera PWA (codename guestcam)",
+  "engines": {
+    "node": "24"
+  },
+  "license": "UNLICENSED",
+  "workspaces": [
+    "shared",
+    "web",
+    "functions",
+    "rules-tests"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @guestcam/web",
+    "build": "npm run build -w @guestcam/web && npm run build -w @guestcam/functions",
+    "typecheck": "npm run typecheck --workspaces --if-present && tsc --noEmit -p scripts",
+    "test": "npm run test:unit && npm run test:rules",
+    "test:unit": "npm run test -w @guestcam/shared -w @guestcam/web",
+    "test:rules": "firebase emulators:exec --only firestore,storage --project demo-guestcam \"npm run test -w @guestcam/rules-tests\"",
+    "emulators": "npm run build -w @guestcam/functions && firebase emulators:start --project demo-guestcam",
+    "seed": "tsx scripts/seed-dev.ts",
+    "deploy:preview": "npm run build -w @guestcam/web && firebase hosting:channel:deploy preview --expires 7d"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "firebase-admin": "^14.5.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "^1.14.6"
+  }
+}
