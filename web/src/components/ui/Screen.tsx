@@ -13,7 +13,7 @@ export interface ScreenProps {
 /** Single-column page: 20px side margins, 8px spacing grid (design.md). */
 export function Screen({ title, eyebrow, children, bottom }: ScreenProps) {
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 pt-8 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+    <div className="mx-auto flex w-full max-w-lg flex-1 flex-col px-5 pt-4 pb-8">
       {title !== undefined || eyebrow !== undefined ? (
         <header className="mb-6">
           {eyebrow !== undefined ? <p className="text-caption text-ink-2">{eyebrow}</p> : null}
