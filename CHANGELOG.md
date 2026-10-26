@@ -6,6 +6,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 
 ## [Unreleased]
 
+## [0.1] - 2026-10-27
+
+Phase 0: the empty but working skeleton. Details: [docs/versions/v0.1.md](docs/versions/v0.1.md).
+
 ### Added
 
 - Design for shared folders (Folder Kongsi): guests create private folders and bulk-upload originals; visible only to the couple, the creator and PIN holders.
@@ -17,6 +21,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 - Footer with copyright, app version and a "Lapor Masalah" placeholder.
 - Installable app shell (PWA): works offline once opened; updates apply at the next screen change, never mid-screen.
 - Firebase setup: deny-all security rules with tests, emulators for local work, a dev seed script, and a preview channel for testing on phones.
+- Full product spec in `docs/product/spec.md`.
+
+### Changed
+
+- Node.js 24 for development and Cloud Functions (was 22).
 
 ## [0.0] - 2026-10-25
 

@@ -48,6 +48,52 @@ Rules:
 
 ---
 
+## 2026-10-27 01:30 — Release v0.1
+
+- **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
+- **Version / branch:** v0.1 / `chore/release-v0.1`
+- **Phase:** Phase 0 (Setup), release
+- **Goal:** After Hidayah squash-merged PR #1 (`4099a0a`), release v0.1 following `docs/versions/VERSIONING.md`. No production deploy.
+
+### What changed and why
+- `CHANGELOG.md`: `[Unreleased]` items moved under `[0.1] - 2026-10-27`, plus the spec and the Node 24 change.
+- `docs/versions/v0.1.md`: release note from the template.
+- `VERSION` set to `0.1`. All five `package.json` files were already `0.1.0`.
+- `docs/ai/memory.md`: status shows v0.1 released and Phase 1 next.
+- The release goes through a pull request (VERSIONING.md: changes reach `main` by PR). The tag `v0.1` and the GitHub Release are made on the merged commit, after a full `npm test` on `main`.
+
+### Files touched
+| File | Change |
+| --- | --- |
+| `CHANGELOG.md`, `VERSION`, `docs/versions/v0.1.md` | modified/added: release |
+| `docs/ai/memory.md`, `docs/ai/worklog.md` | modified: status and this entry |
+
+### Commands run and results
+| Command | Result |
+| --- | --- |
+| `npm run test:unit` on `main` (`4099a0a`) | 34 + 7 passed |
+| `npm run typecheck`, `npm run build` on `main` | clean, ok |
+| `npm test` (full, branch head `b206aad`, same code) | 34 + 7 + 3 passed |
+
+### Decisions
+- None new.
+
+### Problems, risks, open questions
+- Release step 1 asks for the preview to be checked on a real iPhone and Android. No device results were reported before this release; the release note says "Not yet reported".
+- Port 8080 was still held by the Firestore emulator from the previous test run (PID 39160), so the full `npm test` on `main` waits until it is closed.
+- GitHub does not actually protect `main` (branch protection API returns "Branch not protected"), although VERSIONING.md calls it protected.
+
+### Next steps
+- [ ] Hidayah: close PID 39160, squash-merge the release PR
+- [ ] Claude: full `npm test` on `main`, tag `v0.1`, GitHub Release
+- [ ] Optional: turn on branch protection for `main` on GitHub
+- [ ] Phase 1
+
+### Commits
+- (this commit) chore(release): v0.1
+
+---
+
 ## 2026-10-27 01:00 — Switch to Node 24
 
 - **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
