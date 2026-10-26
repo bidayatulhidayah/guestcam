@@ -8,7 +8,7 @@ Maintenance rules:
 - Keep facts here; keep session-by-session detail in `worklog.md`.
 - No secrets, keys, event codes or guest personal data.
 
-Last updated: 2026-10-27 (Phase 0 skeleton on `feat/phase-0-skeleton`; switched to Node 24; region confirmed)
+Last updated: 2026-10-27 (v0.1 released: Phase 0 skeleton)
 
 ---
 
@@ -37,8 +37,8 @@ The couple (hosts) manage everything from an admin dashboard: themes, codes, mod
 
 | Item | State |
 | --- | --- |
-| Version | 0.0 released; Phase 0 work (v0.1) unreleased on branch `feat/phase-0-skeleton`, awaiting review/PR |
-| Phase | Phase 0 (skeleton) built: tests pass, emulators run, preview channel deployed. Phase 1 next |
+| Version | **0.1** released 2026-10-27 (tag `v0.1`, Phase 0 skeleton). Not deployed to production (only the `preview` channel) |
+| Phase | Phase 0 done. Phase 1 next: entry, name, selfie, Snapshot, Upload from Gallery, queue, privacy step, My Uploads |
 | Repo | GitHub, private: `bidayatulhidayah/guestcam` |
 | Firebase | Project `guestcam-2026`; Firestore and Storage confirmed in `asia-southeast1` (Singapore), 2026-10-27; emulators use the `demo-guestcam` demo project |
 | Runtime | Node 24 (D-055) |
