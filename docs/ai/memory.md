@@ -8,7 +8,7 @@ Maintenance rules:
 - Keep facts here; keep session-by-session detail in `worklog.md`.
 - No secrets, keys, event codes or guest personal data.
 
-Last updated: 2026-10-27 (v0.1 released: Phase 0 skeleton)
+Last updated: 2026-10-27 (v0.1 released; emulator cleanup script)
 
 ---
 
@@ -131,6 +131,7 @@ Status: **Active** unless marked otherwise. "Why" is the reason at the time of t
 | D-053 | Root `overrides` pins `@grpc/grpc-js` ^1.14.6 | Firebase's bundled grpc-js 1.9 has known advisories (Node-side only) |
 | D-054 | Default copyright owner "Hidayah" (env `VITE_COPYRIGHT_OWNER`), until per-event owner text exists | Founder's choice, 2026-10-27 |
 | D-055 | **Node 24 everywhere:** conda env `nodejs=24`, `engines.node: "24"` in every package.json, Cloud Functions runtime `nodejs24`, functions bundle targets node24; rules tests use the current SDK (`@firebase/rules-unit-testing` 6, `firebase` 13). Supersedes D-052 | Firebase JS SDK 13 needs Node >= 24.12; one SDK version across the repo; Node 24 is the current LTS with longer support than 22 (Node 22 EOL April 2027, before or around the founder's wedding) |
+| D-056 | `npm run emulators:kill` (PowerShell, Windows only) frees the emulator ports by stopping only Firebase emulator processes; it runs as `pretest` and `posttest` | Windows leaves emulator `java.exe`/`node.exe` running after `emulators:exec` and Ctrl+C, so the next run failed with "port taken" |
 
 ### Process
 
@@ -162,7 +163,6 @@ Status: **Active** unless marked otherwise. "Why" is the reason at the time of t
 | --- | --- |
 | Final product name | Favourite Kenang; check domain, Instagram handle, MyIPO trademark |
 | Copyright footer owner line | Default "Hidayah" for now (D-054); per-event owner text still to design |
-| Windows emulator shutdown | Ctrl+C / `emulators:exec` (so also `npm test`) leaves `java.exe` (Firestore emulator) holding port 8080; still happens on Node 24. Close it in Task Manager before the next run. Look for a firebase-tools fix or a cleanup step in `test:rules` |
 | Friend's engagement date | Sets the deadline for v1.0 |
 | Venue internet at the engagement | Ask for wifi details; print on QR card |
 | Folder direct link | Optional link that opens a folder without PIN (long secret key, can be switched off). Recorded as proposed feature `folderDirectLink`, off by default; awaiting decision |

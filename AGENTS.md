@@ -111,7 +111,8 @@ Measure on a mid-range Android (~4 GB RAM), Chrome DevTools "Slow 4G" + 4x CPU s
 - Dev server: `npm run dev` (http://localhost:5173; connects to the emulators)
 - Emulators: `npm run emulators` (builds functions, then starts Auth, Firestore, Storage, Functions, Hosting and the UI at http://localhost:4000 on the `demo-guestcam` project)
 - Seed the emulators: `npm run seed` (with the emulators running)
-- Tests: `npm test` (unit tests, then security rules tests inside the emulators); `npm run test:unit` or `npm run test:rules` for one part
+- Tests: `npm test` (unit tests, then security rules tests inside the emulators via `firebase emulators:exec`; frees emulator ports before and after); `npm run test:unit` or `npm run test:rules` for one part
+- Free emulator ports (Windows leaves emulators running): `npm run emulators:kill`
 - Typecheck: `npm run typecheck`
 - Build: `npm run build`
 - Deploy preview: `npm run deploy:preview` (builds the web app, deploys Hosting to the `preview` channel, link valid 7 days)
