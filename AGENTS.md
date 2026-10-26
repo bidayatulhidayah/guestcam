@@ -106,11 +106,15 @@ Measure on a mid-range Android (~4 GB RAM), Chrome DevTools "Slow 4G" + 4x CPU s
 - New system tools go into `environment.yml`; libraries go into the relevant `package.json`. Commit lock files.
 - New-computer steps live in `docs/setup/new-computer.md`; keep it current.
 
-## Commands (fill in as they are created)
-- Dev: `cd web && npm run dev`
-- Emulators: `firebase emulators:start`
-- Tests: `npm test`
-- Deploy preview: `firebase hosting:channel:deploy preview`
+## Commands (run from the repo root, inside `conda activate guestcam`)
+- Install: `npm ci` (one lock file for all workspaces)
+- Dev server: `npm run dev` (http://localhost:5173; connects to the emulators)
+- Emulators: `npm run emulators` (builds functions, then starts Auth, Firestore, Storage, Functions, Hosting and the UI at http://localhost:4000 on the `demo-guestcam` project)
+- Seed the emulators: `npm run seed` (with the emulators running)
+- Tests: `npm test` (unit tests, then security rules tests inside the emulators); `npm run test:unit` or `npm run test:rules` for one part
+- Typecheck: `npm run typecheck`
+- Build: `npm run build`
+- Deploy preview: `npm run deploy:preview` (builds the web app, deploys Hosting to the `preview` channel, link valid 7 days)
 
 ## Docs map
 | Path | Contents |

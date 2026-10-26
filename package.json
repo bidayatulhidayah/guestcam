@@ -16,7 +16,7 @@
   "scripts": {
     "dev": "npm run dev -w @guestcam/web",
     "build": "npm run build -w @guestcam/web && npm run build -w @guestcam/functions",
-    "typecheck": "npm run typecheck --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present && tsc --noEmit -p scripts",
     "test": "npm run test:unit && npm run test:rules",
     "test:unit": "npm run test -w @guestcam/shared -w @guestcam/web",
     "test:rules": "firebase emulators:exec --only firestore,storage --project demo-guestcam \"npm run test -w @guestcam/rules-tests\"",

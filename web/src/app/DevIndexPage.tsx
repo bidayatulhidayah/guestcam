@@ -4,6 +4,8 @@ import { Screen } from '../components/ui';
 import { USE_EMULATORS, buildPublicUrl } from '../config';
 import {
   DEV_ALIAS,
+  DEV_ALIAS_EVENT_CODE,
+  DEV_ALIAS_EVENT_SLUG,
   DEV_EVENT_CODE,
   DEV_EVENT_SLUG,
   DEV_INACTIVE_ALIAS,
@@ -21,7 +23,7 @@ const links: { path: string; pageKey: string }[] = [
   { path: `${permanent}/${DEV_EVENT_SLUG}`, pageKey: 'codeScreen' },
   { path: `${permanent}/${DEV_EVENT_SLUG}/gallery`, pageKey: 'gallery' },
   { path: alias, pageKey: 'currentEvent' },
-  { path: `${alias}/${DEV_EVENT_SLUG}-${DEV_EVENT_CODE}`, pageKey: 'eventJoin' },
+  { path: `${alias}/${DEV_ALIAS_EVENT_SLUG}-${DEV_ALIAS_EVENT_CODE}`, pageKey: 'eventJoin' },
   { path: `/${DEV_INACTIVE_ALIAS}`, pageKey: 'aliasInactive' },
   { path: '/mine', pageKey: 'mine' },
   { path: '/login', pageKey: 'login' },
