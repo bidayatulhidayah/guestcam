@@ -1,16 +1,18 @@
+import { useTranslation } from 'react-i18next';
 import { BrowserRouter } from 'react-router';
-import { Button, Screen, Tile } from '../components/ui';
+import { Button, LanguageToggle, Screen, Tile } from '../components/ui';
 
 /** Temporary design check; replaced by the router in the routes step. */
 export function App() {
+  const { t } = useTranslation();
   return (
     <BrowserRouter>
-      <Screen eyebrow="guestcam" title="Zaim & Hidayah" bottom={<Button variant="primary">Snap!</Button>}>
+      <Screen eyebrow={t('appName')} title="Zaim & Hidayah" bottom={<LanguageToggle />}>
         <div className="grid grid-cols-2 gap-4">
-          <Tile icon="□" label="Snap" />
-          <Tile icon="□" label="Galeri" wide />
+          <Tile icon="□" label={t('menu.snapshot')} />
+          <Tile icon="□" label={t('menu.gallery')} wide />
         </div>
-        <Button>Sekunder</Button>
+        <Button variant="primary">{t('pages.codeScreen.title')}</Button>
       </Screen>
     </BrowserRouter>
   );

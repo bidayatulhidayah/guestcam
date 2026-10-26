@@ -1,0 +1,67 @@
+{
+  "appName": "guestcam",
+  "language": {
+    "current": "EN",
+    "switchLabel": "Switch to Malay",
+    "switchTo": "Bahasa Melayu"
+  },
+  "footer": {
+    "copyright": "© {{year}} {{owner}}. All rights reserved.",
+    "version": "Version {{version}}",
+    "reportProblem": "Report a problem",
+    "reportProblemSoon": "Report a problem is coming soon."
+  },
+  "placeholder": {
+    "note": "Placeholder page. It will be built in a later phase.",
+    "otherLanguage": "In Malay:",
+    "space": "Space",
+    "permanentLink": "Permanent link",
+    "alias": "Short name",
+    "eventSlug": "Event",
+    "code": "Code",
+    "noCode": "No code"
+  },
+  "pages": {
+    "devIndex": {
+      "title": "Placeholder pages",
+      "body": "Pick a page to view."
+    },
+    "currentEvent": {
+      "title": "Current event"
+    },
+    "eventJoin": {
+      "title": "Join event"
+    },
+    "codeScreen": {
+      "title": "Enter the event code",
+      "body": "The code is on your invitation card."
+    },
+    "eventMenu": {
+      "title": "Event menu"
+    },
+    "gallery": {
+      "title": "Gallery"
+    },
+    "mine": {
+      "title": "My events"
+    },
+    "login": {
+      "title": "Log in"
+    },
+    "admin": {
+      "title": "Dashboard"
+    },
+    "aliasInactive": {
+      "title": "Link not active",
+      "body": "This link is not active. Scan the QR code on your card or log in."
+    },
+    "notFound": {
+      "title": "Page not found",
+      "back": "Go to home"
+    }
+  },
+  "menu": {
+    "snapshot": "Snap",
+    "gallery": "Gallery"
+  }
+}

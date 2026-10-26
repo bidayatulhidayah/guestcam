@@ -1,0 +1,67 @@
+{
+  "appName": "guestcam",
+  "language": {
+    "current": "BM",
+    "switchLabel": "Tukar ke bahasa Inggeris",
+    "switchTo": "English"
+  },
+  "footer": {
+    "copyright": "© {{year}} {{owner}}. Hak cipta terpelihara.",
+    "version": "Versi {{version}}",
+    "reportProblem": "Lapor Masalah",
+    "reportProblemSoon": "Lapor Masalah akan datang tidak lama lagi."
+  },
+  "placeholder": {
+    "note": "Halaman sementara. Akan dibina dalam fasa seterusnya.",
+    "otherLanguage": "Dalam bahasa Inggeris:",
+    "space": "Ruang",
+    "permanentLink": "Pautan kekal",
+    "alias": "Nama ringkas",
+    "eventSlug": "Majlis",
+    "code": "Kod",
+    "noCode": "Tiada kod"
+  },
+  "pages": {
+    "devIndex": {
+      "title": "Halaman sementara",
+      "body": "Pilih halaman untuk dilihat."
+    },
+    "currentEvent": {
+      "title": "Majlis semasa"
+    },
+    "eventJoin": {
+      "title": "Masuk majlis"
+    },
+    "codeScreen": {
+      "title": "Masukkan kod majlis",
+      "body": "Kod ada pada kad jemputan anda."
+    },
+    "eventMenu": {
+      "title": "Menu majlis"
+    },
+    "gallery": {
+      "title": "Galeri"
+    },
+    "mine": {
+      "title": "Majlis saya"
+    },
+    "login": {
+      "title": "Log masuk"
+    },
+    "admin": {
+      "title": "Papan pemuka"
+    },
+    "aliasInactive": {
+      "title": "Pautan tidak aktif",
+      "body": "Pautan ini tidak aktif. Imbas kod QR pada kad anda atau log masuk."
+    },
+    "notFound": {
+      "title": "Halaman tidak dijumpai",
+      "back": "Ke laman utama"
+    }
+  },
+  "menu": {
+    "snapshot": "Snap",
+    "gallery": "Galeri"
+  }
+}
