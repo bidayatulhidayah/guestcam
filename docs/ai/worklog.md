@@ -48,6 +48,48 @@ Rules:
 
 ---
 
+## 2026-10-27 02:00 — Emulator cleanup script
+
+- **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
+- **Version / branch:** v0.1 (+ unreleased) / `chore/emulator-cleanup`
+- **Phase:** tooling between Phase 0 and Phase 1
+- **Goal:** Windows leaves `java.exe` holding emulator ports after tests. Add `npm run emulators:kill` (PowerShell) for ports 4000, 4400, 4500, 5001, 8080, 8085, 9099, 9199, run it before and after `npm test`, keep the tests on `firebase emulators:exec`, update new-computer.md, open a PR.
+
+### What changed and why
+- `scripts/kill-emulators.ps1`: finds the processes listening on those ports and stops them, but only `java.exe`/`node.exe` whose command line identifies a Firebase emulator. Any other app on those ports (8080 is common) is reported and left running. `-DryRun` lists what would be stopped.
+- `scripts/emulators-kill.mjs`: runs the PowerShell script on Windows and exits quietly on macOS/Linux, so `npm test` keeps working on CI.
+- `package.json`: `emulators:kill`, `pretest` and `posttest`. `test:rules` already uses `firebase emulators:exec` (unchanged).
+- Docs: new-computer.md (what the script does, when it runs, manual use after Ctrl+C), AGENTS.md Commands, memory.md D-056; the open question about the Windows leak is closed.
+
+### Files touched
+| File | Change |
+| --- | --- |
+| `scripts/kill-emulators.ps1`, `scripts/emulators-kill.mjs` | added |
+| `package.json` | modified: `emulators:kill`, `pretest`, `posttest` |
+| `docs/setup/new-computer.md`, `AGENTS.md`, `docs/ai/memory.md`, `docs/ai/worklog.md` | modified |
+
+### Commands run and results
+| Command | Result |
+| --- | --- |
+| `npm run emulators:kill -- -DryRun` | "all emulator ports are free" |
+| `npm test` | pretest: ports free; 34 + 7 + 3 passed; posttest: "stopped java.exe (PID 9612) on port(s) 8080"; afterwards no emulator port in use; exit 0 |
+
+### Decisions
+- D-056: emulator cleanup script, run before and after `npm test`; stops Firebase emulator processes only.
+
+### Problems, risks, open questions
+- npm skips `posttest` when the tests fail; the next `npm test` cleans up in `pretest`, and `npm run emulators:kill` can be run by hand.
+- The script does not cover the Hosting emulator (5000) or the Firestore websocket (9150). 9150 belongs to the same `java.exe` as 8080, so it is freed with it.
+
+### Next steps
+- [ ] Hidayah: review and merge the PR
+- [ ] Phase 1
+
+### Commits
+- (this commit) chore: free emulator ports before and after tests on Windows
+
+---
+
 ## 2026-10-27 01:30 — Release v0.1
 
 - **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows

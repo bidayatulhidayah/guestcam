@@ -46,7 +46,8 @@ Everything the project needs is defined in files inside the repo, so a new compu
 
 - Always run commands inside `conda activate guestcam`: it provides Node 24 and Java 21. Every package.json requires Node 24 (`engines`), and Cloud Functions run on `nodejs24`. A different global Node (for example v22 or v25) is not supported.
 - Moving an existing computer from Node 22 to 24: `conda env update -f environment.yml --prune`, check `node -v` shows v24, then `npm install -g firebase-tools` again (global tools live inside the env) and `npm ci` at the repo root.
-- On Windows, stopping the emulators with Ctrl+C sometimes leaves a `java.exe` behind holding port 8080. If the next start says "port taken", close it in Task Manager.
+- On Windows, the emulators often leave `java.exe` (Firestore, Storage rules) or `node.exe` running after they stop, holding their ports, so the next run fails with "port taken". Fix: `npm run emulators:kill`. It frees ports 4000, 4400, 4500, 5001, 8080, 8085, 9099 and 9199, but only stops processes that are Firebase emulators; any other app on those ports is reported and left running. `npm run emulators:kill -- -DryRun` shows what it would stop. It does nothing on macOS or Linux.
+- `npm test` runs `emulators:kill` automatically before and after the tests (`pretest` / `posttest`). If a test fails, npm skips `posttest`, but the next `npm test` cleans up first. After stopping `npm run emulators` with Ctrl+C, run `npm run emulators:kill` yourself.
 
 - `npm install -g` inside an active conda env installs into that env, not the whole computer, so Firebase CLI stays with the project.
 - Use `npm ci` (not `npm install`) on a new computer: it installs exactly what the lock file says.
