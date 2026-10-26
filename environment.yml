@@ -1,0 +1,17 @@
+# Conda environment for the guestcam project
+# Create:  conda env create -f environment.yml
+# Update:  conda env update -f environment.yml --prune
+# Use:     conda activate guestcam
+name: guestcam
+channels:
+  - conda-forge
+dependencies:
+  - nodejs=22          # Node.js LTS (front end + Cloud Functions runtime)
+  - openjdk=21         # required by the Firebase emulators (Firestore, Storage)
+  - ffmpeg             # local testing of video / boomerang / voice processing
+  - git
+  - gh                 # GitHub CLI: sign-in, cloning, pull requests (also used by Claude Code)
+  - python=3.12        # optional helper scripts (load test, data export)
+  - pip
+  - pip:
+      - locust         # load testing: simulate 200 guests uploading

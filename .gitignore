@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+
+# Builds
+dist/
+build/
+lib/
+*.tsbuildinfo
+
+# Environment and secrets (never commit)
+.env
+.env.*
+!.env.example
+*service-account*.json
+*.pem
+*.key
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+database-debug.log
+pubsub-debug.log
+emulator-data/
+
+# Test and coverage
+coverage/
+.nyc_output/
+playwright-report/
+
+# OS and editors
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Python (helper scripts)
+__pycache__/
+*.pyc
