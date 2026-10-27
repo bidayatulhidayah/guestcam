@@ -25,7 +25,9 @@
     "emulators": "npm run build -w @guestcam/functions && firebase emulators:start --project demo-guestcam",
     "emulators:kill": "node scripts/emulators-kill.mjs",
     "seed": "tsx scripts/seed-dev.ts",
-    "deploy:preview": "npm run build -w @guestcam/web && firebase hosting:channel:deploy preview --expires 7d"
+    "seed:project": "tsx scripts/seed-project.ts",
+    "deploy:preview": "npm run build -w @guestcam/web && firebase hosting:channel:deploy preview --expires 7d",
+    "deploy:backend": "firebase deploy --only firestore:rules,firestore:indexes,storage,functions"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",

@@ -20,6 +20,11 @@ export interface UploadOptions {
 export interface StorageAdapter {
   /** Resumable upload of an original file. */
   uploadFile(path: string, data: Blob, options: UploadOptions): Promise<void>;
+  /**
+   * True if the file is already stored. Used when an upload finished but its
+   * reply was lost (pitfall U1): storage rules refuse to overwrite originals.
+   */
+  fileExists(path: string): Promise<boolean>;
   /** Display copy (~1600 px WebP or 720p MP4) for viewing. */
   getDisplayUrl(path: string): Promise<string>;
   /** ~400 px WebP thumbnail for the gallery grid. */

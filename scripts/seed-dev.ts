@@ -14,6 +14,7 @@ import {
   PACKAGE_FEATURES,
   allFeatures,
   firestorePaths,
+  isValidEventCode,
   type AliasBooking,
   type Catalog,
   type Event,
@@ -196,7 +197,19 @@ async function seedSpace(seed: SeedSpace): Promise<void> {
   console.log(`  #${seed.spaceNumber} · ${seed.plan}  /s/${seed.publicId}${seed.alias ? `  alias /${seed.alias}` : ''}`);
 }
 
+/** Event codes must be unique within a space: joinEvent without a slug relies on it. */
+function assertUniqueCodes(seeds: SeedSpace[]): void {
+  for (const seed of seeds) {
+    const codes = seed.events.map((e) => e.code.toLowerCase());
+    if (new Set(codes).size !== codes.length) throw new Error(`Duplicate event code in space ${seed.spaceNumber}`);
+    for (const code of codes) {
+      if (!isValidEventCode(code)) throw new Error(`Invalid event code "${code}" in space ${seed.spaceNumber}`);
+    }
+  }
+}
+
 async function main(): Promise<void> {
+  assertUniqueCodes(SPACES);
   console.log(`Seeding ${PROJECT_ID} at ${process.env.FIRESTORE_EMULATOR_HOST}`);
   // In order: the founder's space first, then the demo, then client spaces.
   for (const seed of SPACES) await seedSpace(seed);
