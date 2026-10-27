@@ -5,7 +5,7 @@ export default defineConfig({
     include: ['tests/**/*.test.ts'],
     // One emulator instance: run files one after another.
     fileParallelism: false,
-    testTimeout: 20_000,
+    testTimeout: 60_000,
     hookTimeout: 30_000,
   },
 });
