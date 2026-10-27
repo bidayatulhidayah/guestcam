@@ -48,6 +48,85 @@ Rules:
 
 ---
 
+## 2026-10-28 00:30 — Phase 1a: entry, identity, menu
+
+- **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
+- **Version / branch:** v0.1 (+ unreleased) / `feat/phase-1a-entry`
+- **Phase:** Phase 1 (target v0.2), PR 1a of 3
+- **Goal:** Plan approved by Hidayah with changes (per-space wrong-code limit with audit entry; codes unique within a space; server deletes files when a media doc is deleted; one large-file question per selection at 50 MB; note stale "queued" cleanup for Phase 3). Build 1a: entry, identity, menu, rules for spaces/events/guests; deploy rules, indexes and functions to `guestcam-2026` and seed test space #10001.
+
+### What changed and why
+- **shared:**
+  - Callable contracts (`EventView`, resolve/join requests and responses).
+  - `pickCurrentEvent`, `mergeTheme`, unique code and public id generation, rate-limit policies and `recordFailure`.
+  - Types: `Guest.selfiePath`, nullable `lastVisibility`, `Media.sortAt`, `RateLimit`, audit action `spaceCodeEntryLocked`.
+- **Rules (ADR-0007):**
+  - Guests never read `spaces/*`. Events are readable by members and space owners. Codes and members are server-written.
+  - Guest profiles: only that member writes them, with validated fields; `galleryUnlocked` and `firstUploadAt` are server-only.
+  - Storage: the selfie (own path, image under 15 MB, members only; readable by the guest and space owners). Everything else stays denied.
+- **Functions:**
+  - `joinEvent` (constant-time code check, linked events, device/IP/space limits, audit entry on a space lock).
+  - `resolveCurrentEvent` (current event among joined events, otherwise `codeRequired`).
+- **Web:**
+  - React Router in declarative mode; Firestore Lite; Firebase core preloaded.
+  - Code screen; join with `replaceState`; cached event view; theme accent.
+  - Welcome/name → selfie (front camera, Langkau) → menu, with the profile remembered per space and synced to the server when online.
+  - Menu from effective features ("Akan datang" until 1b, Galeri locked); `/mine`; alias inactive page; production root page; dev index for the dev server only.
+- **Storage adapter:** real resumable `uploadFile` and a new `fileExists` (pitfall U1).
+- **Scripts:**
+  - `seed:project` (real project, code printed to the terminal only) and `deploy:backend`.
+  - The dev seed checks that codes are unique within each space.
+  - `test:rules` renamed to `test:emulators`, which now also covers callable-function tests.
+- **Deploy blocker fixed:** `functions/package.json` listed `@guestcam/shared`, which Cloud Build would try to download from npm. It's removed; the code is bundled anyway.
+- `npm dedupe`: two `@firebase/app` patch versions broke the functions client in tests.
+
+### Files touched
+| File | Change |
+| --- | --- |
+| `shared/src/{api,codes,currentEvent,rateLimit}.ts`, `limits.ts`, `types.ts`, `paths.ts`, `tests/access.test.ts` | added/modified |
+| `firestore.rules`, `storage.rules`, `rules-tests/tests/*` | rules for 1a; 30 rules tests + 10 callable tests; deny-all test replaced |
+| `functions/src/access/*`, `functions/src/firebase.ts`, `functions/src/index.ts`, `functions/package.json` | added/modified |
+| `web/src/**` | entry, onboarding, menu, gallery placeholder, firebase/storage libs, device stores, icons, i18n |
+| `scripts/seed-project.ts`, `scripts/seed-dev.ts`, `package.json`, `package-lock.json` | added/modified |
+| `docs/decisions/0007-guest-access-through-callables.md`, `docs/decisions/README.md` | ADR-0007 |
+| `AGENTS.md`, `CHANGELOG.md`, `docs/setup/new-computer.md`, `docs/ai/memory.md`, `docs/ai/worklog.md`, `docs/ai/prompts/phase-1-mvp.md` | modified/added |
+
+### Commands run and results
+| Command | Result |
+| --- | --- |
+| `npm run test:unit` | shared 44, web 8 passed |
+| `npm run test:emulators` | 40 passed (30 rules, 10 callable end-to-end) |
+| `npm run typecheck` | clean |
+| `vite build` | first screen 142 KB gzipped (main 106.6 + Firebase core 33.7 + loaders 1.5); profile sync chunk 39.6 KB loads after onboarding |
+| Local smoke test in the emulators (headless Chrome, 390 px) | 17/17: QR join removes the code, welcome, empty name refused, selfie skip, menu, locked gallery hint, guest doc written, space link reopens, wrong code → neutral code screen without names, typed code joins, alias inactive, malformed id not found |
+| `firebase deploy --only firestore:rules,firestore:indexes,storage,functions` | rules, indexes, `ping`, `resolveCurrentEvent`, `joinEvent` (Node 24, asia-southeast1) created; APIs enabled automatically; artifact cleanup policy set to 1 day |
+| Live checks | `ping` ok; unauthenticated `joinEvent` refused; preview `/s/<unknown>` → code screen → wrong code answered by the live function; no console errors |
+| `npm run deploy:preview` | https://guestcam-2026--preview-s6g4gj5a.web.app (expires 2026-11-04) |
+
+### Decisions
+- D-057 to D-064 in memory.md; ADR-0007.
+
+### Problems, risks, open questions
+- **Seeding the real project is blocked on credentials.** The Admin SDK needs Google Application Default Credentials. conda-forge has no `gcloud`, and the Firebase CLI login can't be used by scripts. Options are in memory.md's open questions.
+- Space #10001 is the friend's engagement number (D-042); the test space must be renamed or reused before go-live (D-064).
+- A space-wide code lock could block real guests for 15 minutes; hosts need an "unlock code entry" action (Phase 4).
+- **Phase 3 task (Hidayah, 2026-10-27):** a scheduled cleanup of stale `status: "queued"` media docs whose upload never arrived (pitfall U2).
+- The selfie is uploaded when the menu opens. If that fails, it retries on the next menu open; it isn't in the upload queue (1b could add it).
+
+### Next steps
+- [ ] Hidayah: choose credentials for `seed:project`; then Claude seeds #10001 and prints the test link
+- [ ] Hidayah: phone checklist on the preview (iPhone Safari, iPhone via WhatsApp, Android Chrome), review and merge PR 1a
+- [ ] PR 1b: Snapshot, Upload from Gallery, queue, media records, Storage rules, upload and delete triggers
+- [ ] PR 1c: privacy step, My Uploads, device handling
+
+### Commits
+- `6e3260c` security(rules): add access rules for spaces, events, members and guests
+- `e3f81fb` feat(access): add resolveCurrentEvent and joinEvent callables
+- `18d8c70` feat(entry): join events by QR or code, name and selfie, event menu
+- (this commit) docs: record Phase 1a decisions, ADR-0007 and commands
+
+---
+
 ## 2026-10-27 02:00 — Emulator cleanup script
 
 - **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows

@@ -6,6 +6,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 
 ## [Unreleased]
 
+### Added
+
+- Guests join an event from the QR link or by typing the 4-character code; the code disappears from the address bar after joining. Wrong codes show the same neutral screen for every case, with limits per phone, per network and per couple's space.
+- Welcome screen with the couple's names and event title, then the guest's name and an optional selfie (big "Langkau" button). The name and selfie are remembered for the couple's other events on the same phone.
+- Event menu with the functions the couple chose; capture tiles say "Akan datang" until they are built, and Galeri stays locked until the guest's first upload.
+- "Majlis saya" lists the events joined on this phone; an event reopens instantly, even offline.
+
 ## [0.1] - 2026-10-27
 
 Phase 0: the empty but working skeleton. Details: [docs/versions/v0.1.md](docs/versions/v0.1.md).

@@ -8,7 +8,7 @@ Maintenance rules:
 - Keep facts here; keep session-by-session detail in `worklog.md`.
 - No secrets, keys, event codes or guest personal data.
 
-Last updated: 2026-10-27 (v0.1 released; emulator cleanup script)
+Last updated: 2026-10-28 (Phase 1a: entry, identity, menu; backend deployed to guestcam-2026)
 
 ---
 
@@ -38,9 +38,9 @@ The couple (hosts) manage everything from an admin dashboard: themes, codes, mod
 | Item | State |
 | --- | --- |
 | Version | **0.1** released 2026-10-27 (tag `v0.1`, Phase 0 skeleton). Not deployed to production (only the `preview` channel) |
-| Phase | Phase 0 done. Phase 1 next: entry, name, selfie, Snapshot, Upload from Gallery, queue, privacy step, My Uploads |
+| Phase | Phase 1 (target v0.2) in progress, split into PRs 1a (entry, identity, menu: built, PR open), 1b (capture, queue, media records), 1c (privacy step, My Uploads, device handling) |
 | Repo | GitHub, private: `bidayatulhidayah/guestcam` |
-| Firebase | Project `guestcam-2026`; Firestore and Storage confirmed in `asia-southeast1` (Singapore), 2026-10-27; emulators use the `demo-guestcam` demo project |
+| Firebase | Project `guestcam-2026`; Firestore and Storage confirmed in `asia-southeast1` (Singapore), 2026-10-27; emulators use the `demo-guestcam` demo project. 2026-10-28: Firestore/Storage rules, indexes and functions (`ping`, `resolveCurrentEvent`, `joinEvent`, Node 24) deployed with Hidayah's approval; artifact cleanup policy 1 day. Hosting only on the `preview` channel. No real users yet |
 | Runtime | Node 24 (D-055) |
 | Hosting | Free Firebase domain (`guestcam-2026.web.app`) until after the friend's engagement; Phase 0 preview channel `preview` |
 | Product name | Not final. Codename `guestcam`; working favourite **Kenang** (`kenang.app`). Shortlist in the spec |
@@ -132,6 +132,14 @@ Status: **Active** unless marked otherwise. "Why" is the reason at the time of t
 | D-054 | Default copyright owner "Hidayah" (env `VITE_COPYRIGHT_OWNER`), until per-event owner text exists | Founder's choice, 2026-10-27 |
 | D-055 | **Node 24 everywhere:** conda env `nodejs=24`, `engines.node: "24"` in every package.json, Cloud Functions runtime `nodejs24`, functions bundle targets node24; rules tests use the current SDK (`@firebase/rules-unit-testing` 6, `firebase` 13). Supersedes D-052 | Firebase JS SDK 13 needs Node >= 24.12; one SDK version across the repo; Node 24 is the current LTS with longer support than 22 (Node 22 EOL April 2027, before or around the founder's wedding) |
 | D-056 | `npm run emulators:kill` (PowerShell, Windows only) frees the emulator ports by stopping only Firebase emulator processes; it runs as `pretest` and `posttest` | Windows leaves emulator `java.exe`/`node.exe` running after `emulators:exec` and Ctrl+C, so the next run failed with "port taken" |
+| D-057 | Guests never read `spaces/*`; `resolveCurrentEvent` and `joinEvent` return a guest-safe `EventView` (no dates, plan, space number or codes). Rules check entitlements server-side. ADR-0007 | Rules cannot hide fields (P1); `spaceNumber` must never reach guests |
+| D-058 | Wrong event codes limited per device (5, then 5 min), per IP (100 per 15 min, hashed) and per space (300 per hour locks code entry for that space for 15 min + `spaceCodeEntryLocked` audit entry) | Hidayah, 2026-10-27: venue wifi shares one IP; anonymous accounts make device limits weak |
+| D-059 | Event codes are unique within a space (generation and seeds enforce it); `joinEvent` without a slug matches the code across the space's open events | Hidayah, 2026-10-27: lets the plain code screen work |
+| D-060 | `Guest.galleryUnlocked` and `firstUploadAt` are server-written only (the upload trigger, Phase 1b); `lastVisibility` is null until the first privacy choice; `selfiePath` added | Pitfall P3: a client-set flag would bypass the gallery lock |
+| D-061 | Bundle plan: React Router in declarative mode (17 KB, not the 35 KB data router), Firestore Lite for guests (41 KB, not 147 KB), Firebase core (app, auth, functions) preloaded as its own chunk; full Firestore only for the Phase 3 live gallery. First screen 142 KB gzipped. Switching to wouter is pre-approved if the first screen exceeds 150 KB (record it here if it happens) | Performance budget D-031 |
+| D-062 | Deleting a media doc triggers a server function that deletes its files (original now, derived copies later); guests cannot delete or overwrite in Storage | Hidayah, 2026-10-27: Storage is create-only for guests |
+| D-063 | "Muat naik sekarang, atau nanti guna wifi?" asked once per selection (not per file) when the selection holds a file over 50 MB | Hidayah, 2026-10-27 |
+| D-064 | Phone testing uses a test space #10001 "Pasangan Ujian" in `guestcam-2026`, seeded by `npm run seed:project` with a random permanent id and code printed only to the terminal. #10001 is the friend's engagement number (D-042): rename/reuse it for the real engagement, or reassign before go-live | Hidayah approved seeding 10001 for Phase 1 tests |
 
 ### Process
 
@@ -161,6 +169,8 @@ Status: **Active** unless marked otherwise. "Why" is the reason at the time of t
 
 | Question | Notes |
 | --- | --- |
+| Credentials for `seed:project` | The Admin SDK needs Google Application Default Credentials; options: Google Cloud SDK `gcloud auth application-default login` (recommended, no key file), a service-account key kept outside the repo, or creating the test space by hand. Awaiting Hidayah |
+| Space-wide code lock | A flood of wrong codes can block real guests for 15 min; hosts need an "unlock code entry" action (Phase 4) |
 | Final product name | Favourite Kenang; check domain, Instagram handle, MyIPO trademark |
 | Copyright footer owner line | Default "Hidayah" for now (D-054); per-event owner text still to design |
 | Friend's engagement date | Sets the deadline for v1.0 |

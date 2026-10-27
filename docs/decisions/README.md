@@ -16,3 +16,4 @@ An ADR records one significant decision: the context, the options considered, wh
 | [0004](0004-membership-based-event-access.md) | Membership-based event access and privacy | Accepted |
 | [0005](0005-shared-folders-with-pin.md) | Shared folders protected by PIN | Accepted |
 | [0006](0006-feature-toggles-and-packages.md) | Feature toggles, packages and add-ons | Accepted |
+| [0007](0007-guest-access-through-callables.md) | Guest access through callable functions and server-only guest fields | Accepted |

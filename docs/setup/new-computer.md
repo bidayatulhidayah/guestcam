@@ -52,3 +52,5 @@ Everything the project needs is defined in files inside the repo, so a new compu
 - `npm install -g` inside an active conda env installs into that env, not the whole computer, so Firebase CLI stays with the project.
 - Use `npm ci` (not `npm install`) on a new computer: it installs exactly what the lock file says.
 - If you add a new system tool, add it to `environment.yml` and commit, so the next computer gets it too.
+- Function settings per project live in `functions/.env.<project-id>` (not committed), e.g. `functions/.env.guestcam-2026` with `PUBLIC_BASE_URL=https://guestcam-2026.web.app`. Copy `functions/.env.example`. Without it, deploys use an empty address.
+- `npm run seed:project` writes to the real project with the Firebase Admin SDK, which needs Google Application Default Credentials (the Firebase CLI login is not enough). Set them up once per computer as described in the Phase 1a work log entry; never commit a key file.
