@@ -27,6 +27,7 @@ export const collections = {
   private: 'private',
   auditLog: 'auditLog',
   bugReports: 'bugReports',
+  rateLimits: 'rateLimits',
   catalog: 'catalog',
 } as const;
 
@@ -60,6 +61,7 @@ export const firestorePaths = {
 
   auditLogEntry: (entryId: string) => `auditLog/${seg(entryId)}`,
   bugReport: (reportId: string) => `bugReports/${seg(reportId)}`,
+  rateLimit: (key: string) => `rateLimits/${seg(key)}`,
   catalog: () => 'catalog/current',
 } as const;
 

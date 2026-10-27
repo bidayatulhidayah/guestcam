@@ -75,6 +75,8 @@ export const AUDIT_ACTIONS = [
   'hostRemove',
   'planChange',
   'entitlementsUpdate',
+  /** Too many wrong event codes in a space: code entry locked for a while (server). */
+  'spaceCodeEntryLocked',
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
 
@@ -187,12 +189,16 @@ export interface EventMember {
 /** `events/{eventId}/guests/{uid}`: readable only by that guest and hosts. */
 export interface Guest {
   displayName: string;
+  /** Profile selfie (`storagePaths.guestSelfie`); never an upload, never in a gallery. */
+  selfiePath: string | null;
+  /** Small copy made by a function (Phase 3). */
   selfieThumbPath: string | null;
-  /** Set on the first upload (selfie does not count, D-005). */
+  /** Server-written on the first upload (selfie does not count, D-005). Guests cannot set it. */
   galleryUnlocked: boolean;
+  /** Server-written with `galleryUnlocked`. */
   firstUploadAt: Timestamp | null;
-  /** Remembered privacy choice for the next item (D-006). */
-  lastVisibility: Visibility;
+  /** Remembered privacy choice for the next item (D-006); `null` until the first choice. */
+  lastVisibility: Visibility | null;
   showName: boolean;
   language: Language;
   joinedAt: Timestamp;
@@ -241,6 +247,8 @@ export interface Media {
   capturedAtSource: CapturedAtSource;
   /** Always a server timestamp (pitfall M9). */
   uploadedAt: Timestamp | null;
+  /** Gallery order: `capturedAt ?? uploadedAt`, set by the server when the upload lands. */
+  sortAt: Timestamp | null;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -343,6 +351,16 @@ export interface Purchase {
   catalogVersion: number;
   paidAt: Timestamp;
   invoiceNo: string;
+}
+
+/**
+ * `rateLimits/{key}` (server only). Keys are hashed: `device_<hash>`,
+ * `ip_<hash>`, `space_<spaceId>`.
+ */
+export interface RateLimit {
+  failures: number;
+  windowStartedAt: Timestamp;
+  lockedUntil: Timestamp | null;
 }
 
 // ---------------------------------------------------------------------------

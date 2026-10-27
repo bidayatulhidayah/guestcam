@@ -1,11 +1,155 @@
 rules_version = '2';
 
-// Phase 0: deny everything. Real rules arrive with each feature, always with
-// tests in rules-tests/ in the same commit (AGENTS.md rule 13).
+// Security rules. Every change needs tests in rules-tests/ in the same commit
+// (AGENTS.md rule 13). Rules are not filters: queries must match them.
+//
+// Phase 1a: spaces, events, members and guests. Media rules arrive in 1b.
+// Guests never read spaces/*: it holds the plan, space number and
+// entitlements, and rules cannot hide single fields (pitfall P1). The guest
+// app gets what it needs from the resolveCurrentEvent / joinEvent functions.
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function isSuperadmin() {
+      return signedIn() && request.auth.token.get('superadmin', false) == true;
+    }
+
+    function hostDoc(spaceId) {
+      return /databases/$(database)/documents/spaces/$(spaceId)/hosts/$(request.auth.uid);
+    }
+
+    // Space owners (each partner) and the super admin. Moderators are not owners.
+    function isSpaceOwner(spaceId) {
+      return isSuperadmin()
+        || (signedIn() && exists(hostDoc(spaceId)) && get(hostDoc(spaceId)).data.role == 'owner');
+    }
+
+    function eventSpaceId(eventId) {
+      return get(/databases/$(database)/documents/events/$(eventId)).data.spaceId;
+    }
+
+    // Membership is written only by joinEvent after a correct code (D-036).
+    function isMember(eventId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/events/$(eventId)/members/$(request.auth.uid));
+    }
+
+    // ---- Spaces and indexes: server and owners only ------------------------
+
+    match /spaces/{spaceId} {
+      allow read: if isSpaceOwner(spaceId);
+      allow write: if false;
+
+      match /hosts/{uid} {
+        allow read: if isSelf(uid) || isSpaceOwner(spaceId);
+        allow write: if false;
+      }
+
+      match /purchases/{purchaseId} {
+        allow read: if isSpaceOwner(spaceId);
+        allow write: if false;
+      }
+    }
+
+    match /publicIds/{publicId} {
       allow read, write: if false;
+    }
+
+    match /counters/{counterId} {
+      allow read, write: if false;
+    }
+
+    match /aliasBookings/{bookingId} {
+      allow read, write: if false;
+    }
+
+    match /rateLimits/{key} {
+      allow read, write: if false;
+    }
+
+    match /auditLog/{entryId} {
+      allow read: if isSpaceOwner(resource.data.spaceId);
+      allow write: if false;
+    }
+
+    match /catalog/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ---- Events ------------------------------------------------------------
+
+    match /events/{eventId} {
+      allow read: if isMember(eventId) || isSpaceOwner(resource.data.spaceId);
+      allow write: if false;
+
+      // Event code and linked events: functions only.
+      match /private/{docId} {
+        allow read, write: if false;
+      }
+
+      match /members/{uid} {
+        allow read: if isSelf(uid) || isSpaceOwner(eventSpaceId(eventId));
+        allow write: if false;
+      }
+
+      // Guest profile. galleryUnlocked and firstUploadAt are server-written
+      // (pitfall P3), so a guest cannot open the gallery without uploading.
+      match /guests/{uid} {
+        allow read: if isSelf(uid) || isSpaceOwner(eventSpaceId(eventId));
+        allow create: if isSelf(uid) && isMember(eventId) && validGuestCreate(eventId, uid);
+        allow update: if isSelf(uid) && isMember(eventId) && validGuestUpdate(eventId, uid);
+        allow delete: if false;
+      }
+    }
+
+    // ---- Guest validation --------------------------------------------------
+
+    function validName(name) {
+      return name is string && name.size() >= 1 && name.size() <= 40;
+    }
+
+    function validSelfiePath(path, eventId, uid) {
+      return path == null
+        || (path is string
+          && path.matches('events/' + eventId + '/guests/' + uid + '/selfie[.](jpg|jpeg|png|webp)'));
+    }
+
+    function validGuestFields(data, eventId, uid) {
+      return validName(data.displayName)
+        && validSelfiePath(data.selfiePath, eventId, uid)
+        && (data.lastVisibility == null || data.lastVisibility in ['private', 'public'])
+        && data.showName is bool
+        && data.language in ['ms', 'en'];
+    }
+
+    function validGuestCreate(eventId, uid) {
+      let data = request.resource.data;
+      return data.keys().hasOnly([
+          'displayName', 'selfiePath', 'selfieThumbPath', 'galleryUnlocked', 'firstUploadAt',
+          'lastVisibility', 'showName', 'language', 'joinedAt'])
+        && data.keys().hasAll([
+          'displayName', 'selfiePath', 'selfieThumbPath', 'galleryUnlocked', 'firstUploadAt',
+          'lastVisibility', 'showName', 'language', 'joinedAt'])
+        && validGuestFields(data, eventId, uid)
+        && data.selfieThumbPath == null
+        && data.galleryUnlocked == false
+        && data.firstUploadAt == null
+        && data.joinedAt == request.time;
+    }
+
+    function validGuestUpdate(eventId, uid) {
+      return request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['displayName', 'selfiePath', 'lastVisibility', 'showName', 'language'])
+        && validGuestFields(request.resource.data, eventId, uid);
     }
   }
 }
