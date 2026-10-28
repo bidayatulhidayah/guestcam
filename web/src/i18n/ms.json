@@ -68,6 +68,32 @@
     "locked": "Berkunci",
     "galleryLockedNotice": "Kongsi satu detik dahulu untuk buka galeri."
   },
+  "capture": {
+    "saved": "Disimpan di telefon. Sedang dihantar.",
+    "tooLarge": "{{count}} fail terlalu besar (maksimum 4 GB).",
+    "unsupported": "{{count}} fail bukan gambar atau video.",
+    "storageFull": "Ruang telefon penuh. Biarkan halaman ini terbuka sehingga semua dihantar.",
+    "largeTitle": "Muat naik sekarang, atau nanti guna wifi?",
+    "largeBody": "Pilihan anda ada fail besar ({{size}}). Wifi lebih laju dan jimat data.",
+    "largeNow": "Muat naik sekarang",
+    "largeLater": "Nanti, guna wifi",
+    "repicked": "{{count}} fail disambung semula."
+  },
+  "queue": {
+    "waiting": "{{count}} menunggu dihantar",
+    "sending": "Sedang dihantar: {{percent}}%",
+    "resuming": "Menyambung semula...",
+    "keepOpen": "Biarkan halaman ini terbuka sehingga selesai.",
+    "offline": "Tiada internet. Akan dihantar bila ada sambungan.",
+    "held": "{{count}} menunggu wifi",
+    "sendNow": "Hantar sekarang",
+    "needsRepick": "{{count}} fail perlu dipilih semula dari galeri telefon",
+    "repick": "Pilih semula",
+    "failed": "{{count}} gagal dihantar",
+    "retry": "Cuba lagi",
+    "allSent": "{{count}} dah dihantar",
+    "progressLabel": "Kemajuan menghantar"
+  },
   "gallery": {
     "title": "Galeri",
     "soon": "Galeri akan dibuka tidak lama lagi."

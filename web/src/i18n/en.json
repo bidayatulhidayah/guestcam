@@ -68,6 +68,32 @@
     "locked": "Locked",
     "galleryLockedNotice": "Share one moment first to open the gallery."
   },
+  "capture": {
+    "saved": "Saved on your phone. Sending now.",
+    "tooLarge": "{{count}} file(s) too large (4 GB maximum).",
+    "unsupported": "{{count}} file(s) are not photos or videos.",
+    "storageFull": "Your phone storage is full. Keep this page open until everything is sent.",
+    "largeTitle": "Upload now, or later on wifi?",
+    "largeBody": "Your selection has a large file ({{size}}). Wifi is faster and saves data.",
+    "largeNow": "Upload now",
+    "largeLater": "Later, on wifi",
+    "repicked": "{{count}} file(s) resumed."
+  },
+  "queue": {
+    "waiting": "{{count}} waiting to send",
+    "sending": "Sending: {{percent}}%",
+    "resuming": "Resuming...",
+    "keepOpen": "Keep this page open until it finishes.",
+    "offline": "No internet. Will send when you are connected.",
+    "held": "{{count}} waiting for wifi",
+    "sendNow": "Send now",
+    "needsRepick": "{{count}} file(s) need to be picked again from your phone gallery",
+    "repick": "Pick again",
+    "failed": "{{count}} could not be sent",
+    "retry": "Try again",
+    "allSent": "{{count}} sent",
+    "progressLabel": "Sending progress"
+  },
   "gallery": {
     "title": "Gallery",
     "soon": "The gallery will open soon."

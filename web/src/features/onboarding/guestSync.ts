@@ -38,7 +38,18 @@ export async function syncGuest(event: EventView, language: Language): Promise<G
     });
     snapshot = await getDoc(ref);
   }
-  const guest = snapshot.data() as Guest;
+  let guest = snapshot.data() as Guest;
+  if (!guest.displayName) {
+    // The upload trigger created a bare doc (gallery unlock) before the profile synced.
+    await updateDoc(ref, {
+      displayName: profile.displayName,
+      selfiePath: null,
+      lastVisibility: null,
+      showName: true,
+      language,
+    });
+    guest = (await getDoc(ref)).data() as Guest;
+  }
 
   if (profile.hasSelfie && !guest.selfiePath) {
     const selfie = await readSelfie(event.publicId);
