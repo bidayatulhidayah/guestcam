@@ -139,8 +139,9 @@ Status: **Active** unless marked otherwise. "Why" is the reason at the time of t
 | D-061 | Bundle plan: React Router in declarative mode (17 KB, not the 35 KB data router), Firestore Lite for guests (41 KB, not 147 KB), Firebase core (app, auth, functions) preloaded as its own chunk; full Firestore only for the Phase 3 live gallery. First screen 142 KB gzipped. Switching to wouter is pre-approved if the first screen exceeds 150 KB (record it here if it happens) | Performance budget D-031 |
 | D-062 | Deleting a media doc triggers a server function that deletes its files (original now, derived copies later); guests cannot delete or overwrite in Storage | Hidayah, 2026-10-27: Storage is create-only for guests |
 | D-063 | "Muat naik sekarang, atau nanti guna wifi?" asked once per selection (not per file) when the selection holds a file over 50 MB | Hidayah, 2026-10-27 |
-| D-064 | Phone testing uses a test space #10001 "Pasangan Ujian" in `guestcam-2026`, seeded by `npm run seed:project` with a random permanent id and code printed only to the terminal. #10001 is the friend's engagement number (D-042): rename/reuse it for the real engagement, or reassign before go-live | Hidayah approved seeding 10001 for Phase 1 tests |
+| D-064 | **Superseded by D-066.** Phone testing uses a test space #10001 "Pasangan Ujian" in `guestcam-2026`, seeded by `npm run seed:project` with a random permanent id and code printed only to the terminal. #10001 is the friend's engagement number (D-042): rename/reuse it for the real engagement, or reassign before go-live | Hidayah approved seeding 10001 for Phase 1 tests |
 | D-065 | Admin scripts against the real project (`seed:project`) use Google Application Default Credentials from the Google Cloud CLI (`gcloud auth application-default login`); no service-account key files | Hidayah, 2026-10-28: no long-lived secrets on disk |
+| D-066 | The real-project phone-test space is **#00100** (plan `internal`, "Pasangan Ujian", event `tunang`), seeded by `npm run seed:project`; the client counter starts at 10001, so #10001 stays free for the friend's engagement | Hidayah reserved 00100 for testing, 2026-10-28 |
 
 ### Process
 
@@ -165,6 +166,7 @@ Status: **Active** unless marked otherwise. "Why" is the reason at the time of t
 | S-10 | 4-digit space numbers (#0000, first other space #0001) | D-042 |
 | S-11 | Seven-item menu without folders (D-007) | D-045 |
 | S-12 | Node 22 (conda env, engines, Functions runtime `nodejs22`) | D-055 |
+| S-13 | Test space on #10001 (D-064) | D-066 |
 
 ## 6. Open questions
 

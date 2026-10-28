@@ -108,13 +108,13 @@ Rules:
 
 ### Problems, risks, open questions
 - **Seeding the real project is blocked on credentials.** The Admin SDK needs Google Application Default Credentials. conda-forge has no `gcloud`, and the Firebase CLI login can't be used by scripts. Options are in memory.md's open questions.
-- Space #10001 is the friend's engagement number (D-042); the test space must be renamed or reused before go-live (D-064).
+- Space #10001 is the friend's engagement number (D-042). Update: Hidayah moved the test space to #00100 (plan `internal`), so #10001 stays free (D-066).
 - A space-wide code lock could block real guests for 15 minutes; hosts need an "unlock code entry" action (Phase 4).
 - **Phase 3 task (Hidayah, 2026-10-27):** a scheduled cleanup of stale `status: "queued"` media docs whose upload never arrived (pitfall U2).
 - The selfie is uploaded when the menu opens. If that fails, it retries on the next menu open; it isn't in the upload queue (1b could add it).
 
 ### Next steps
-- [ ] Hidayah: choose credentials for `seed:project`; then Claude seeds #10001 and prints the test link
+- [ ] Hidayah: set up Google Cloud CLI credentials (D-065); then Claude seeds #00100 and prints the test link
 - [ ] Hidayah: phone checklist on the preview (iPhone Safari, iPhone via WhatsApp, Android Chrome), review and merge PR 1a
 - [ ] PR 1b: Snapshot, Upload from Gallery, queue, media records, Storage rules, upload and delete triggers
 - [ ] PR 1c: privacy step, My Uploads, device handling

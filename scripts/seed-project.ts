@@ -1,12 +1,13 @@
 /**
  * Seeds a REAL Firebase project with the phone-test space (Phase 1):
- *   #10001 · beta, "Pasangan Ujian", one engagement event "tunang",
- *   entitled to and enabled for every feature.
- * plus counters/spaces (next 10002) and catalog/current when missing.
+ *   #00100 · internal (manually assigned test number, D-042), "Pasangan Ujian",
+ *   one engagement event "tunang", entitled to and enabled for every feature.
+ * plus counters/spaces (next client number 10001) and catalog/current when
+ * missing. #10001 stays free for the friend's engagement.
  *
  * The permanent id and the event code are random and printed ONLY to this
  * terminal. Never paste them into docs, commits or chats (AGENTS.md).
- * Safe to run again: an existing #10001 is reported, not duplicated.
+ * Safe to run again: an existing #00100 is reported, not duplicated.
  *
  * Needs Google Application Default Credentials for an account with access
  * to the project (see docs/setup/new-computer.md).
@@ -32,7 +33,8 @@ import {
 import { applicationDefault, initializeApp } from 'firebase-admin/app';
 import { Timestamp, getFirestore } from 'firebase-admin/firestore';
 
-const SPACE_NUMBER = '10001';
+/** Internal test range 00002-09999, assigned by hand (Hidayah reserved 00100 for testing). */
+const SPACE_NUMBER = '00100';
 const EVENT_SLUG = 'tunang';
 
 function arg(name: string): string | undefined {
@@ -54,7 +56,7 @@ const bytes = (n: number) => new Uint8Array(randomBytes(n));
 
 function printLinks(publicId: string, code: string): void {
   console.log('');
-  console.log('  Space #10001 (beta) · event "tunang"');
+  console.log(`  Space #${SPACE_NUMBER} (internal test) · event "${EVENT_SLUG}"`);
   console.log(`  Permanent link : ${baseUrl}/s/${publicId}`);
   console.log(`  QR link        : ${baseUrl}/s/${publicId}/${EVENT_SLUG}-${code.toUpperCase()}`);
   console.log(`  Event code     : ${code.toUpperCase()}`);
@@ -99,7 +101,7 @@ async function main(): Promise<void> {
     const space: Space = {
       publicId,
       spaceNumber: SPACE_NUMBER,
-      plan: 'beta',
+      plan: 'internal',
       trialEndsAt: null,
       displayNames: 'Pasangan Ujian',
       defaultTheme: { accent: '#4B5320', displayFont: null, coverPath: null, monogramPath: null, themeVersion: 1 },
@@ -134,8 +136,8 @@ async function main(): Promise<void> {
     tx.set(db.doc(firestorePaths.publicId(publicId)), { spaceId: spaceRef.id });
     tx.set(eventRef, event);
     tx.set(db.doc(firestorePaths.eventAccess(eventRef.id)), access);
-    const nextNumber = (counter.data() as SpaceCounter | undefined)?.nextClientNumber ?? 10001;
-    if (nextNumber <= 10001) tx.set(counterRef, { nextClientNumber: 10002 } satisfies SpaceCounter);
+    // Client spaces start at 10001 (10000 is reserved); internal numbers never use the counter.
+    if (!counter.exists) tx.set(counterRef, { nextClientNumber: 10001 } satisfies SpaceCounter);
     if (!catalog.exists) {
       const initial: Catalog = {
         features: [...FEATURE_KEYS],
