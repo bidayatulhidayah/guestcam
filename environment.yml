@@ -2,6 +2,9 @@
 # Create:  conda env create -f environment.yml
 # Update:  conda env update -f environment.yml --prune
 # Use:     conda activate guestcam
+# Not in this file: the Google Cloud CLI (gcloud). conda-forge has no Windows
+# build, so it is installed with Google's Windows installer; see
+# docs/setup/new-computer.md. Do not add google-cloud-sdk here.
 name: guestcam
 channels:
   - conda-forge

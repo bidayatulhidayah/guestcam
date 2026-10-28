@@ -7,6 +7,7 @@ Everything the project needs is defined in files inside the repo, so a new compu
 | File | What it pins |
 | --- | --- |
 | `environment.yml` | System tools: Node.js 24, Java 21, ffmpeg, Git, Python |
+| Google Cloud CLI (outside conda) | `gcloud`, only for admin scripts against the real project (`npm run seed:project`). conda-forge has no Windows build, so it is installed with Google's Windows installer and is NOT in `environment.yml` |
 | `package.json` + `package-lock.json` (repo root) | All libraries for every workspace (`shared`, `web`, `functions`, `rules-tests`); ONE lock file |
 | `web/.env.example` | Web settings (Firebase web config, public address, footer owner); copy to `web/.env.local` |
 | `functions/.env.example` | Function parameters (`PUBLIC_BASE_URL`); copy to `functions/.env.local` |
@@ -27,6 +28,7 @@ Everything the project needs is defined in files inside the repo, so a new compu
 - [ ] Copy settings: `cp web/.env.example web/.env.local` and fill in the Firebase config (`firebase apps:sdkconfig web` prints it)
 - [ ] Install project libraries (all workspaces at once, from the repo root): `npm ci`
 - [ ] Check: `npm test` passes (needs Java from the conda env for the emulators)
+- [ ] Only if you will run admin scripts against the real project: install the Google Cloud CLI (non-conda tool, see Notes) and run `gcloud auth application-default login`, then `gcloud auth application-default set-quota-project guestcam-2026`
 
 ## Every work session
 
@@ -54,8 +56,8 @@ Everything the project needs is defined in files inside the repo, so a new compu
 - If you add a new system tool, add it to `environment.yml` and commit, so the next computer gets it too.
 - Function settings per project live in `functions/.env.<project-id>` (not committed), e.g. `functions/.env.guestcam-2026` with `PUBLIC_BASE_URL=https://guestcam-2026.web.app`. Copy `functions/.env.example`. Without it, deploys use an empty address.
 - `npm run seed:project` writes to the real project with the Firebase Admin SDK, which needs Google Application Default Credentials (the Firebase CLI login is not enough). One-time setup per computer, no key file:
-  1. Install the Google Cloud CLI with Google's Windows installer (https://cloud.google.com/sdk/docs/install). conda-forge does not package it.
+  1. Install the Google Cloud CLI with Google's Windows installer (https://cloud.google.com/sdk/docs/install). It is a **non-conda tool**: conda-forge has no Windows build, so do not add `google-cloud-sdk` to `environment.yml`. The installer puts `gcloud` on the system PATH, so it works inside and outside the conda env.
   2. Open a new terminal and run `gcloud auth application-default login`; sign in with the Google account that owns the Firebase project.
   3. Run `gcloud auth application-default set-quota-project guestcam-2026`.
-  4. Then: `npm run seed:project -- --project guestcam-2026`. The event code is printed to the terminal only; never paste it into docs, commits or chats.
+  4. Then: `npm run seed:project -- --project guestcam-2026`. It only creates test space #00100 and its test event, never overwrites, and stops if #00100 already exists. The event code is printed to the terminal only; never paste it into docs, commits or chats.
   Never create or commit a service-account key file.

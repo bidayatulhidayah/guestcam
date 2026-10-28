@@ -30,6 +30,10 @@ Phase 1a implements entry and identity. Three facts shape the data access:
 - `guests/{uid}`: created and updated only by that member with validated fields; `galleryUnlocked` and `firstUploadAt` are written only by the server (the upload trigger, Phase 1b).
 - The guest app uses Firestore Lite for one-off reads and writes; the event view is cached on the phone and refreshed in the background.
 
+## Amendment (2026-10-28, memory D-067)
+
+The space-wide lock blocks only codes typed without an event slug (the plain code screen). QR links (slug + code) keep working during a lock, under the per-device and per-IP limits. Every wrong code still counts toward the space limit and writes the audit entry when it trips. Trade-off: a caller can always include a slug, so the space lock mainly stops guessing across all of a space's events; per-slug guessing is bounded by the device and IP limits, and App Check is added in Phase 5.
+
 ## Consequences
 
 - Good: no private space field can reach a guest; the gallery lock cannot be set by the client; brute force is limited even across many anonymous accounts.

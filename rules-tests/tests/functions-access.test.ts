@@ -149,7 +149,7 @@ describe('joinEvent', () => {
     expect((await (await newGuest()).join({ ...wrong, code: 'k7q2' })).kind).toBe('joined');
   });
 
-  it('locks code entry for the whole space after 300 wrong codes and writes the audit log', async () => {
+  async function nearSpaceLimit() {
     const limit = EVENT_CODE_RATE_LIMITS.space;
     await env.withSecurityRulesDisabled(async (context) => {
       await setDoc(doc(context.firestore(), firestorePaths.rateLimit(`space_${ids.space}`)), {
@@ -158,14 +158,9 @@ describe('joinEvent', () => {
         lockedUntil: null,
       });
     });
-    const result = await (await newGuest()).join({ publicId: ids.publicId, code: 'aaaa' });
-    expect(result).toEqual({ kind: 'tooManyTries', retryAfterMs: limit.lockMs });
+  }
 
-    const other = await newGuest();
-    expect((await other.join({ publicId: ids.publicId, eventSlug: 'tunang', code: 'k7q2' })).kind).toBe(
-      'tooManyTries',
-    );
-
+  async function spaceLockEntries() {
     let actions: unknown[] = [];
     await env.withSecurityRulesDisabled(async (context) => {
       const snap = await getDocs(collection(context.firestore(), 'auditLog'));
@@ -174,7 +169,44 @@ describe('joinEvent', () => {
         .filter((d) => d.id !== 'entry1' && d.data().spaceId === ids.space)
         .map((d) => d.data().action);
     });
-    expect(actions.filter((a) => a === 'spaceCodeEntryLocked')).toHaveLength(1);
+    return actions.filter((a) => a === 'spaceCodeEntryLocked').length;
+  }
+
+  it('after 300 wrong codes, locks typed codes for the space and writes the audit log', async () => {
+    const limit = EVENT_CODE_RATE_LIMITS.space;
+    await nearSpaceLimit();
+    const result = await (await newGuest()).join({ publicId: ids.publicId, code: 'aaaa' });
+    expect(result).toEqual({ kind: 'tooManyTries', retryAfterMs: limit.lockMs });
+    expect(await spaceLockEntries()).toBe(1);
+
+    // A different phone typing the right code on the plain code screen is blocked too.
+    expect((await (await newGuest()).join({ publicId: ids.publicId, code: 'k7q2' })).kind).toBe('tooManyTries');
+  });
+
+  it('QR links (slug + code) keep working while the space is locked', async () => {
+    await nearSpaceLimit();
+    await (await newGuest()).join({ publicId: ids.publicId, code: 'aaaa' });
+
+    const qrGuest = await newGuest();
+    expect(await qrGuest.join({ publicId: ids.publicId, eventSlug: 'tunang', code: 'K7Q2' })).toMatchObject({
+      kind: 'joined',
+    });
+    // A wrong QR code is still just a wrong code (device and IP limits apply).
+    expect(await qrGuest.join({ publicId: ids.publicId, eventSlug: 'tunang', code: 'aaaa' })).toEqual({
+      kind: 'wrongCode',
+    });
+    expect(await spaceLockEntries()).toBe(1);
+  });
+
+  it('wrong QR codes still count toward the space limit and trip the audit entry', async () => {
+    await nearSpaceLimit();
+    const qrGuest = await newGuest();
+    // Not blocked itself, but this 300th wrong code locks typed entry and is logged.
+    expect(await qrGuest.join({ publicId: ids.publicId, eventSlug: 'tunang', code: 'aaaa' })).toEqual({
+      kind: 'wrongCode',
+    });
+    expect(await spaceLockEntries()).toBe(1);
+    expect((await (await newGuest()).join({ publicId: ids.publicId, code: 'k7q2' })).kind).toBe('tooManyTries');
   });
 
   it('also joins linked events and keeps joinedAt when joining again', async () => {

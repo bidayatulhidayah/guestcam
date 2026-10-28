@@ -25,7 +25,10 @@ function sameCode(a: string, b: string): boolean {
 /**
  * Checks an event code and makes the caller a member (D-036).
  * Wrong code, unknown event and unknown space all answer `wrongCode`.
- * Limits: per device, per IP and per space (EVENT_CODE_RATE_LIMITS).
+ * Limits (EVENT_CODE_RATE_LIMITS): per device and per IP always; the
+ * space-wide lock blocks only codes typed without an event slug (the plain
+ * code screen), so QR links keep working during a lock (D-067). Every wrong
+ * code still counts toward the space limit and its audit entry.
  */
 export async function joinEvent(request: CallableRequest<JoinEventRequest>): Promise<JoinEventResponse> {
   const uid = request.auth?.uid;
@@ -34,18 +37,26 @@ export async function joinEvent(request: CallableRequest<JoinEventRequest>): Pro
   const nowMs = Date.now();
 
   const space = typeof input.publicId === 'string' ? await loadSpaceByPublicId(input.publicId) : null;
-  const keys: LimitKey[] = [
-    { key: `device_${uid}`, policy: EVENT_CODE_RATE_LIMITS.device },
-    { key: `ip_${hashIp(clientIp(request.rawRequest))}`, policy: EVENT_CODE_RATE_LIMITS.ip },
-  ];
-  if (space) keys.push({ key: `space_${space.spaceId}`, policy: EVENT_CODE_RATE_LIMITS.space, spaceId: space.spaceId });
-
-  const locked = await remainingLockMs(keys, nowMs);
-  if (locked > 0) return { kind: 'tooManyTries', retryAfterMs: locked };
-
   const code = typeof input.code === 'string' ? normalizeEventCode(input.code) : null;
   const slug = typeof input.eventSlug === 'string' ? input.eventSlug.trim().toLowerCase() : null;
   const slugOk = slug === null || slug === '' || isValidEventSlug(slug);
+  const typedWithoutSlug = !slug;
+
+  const keys: LimitKey[] = [
+    { key: `device_${uid}`, policy: EVENT_CODE_RATE_LIMITS.device, enforce: true },
+    { key: `ip_${hashIp(clientIp(request.rawRequest))}`, policy: EVENT_CODE_RATE_LIMITS.ip, enforce: true },
+  ];
+  if (space) {
+    keys.push({
+      key: `space_${space.spaceId}`,
+      policy: EVENT_CODE_RATE_LIMITS.space,
+      spaceId: space.spaceId,
+      enforce: typedWithoutSlug,
+    });
+  }
+
+  const locked = await remainingLockMs(keys, nowMs);
+  if (locked > 0) return { kind: 'tooManyTries', retryAfterMs: locked };
 
   let match: LoadedEvent | undefined;
   let linkedEventIds: string[] = [];

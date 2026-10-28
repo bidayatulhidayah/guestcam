@@ -17,6 +17,11 @@ export interface LimitKey {
   policy: RateLimitPolicy;
   /** Set for space keys: a lock is written to the audit log of this space. */
   spaceId?: string;
+  /**
+   * Whether an active lock on this key blocks this request. Wrong attempts are
+   * always counted; a key that is not enforced only records (D-067).
+   */
+  enforce: boolean;
 }
 
 function toState(data: RateLimit | undefined): RateLimitState | null {
@@ -38,16 +43,18 @@ function toDoc(state: RateLimitState): RateLimit {
 
 const refFor = (key: string) => db.doc(firestorePaths.rateLimit(key)) as DocumentReference<RateLimit>;
 
-/** Longest remaining lock over these keys, in ms; 0 when entry is open. */
+/** Longest remaining lock over the enforced keys, in ms; 0 when entry is open. */
 export async function remainingLockMs(keys: LimitKey[], nowMs: number): Promise<number> {
-  const snaps = await db.getAll(...keys.map((k) => refFor(k.key)));
+  const enforced = keys.filter((k) => k.enforce);
+  if (enforced.length === 0) return 0;
+  const snaps = await db.getAll(...enforced.map((k) => refFor(k.key)));
   return Math.max(0, ...snaps.map((snap) => lockRemainingMs(toState(snap.data() as RateLimit | undefined), nowMs)));
 }
 
 /**
  * Records one wrong attempt against every key in a transaction. Returns the
- * longest lock started by this attempt (0 if none). A space lock also writes
- * an audit log entry (AGENTS.md rule 15).
+ * longest lock started by this attempt on an enforced key (0 if none). A space
+ * lock also writes an audit log entry (AGENTS.md rule 15).
  */
 export async function recordWrongAttempt(keys: LimitKey[], nowMs: number): Promise<number> {
   return db.runTransaction(async (tx) => {
@@ -60,7 +67,7 @@ export async function recordWrongAttempt(keys: LimitKey[], nowMs: number): Promi
       const { state, lockedNow } = recordFailure(toState(snaps[i]?.data()), nowMs, limit.policy);
       tx.set(ref, toDoc(state));
       if (!lockedNow) return;
-      lockMs = Math.max(lockMs, limit.policy.lockMs);
+      if (limit.enforce) lockMs = Math.max(lockMs, limit.policy.lockMs);
       if (limit.spaceId) {
         const entry: Omit<AuditLogEntry, 'at'> & { at: FieldValue } = {
           spaceId: limit.spaceId,
