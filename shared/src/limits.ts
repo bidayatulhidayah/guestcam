@@ -10,6 +10,9 @@ const GB = 1024 * MB;
 /** Hard cap per file for every plan (storage rules enforce it too, pitfall U6). */
 export const MAX_FILE_BYTES = 4 * GB;
 
+/** A selection with a file larger than this asks once: upload now, or later on wifi? (D-063) */
+export const LARGE_FILE_PROMPT_BYTES = 50 * MB;
+
 /** Recording rules shared by Call the Couple and Video Wish (D-010, D-011). */
 export const RECORDING = {
   silenceBeepAfterMs: 45_000,

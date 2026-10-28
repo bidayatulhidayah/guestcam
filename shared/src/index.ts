@@ -6,6 +6,7 @@ export * from './entry';
 export * from './features';
 export * from './limits';
 export * from './location';
+export * from './media';
 export * from './paths';
 export * from './rateLimit';
 export * from './types';

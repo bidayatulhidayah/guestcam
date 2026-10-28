@@ -76,8 +76,8 @@ describe('guest selfie', () => {
 
 describe('everything else in Storage', () => {
   it('stays denied until its phase adds rules', async () => {
-    const path = storagePaths.mediaOriginal(ids.event, ids.guest, 'm1');
+    const path = `events/${ids.event}/folders/f1/${ids.guest}/original/m1`;
     await assertFails(uploadBytes(ref(storage(ids.guest), path), smallImage, jpeg));
-    await assertFails(getBytes(ref(storage(ids.owner), path)));
+    await assertFails(getBytes(ref(storage(ids.owner), `spaces/${ids.space}/theme/cover.jpg`)));
   });
 });
