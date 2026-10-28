@@ -48,6 +48,68 @@ Rules:
 
 ---
 
+## 2026-10-28 02:00 — Phase 1a follow-up: test space #00100, lock scope, safe seed
+
+- **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
+- **Version / branch:** v0.1 (+ unreleased) / `feat/phase-1a-entry` (PR #5)
+- **Phase:** Phase 1 (target v0.2), PR 1a
+- **Goal:** Hidayah's changes before seeding:
+  1. Test space is #00100, which she reserved for testing.
+  2. Document the Google Cloud CLI as a non-conda tool.
+  3. `seed:project` must create only #00100 and its event, never overwrite, and never touch #00000 or #10000+.
+  4. The space-wide wrong-code lock must block only typed codes; QR links keep working under the device and IP limits.
+
+  Then seed `guestcam-2026` and show the test link and code in the terminal only.
+
+### What changed and why
+- `seed:project`:
+  - Creates only the four documents of #00100 (space, publicIds entry, event, event access), all with `create()`, so nothing can be overwritten.
+  - Stops if #00100 exists, and refuses numbers outside 00002-09999.
+  - No longer writes `counters/spaces` or `catalog/current`.
+- `joinEvent`: the space lock is enforced only when no event slug is sent (the plain code screen). Wrong codes with a slug still count toward the space limit and its audit entry. `rateLimits.ts` gained an `enforce` flag per key.
+- Tests: replaced the space-lock test with three:
+  - typed codes are blocked after 300 wrong codes;
+  - QR links keep joining during a lock;
+  - wrong QR codes still trip the lock and its audit entry.
+- Docs: `new-computer.md` and an `environment.yml` comment say the Google Cloud CLI comes from Google's Windows installer, not conda. Memory D-067 to D-069; ADR-0007 amendment.
+
+### Files touched
+| File | Change |
+| --- | --- |
+| `functions/src/access/joinEvent.ts`, `functions/src/access/rateLimits.ts` | space lock scope, `enforce` flag |
+| `rules-tests/tests/functions-access.test.ts` | three space-lock tests |
+| `scripts/seed-project.ts` | create-only #00100 |
+| `docs/setup/new-computer.md`, `environment.yml` | gcloud as a non-conda tool |
+| `docs/ai/memory.md`, `docs/decisions/0007-guest-access-through-callables.md`, `docs/ai/worklog.md` | D-067 to D-069, amendment, this entry |
+
+### Commands run and results
+| Command | Result |
+| --- | --- |
+| `npm test` (twice in a row) | 44 + 8 + 42 passed both times; ports freed before and after |
+| `firebase deploy --only functions:joinEvent` | updated in asia-southeast1 |
+| `npm run seed:project -- --project guestcam-2026` | created #00100 (internal) with event `tunang`; link and code printed to the terminal only |
+| Same command again | "already exists. Stopped; nothing was written." |
+| Headless Chrome on the preview with the test QR link | joined, address cleaned to `/s/…/tunang`, welcome shows "Pasangan Ujian"; no console errors (this created one anonymous test member in #00100) |
+
+### Decisions
+- D-067 space lock scope (supersedes the lock part of D-058), D-068 safe live seed, D-069 gcloud outside conda.
+
+### Problems, risks, open questions
+- One `npm test` run failed all 12 callable tests at once while every rules test passed; the next three runs were clean. The output wasn't kept, so the cause is unknown (possibly a slow Functions emulator start). Watch for it again.
+- D-067 trade-off: any caller can send a slug, so per-slug guessing is bounded only by the device and IP limits until App Check (Phase 5).
+- The seed prints links on `guestcam-2026.web.app` (the live channel), which doesn't have this app yet. Test on the preview channel with the same path.
+
+### Next steps
+- [ ] Hidayah: phone checklist on the preview with the #00100 test link (from the terminal), then review and merge PR #5
+- [ ] PR 1b: Snapshot, Upload from Gallery, queue, media records, Storage rules, upload and delete triggers
+
+### Commits
+- `e9502a0` chore(seed): use internal test space #00100 for the real project
+- `a52e4af` security(access): space lock blocks only typed codes; create-only test seed
+- (this commit) docs: log the #00100 seed and lock-scope follow-up
+
+---
+
 ## 2026-10-28 00:30 — Phase 1a: entry, identity, menu
 
 - **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
