@@ -137,6 +137,22 @@ describe('creating media docs', () => {
   });
 });
 
+describe('checking before creating (upload queue retries, pitfall U1)', () => {
+  it('a member may see that an item does not exist yet', async () => {
+    await assertSucceeds(getDoc(mediaDoc(ids.guest)));
+  });
+
+  it('non-members get nothing, not even that', async () => {
+    await assertFails(getDoc(mediaDoc(ids.stranger)));
+    await assertFails(getDoc(mediaDoc(null)));
+  });
+
+  it('once it exists, another guest still cannot read it', async () => {
+    await seedMedia(env, ids.guest);
+    await assertFails(getDoc(mediaDoc(ids.otherGuest)));
+  });
+});
+
 describe('reading media docs', () => {
   beforeEach(async () => {
     await seedMedia(env, ids.guest);

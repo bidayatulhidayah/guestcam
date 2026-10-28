@@ -115,6 +115,10 @@ service cloud.firestore {
       // so only the owner and space owners can read items (public reads
       // arrive with the gallery lock in Phase 3, pitfall P3).
       match /media/{mediaId} {
+        // A member may learn that an item does NOT exist yet: the upload queue
+        // checks before creating, so a retry never duplicates (pitfall U1).
+        // Ids are random UUIDs, so this reveals nothing.
+        allow get: if resource == null && isMember(eventId);
         allow read: if (signedIn() && resource.data.ownerUid == request.auth.uid)
           || isSpaceOwner(resource.data.spaceId);
         allow create: if isMember(eventId) && validMediaCreate(eventId, mediaId);
