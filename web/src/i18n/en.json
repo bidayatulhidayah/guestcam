@@ -5,6 +5,12 @@
     "switchLabel": "Switch to Malay",
     "switchTo": "Bahasa Melayu"
   },
+  "common": {
+    "loading": "Loading...",
+    "retry": "Try again",
+    "offline": "No internet connection. Check your connection, then try again.",
+    "error": "Something went wrong. Try again in a moment."
+  },
   "footer": {
     "copyright": "© {{year}} {{owner}}. All rights reserved.",
     "version": "Version {{version}}",
@@ -13,58 +19,80 @@
   },
   "placeholder": {
     "note": "Placeholder page. It will be built in a later phase.",
-    "otherLanguage": "In Malay:",
-    "space": "Space",
-    "permanentLink": "Permanent link",
-    "alias": "Short name",
-    "eventSlug": "Event",
-    "code": "Code",
-    "noCode": "No code",
-    "firebaseConnecting": "Connecting to the Firebase emulators...",
-    "firebaseConnected": "Firebase emulators connected. Guest ID: {{uid}}",
-    "firebaseError": "Cannot reach the Firebase emulators. Run npm run emulators."
+    "otherLanguage": "In Malay:"
+  },
+  "home": {
+    "title": "Welcome",
+    "body": "Scan the QR code on your invitation card to join the event."
+  },
+  "entry": {
+    "codeTitle": "Enter the event code",
+    "codeBody": "The 4-character code is on your invitation card, under the QR code.",
+    "codeLabel": "Event code",
+    "submit": "Enter",
+    "checking": "Checking the code...",
+    "wrongCode": "That code is not right. Try again.",
+    "invalidCode": "The code has 4 characters, for example K7Q2.",
+    "tooManyTries": "Too many tries. Try again in {{minutes}} minutes.",
+    "joining": "Opening the event...",
+    "aliasInactiveTitle": "Link not active",
+    "aliasInactiveBody": "This link is not active. Scan the QR code on your card or log in."
+  },
+  "welcome": {
+    "nameLabel": "Your name",
+    "nameHint": "The couple will see this name with your photos and wishes.",
+    "nameRequired": "Please write your name.",
+    "continue": "Continue"
+  },
+  "selfie": {
+    "title": "Take a selfie?",
+    "body": "Your selfie is shown next to the photos you share publicly.",
+    "take": "Take a selfie",
+    "use": "Use this photo",
+    "retake": "Take again",
+    "skip": "Skip",
+    "preview": "Your selfie",
+    "failed": "That photo could not be opened. Try again."
+  },
+  "menu": {
+    "greeting": "Hi, {{name}}",
+    "snapshot": "Snapshot",
+    "galleryUpload": "Upload",
+    "videoWish": "Video Wish",
+    "boomerang": "Boomerang",
+    "voiceCall": "Call the Couple",
+    "textWish": "Type a Wish",
+    "sharedFolder": "Shared Folder",
+    "gallery": "Gallery",
+    "comingSoon": "Coming soon",
+    "locked": "Locked",
+    "galleryLockedNotice": "Share one moment first to open the gallery."
+  },
+  "gallery": {
+    "title": "Gallery",
+    "soon": "The gallery will open soon."
+  },
+  "mine": {
+    "title": "My events",
+    "empty": "No events on this device yet. Scan the QR code on your invitation card."
   },
   "pages": {
-    "devIndex": {
-      "title": "Placeholder pages",
-      "body": "Pick a page to view."
-    },
-    "currentEvent": {
-      "title": "Current event"
-    },
-    "eventJoin": {
-      "title": "Join event"
-    },
-    "codeScreen": {
-      "title": "Enter the event code",
-      "body": "The code is on your invitation card."
-    },
-    "eventMenu": {
-      "title": "Event menu"
-    },
-    "gallery": {
-      "title": "Gallery"
-    },
-    "mine": {
-      "title": "My events"
-    },
     "login": {
       "title": "Log in"
     },
     "admin": {
       "title": "Dashboard"
     },
-    "aliasInactive": {
-      "title": "Link not active",
-      "body": "This link is not active. Scan the QR code on your card or log in."
-    },
     "notFound": {
       "title": "Page not found",
       "back": "Go to home"
     }
   },
-  "menu": {
-    "snapshot": "Snap",
-    "gallery": "Gallery"
+  "dev": {
+    "title": "Development page",
+    "body": "Links to the emulator test data.",
+    "firebaseConnecting": "Connecting to the Firebase emulators...",
+    "firebaseConnected": "Firebase emulators connected. Guest ID: {{uid}}",
+    "firebaseError": "Cannot reach the Firebase emulators. Run npm run emulators."
   }
 }

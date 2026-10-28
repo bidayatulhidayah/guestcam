@@ -1,9 +1,44 @@
 rules_version = '2';
 
-// Phase 0: deny everything. Real rules arrive with uploads (Phase 1),
-// with tests in rules-tests/ in the same commit (AGENTS.md rule 13).
+// Storage rules. Every change needs tests in rules-tests/ in the same commit
+// (AGENTS.md rule 13). Phase 1a: the guest selfie. Media originals arrive in 1b.
 service firebase.storage {
   match /b/{bucket}/o {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isMember(eventId) {
+      return signedIn()
+        && firestore.exists(/databases/(default)/documents/events/$(eventId)/members/$(request.auth.uid));
+    }
+
+    // Space owners, looked up through the event (two Firestore reads). A
+    // missing host doc makes the get() fail, which denies.
+    function isEventSpaceOwner(eventId) {
+      return signedIn()
+        && (request.auth.token.get('superadmin', false) == true
+          || firestore.get(/databases/(default)/documents/spaces/$(
+              firestore.get(/databases/(default)/documents/events/$(eventId)).data.spaceId
+            )/hosts/$(request.auth.uid)).data.role == 'owner');
+    }
+
+    // Guest profile selfie: never an upload, never in a gallery.
+    // Retaking a selfie replaces the file, so writes are allowed for the owner.
+    match /events/{eventId}/guests/{uid}/{fileName} {
+      allow read: if (signedIn() && request.auth.uid == uid) || isEventSpaceOwner(eventId);
+      allow write: if signedIn()
+        && request.auth.uid == uid
+        && fileName.matches('selfie[.](jpg|jpeg|png|webp)')
+        && request.resource != null
+        && request.resource.size < 15 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp)')
+        && isMember(eventId);
+      allow delete: if false;
+    }
+
+    // Everything else: denied until its phase adds rules.
     match /{allPaths=**} {
       allow read, write: if false;
     }

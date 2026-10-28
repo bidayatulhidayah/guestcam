@@ -1,18 +1,19 @@
-import { isValidEventSlug } from '@guestcam/shared';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router';
-import { InfoRow, PlaceholderPage } from '../../components/PlaceholderPage';
-import { CodeScreenPage } from '../entry/CodeScreenPage';
+import { Screen } from '../../components/ui';
+import { useEvent } from '../entry/EventContext';
+import { readGalleryUnlocked } from '../entry/eventStore';
 
-/** `.../:eventSlug/gallery`: lock and reveal rules apply (Phase 3). */
+/**
+ * `.../:eventSlug/gallery`. Locked until the guest's first upload; the real
+ * gallery (and its lock in security rules, pitfall P3) arrives in Phase 3.
+ */
 export function GalleryPage() {
   const { t } = useTranslation();
-  const { eventSlug = '' } = useParams();
-  if (!isValidEventSlug(eventSlug.toLowerCase())) return <CodeScreenPage />;
-
+  const event = useEvent();
+  const unlocked = readGalleryUnlocked(event.eventId);
   return (
-    <PlaceholderPage pageKey="gallery">
-      <InfoRow label={t('placeholder.eventSlug')} value={eventSlug.toLowerCase()} />
-    </PlaceholderPage>
+    <Screen title={t('gallery.title')}>
+      <p>{unlocked ? t('gallery.soon') : t('menu.galleryLockedNotice')}</p>
+    </Screen>
   );
 }

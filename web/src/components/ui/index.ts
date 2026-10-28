@@ -1,4 +1,6 @@
 export { Button, type ButtonProps } from './Button';
-export { Screen, type ScreenProps } from './Screen';
-export { Tile, type TileProps } from './Tile';
+export { Icon, type IconName } from './Icon';
 export { LanguageToggle } from './LanguageToggle';
+export { Screen, type ScreenProps } from './Screen';
+export { TextField, type TextFieldProps } from './TextField';
+export { Tile, type TileProps } from './Tile';

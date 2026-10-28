@@ -48,6 +48,147 @@ Rules:
 
 ---
 
+## 2026-10-28 02:00 — Phase 1a follow-up: test space #00100, lock scope, safe seed
+
+- **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
+- **Version / branch:** v0.1 (+ unreleased) / `feat/phase-1a-entry` (PR #5)
+- **Phase:** Phase 1 (target v0.2), PR 1a
+- **Goal:** Hidayah's changes before seeding:
+  1. Test space is #00100, which she reserved for testing.
+  2. Document the Google Cloud CLI as a non-conda tool.
+  3. `seed:project` must create only #00100 and its event, never overwrite, and never touch #00000 or #10000+.
+  4. The space-wide wrong-code lock must block only typed codes; QR links keep working under the device and IP limits.
+
+  Then seed `guestcam-2026` and show the test link and code in the terminal only.
+
+### What changed and why
+- `seed:project`:
+  - Creates only the four documents of #00100 (space, publicIds entry, event, event access), all with `create()`, so nothing can be overwritten.
+  - Stops if #00100 exists, and refuses numbers outside 00002-09999.
+  - No longer writes `counters/spaces` or `catalog/current`.
+- `joinEvent`: the space lock is enforced only when no event slug is sent (the plain code screen). Wrong codes with a slug still count toward the space limit and its audit entry. `rateLimits.ts` gained an `enforce` flag per key.
+- Tests: replaced the space-lock test with three:
+  - typed codes are blocked after 300 wrong codes;
+  - QR links keep joining during a lock;
+  - wrong QR codes still trip the lock and its audit entry.
+- Docs: `new-computer.md` and an `environment.yml` comment say the Google Cloud CLI comes from Google's Windows installer, not conda. Memory D-067 to D-069; ADR-0007 amendment.
+
+### Files touched
+| File | Change |
+| --- | --- |
+| `functions/src/access/joinEvent.ts`, `functions/src/access/rateLimits.ts` | space lock scope, `enforce` flag |
+| `rules-tests/tests/functions-access.test.ts` | three space-lock tests |
+| `scripts/seed-project.ts` | create-only #00100 |
+| `docs/setup/new-computer.md`, `environment.yml` | gcloud as a non-conda tool |
+| `docs/ai/memory.md`, `docs/decisions/0007-guest-access-through-callables.md`, `docs/ai/worklog.md` | D-067 to D-069, amendment, this entry |
+
+### Commands run and results
+| Command | Result |
+| --- | --- |
+| `npm test` (twice in a row) | 44 + 8 + 42 passed both times; ports freed before and after |
+| `firebase deploy --only functions:joinEvent` | updated in asia-southeast1 |
+| `npm run seed:project -- --project guestcam-2026` | created #00100 (internal) with event `tunang`; link and code printed to the terminal only |
+| Same command again | "already exists. Stopped; nothing was written." |
+| Headless Chrome on the preview with the test QR link | joined, address cleaned to `/s/…/tunang`, welcome shows "Pasangan Ujian"; no console errors (this created one anonymous test member in #00100) |
+
+### Decisions
+- D-067 space lock scope (supersedes the lock part of D-058), D-068 safe live seed, D-069 gcloud outside conda.
+
+### Problems, risks, open questions
+- One `npm test` run failed all 12 callable tests at once while every rules test passed; the next three runs were clean. The output wasn't kept, so the cause is unknown (possibly a slow Functions emulator start). Watch for it again.
+- D-067 trade-off: any caller can send a slug, so per-slug guessing is bounded only by the device and IP limits until App Check (Phase 5).
+- The seed prints links on `guestcam-2026.web.app` (the live channel), which doesn't have this app yet. Test on the preview channel with the same path.
+
+### Next steps
+- [ ] Hidayah: phone checklist on the preview with the #00100 test link (from the terminal), then review and merge PR #5
+- [ ] PR 1b: Snapshot, Upload from Gallery, queue, media records, Storage rules, upload and delete triggers
+
+### Commits
+- `e9502a0` chore(seed): use internal test space #00100 for the real project
+- `a52e4af` security(access): space lock blocks only typed codes; create-only test seed
+- (this commit) docs: log the #00100 seed and lock-scope follow-up
+
+---
+
+## 2026-10-28 00:30 — Phase 1a: entry, identity, menu
+
+- **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
+- **Version / branch:** v0.1 (+ unreleased) / `feat/phase-1a-entry`
+- **Phase:** Phase 1 (target v0.2), PR 1a of 3
+- **Goal:** Plan approved by Hidayah with changes (per-space wrong-code limit with audit entry; codes unique within a space; server deletes files when a media doc is deleted; one large-file question per selection at 50 MB; note stale "queued" cleanup for Phase 3). Build 1a: entry, identity, menu, rules for spaces/events/guests; deploy rules, indexes and functions to `guestcam-2026` and seed test space #10001.
+
+### What changed and why
+- **shared:**
+  - Callable contracts (`EventView`, resolve/join requests and responses).
+  - `pickCurrentEvent`, `mergeTheme`, unique code and public id generation, rate-limit policies and `recordFailure`.
+  - Types: `Guest.selfiePath`, nullable `lastVisibility`, `Media.sortAt`, `RateLimit`, audit action `spaceCodeEntryLocked`.
+- **Rules (ADR-0007):**
+  - Guests never read `spaces/*`. Events are readable by members and space owners. Codes and members are server-written.
+  - Guest profiles: only that member writes them, with validated fields; `galleryUnlocked` and `firstUploadAt` are server-only.
+  - Storage: the selfie (own path, image under 15 MB, members only; readable by the guest and space owners). Everything else stays denied.
+- **Functions:**
+  - `joinEvent` (constant-time code check, linked events, device/IP/space limits, audit entry on a space lock).
+  - `resolveCurrentEvent` (current event among joined events, otherwise `codeRequired`).
+- **Web:**
+  - React Router in declarative mode; Firestore Lite; Firebase core preloaded.
+  - Code screen; join with `replaceState`; cached event view; theme accent.
+  - Welcome/name → selfie (front camera, Langkau) → menu, with the profile remembered per space and synced to the server when online.
+  - Menu from effective features ("Akan datang" until 1b, Galeri locked); `/mine`; alias inactive page; production root page; dev index for the dev server only.
+- **Storage adapter:** real resumable `uploadFile` and a new `fileExists` (pitfall U1).
+- **Scripts:**
+  - `seed:project` (real project, code printed to the terminal only) and `deploy:backend`.
+  - The dev seed checks that codes are unique within each space.
+  - `test:rules` renamed to `test:emulators`, which now also covers callable-function tests.
+- **Deploy blocker fixed:** `functions/package.json` listed `@guestcam/shared`, which Cloud Build would try to download from npm. It's removed; the code is bundled anyway.
+- `npm dedupe`: two `@firebase/app` patch versions broke the functions client in tests.
+
+### Files touched
+| File | Change |
+| --- | --- |
+| `shared/src/{api,codes,currentEvent,rateLimit}.ts`, `limits.ts`, `types.ts`, `paths.ts`, `tests/access.test.ts` | added/modified |
+| `firestore.rules`, `storage.rules`, `rules-tests/tests/*` | rules for 1a; 30 rules tests + 10 callable tests; deny-all test replaced |
+| `functions/src/access/*`, `functions/src/firebase.ts`, `functions/src/index.ts`, `functions/package.json` | added/modified |
+| `web/src/**` | entry, onboarding, menu, gallery placeholder, firebase/storage libs, device stores, icons, i18n |
+| `scripts/seed-project.ts`, `scripts/seed-dev.ts`, `package.json`, `package-lock.json` | added/modified |
+| `docs/decisions/0007-guest-access-through-callables.md`, `docs/decisions/README.md` | ADR-0007 |
+| `AGENTS.md`, `CHANGELOG.md`, `docs/setup/new-computer.md`, `docs/ai/memory.md`, `docs/ai/worklog.md`, `docs/ai/prompts/phase-1-mvp.md` | modified/added |
+
+### Commands run and results
+| Command | Result |
+| --- | --- |
+| `npm run test:unit` | shared 44, web 8 passed |
+| `npm run test:emulators` | 40 passed (30 rules, 10 callable end-to-end) |
+| `npm run typecheck` | clean |
+| `vite build` | first screen 142 KB gzipped (main 106.6 + Firebase core 33.7 + loaders 1.5); profile sync chunk 39.6 KB loads after onboarding |
+| Local smoke test in the emulators (headless Chrome, 390 px) | 17/17: QR join removes the code, welcome, empty name refused, selfie skip, menu, locked gallery hint, guest doc written, space link reopens, wrong code → neutral code screen without names, typed code joins, alias inactive, malformed id not found |
+| `firebase deploy --only firestore:rules,firestore:indexes,storage,functions` | rules, indexes, `ping`, `resolveCurrentEvent`, `joinEvent` (Node 24, asia-southeast1) created; APIs enabled automatically; artifact cleanup policy set to 1 day |
+| Live checks | `ping` ok; unauthenticated `joinEvent` refused; preview `/s/<unknown>` → code screen → wrong code answered by the live function; no console errors |
+| `npm run deploy:preview` | https://guestcam-2026--preview-s6g4gj5a.web.app (expires 2026-11-04) |
+
+### Decisions
+- D-057 to D-064 in memory.md; ADR-0007.
+
+### Problems, risks, open questions
+- **Seeding the real project is blocked on credentials.** The Admin SDK needs Google Application Default Credentials. conda-forge has no `gcloud`, and the Firebase CLI login can't be used by scripts. Options are in memory.md's open questions.
+- Space #10001 is the friend's engagement number (D-042). Update: Hidayah moved the test space to #00100 (plan `internal`), so #10001 stays free (D-066).
+- A space-wide code lock could block real guests for 15 minutes; hosts need an "unlock code entry" action (Phase 4).
+- **Phase 3 task (Hidayah, 2026-10-27):** a scheduled cleanup of stale `status: "queued"` media docs whose upload never arrived (pitfall U2).
+- The selfie is uploaded when the menu opens. If that fails, it retries on the next menu open; it isn't in the upload queue (1b could add it).
+
+### Next steps
+- [ ] Hidayah: set up Google Cloud CLI credentials (D-065); then Claude seeds #00100 and prints the test link
+- [ ] Hidayah: phone checklist on the preview (iPhone Safari, iPhone via WhatsApp, Android Chrome), review and merge PR 1a
+- [ ] PR 1b: Snapshot, Upload from Gallery, queue, media records, Storage rules, upload and delete triggers
+- [ ] PR 1c: privacy step, My Uploads, device handling
+
+### Commits
+- `6e3260c` security(rules): add access rules for spaces, events, members and guests
+- `e3f81fb` feat(access): add resolveCurrentEvent and joinEvent callables
+- `18d8c70` feat(entry): join events by QR or code, name and selfie, event menu
+- (this commit) docs: record Phase 1a decisions, ADR-0007 and commands
+
+---
+
 ## 2026-10-27 02:00 — Emulator cleanup script
 
 - **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows

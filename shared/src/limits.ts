@@ -36,12 +36,33 @@ export const EVENT_DEFAULTS = {
 
 export const FOLDER = { pinLength: 6, idLength: 10, emptyFolderDeleteAfterHours: 24 } as const;
 
-export const JOIN_RATE_LIMITS = {
-  eventCodeTriesPerDevice: 5,
-  folderPinTriesPerDevicePer15Min: 5,
-  folderPinTriesPerIpPerHour: 20,
-  folderPinTriesPerFolderPerDay: 50,
-} as const;
+const MINUTE = 60_000;
+
+export interface RateLimitPolicy {
+  /** Wrong attempts allowed inside one window. */
+  maxFailures: number;
+  windowMs: number;
+  /** How long entry stays locked once the limit is reached. */
+  lockMs: number;
+}
+
+/**
+ * Wrong event codes (`joinEvent`). The IP limit is generous because a whole
+ * venue shares one IP on its wifi; the space limit stops a slow, distributed
+ * guess and is written to the audit log when it trips.
+ */
+export const EVENT_CODE_RATE_LIMITS = {
+  device: { maxFailures: 5, windowMs: 15 * MINUTE, lockMs: 5 * MINUTE },
+  ip: { maxFailures: 100, windowMs: 15 * MINUTE, lockMs: 15 * MINUTE },
+  space: { maxFailures: 300, windowMs: 60 * MINUTE, lockMs: 15 * MINUTE },
+} as const satisfies Record<string, RateLimitPolicy>;
+
+/** Shared folder PINs (architecture.md Part 5, Phase 3). */
+export const FOLDER_PIN_RATE_LIMITS = {
+  device: { maxFailures: 5, windowMs: 15 * MINUTE, lockMs: 15 * MINUTE },
+  ip: { maxFailures: 20, windowMs: 60 * MINUTE, lockMs: 60 * MINUTE },
+  folder: { maxFailures: 50, windowMs: 24 * 60 * MINUTE, lockMs: 24 * 60 * MINUTE },
+} as const satisfies Record<string, RateLimitPolicy>;
 
 /** `null` means no limit from the plan (the package or host settings may still set one). */
 export interface PlanLimits {

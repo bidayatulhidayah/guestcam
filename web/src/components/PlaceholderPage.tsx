@@ -25,12 +25,3 @@ export function PlaceholderPage({ pageKey, children }: PlaceholderPageProps) {
     </Screen>
   );
 }
-
-export function InfoRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between gap-4 border-b border-line py-2">
-      <span className="text-ink-2">{label}</span>
-      <span className="font-bold break-all">{value}</span>
-    </div>
-  );
-}

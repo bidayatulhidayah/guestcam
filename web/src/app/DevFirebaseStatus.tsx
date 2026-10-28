@@ -10,8 +10,9 @@ export function DevFirebaseStatus() {
 
   useEffect(() => {
     let active = true;
-    import('../lib/firebase')
-      .then(({ connectFirebase }) => connectFirebase())
+    import('../lib/firebase/load')
+      .then(({ loadFirebase }) => loadFirebase())
+      .then(({ ensureAnonymousUser }) => ensureAnonymousUser())
       .then(({ uid }) => active && setStatus({ state: 'connected', uid }))
       .catch((error: unknown) => {
         console.error('Firebase emulator connection failed', error);
@@ -24,9 +25,9 @@ export function DevFirebaseStatus() {
 
   return (
     <p role="status" className="rounded-card bg-paper-2 p-4 text-caption break-all">
-      {status.state === 'connecting' && t('placeholder.firebaseConnecting')}
-      {status.state === 'connected' && t('placeholder.firebaseConnected', { uid: status.uid })}
-      {status.state === 'error' && t('placeholder.firebaseError')}
+      {status.state === 'connecting' && t('dev.firebaseConnecting')}
+      {status.state === 'connected' && t('dev.firebaseConnected', { uid: status.uid })}
+      {status.state === 'error' && t('dev.firebaseError')}
     </p>
   );
 }

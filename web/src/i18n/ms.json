@@ -5,6 +5,12 @@
     "switchLabel": "Tukar ke bahasa Inggeris",
     "switchTo": "English"
   },
+  "common": {
+    "loading": "Sedang dimuatkan...",
+    "retry": "Cuba lagi",
+    "offline": "Tiada sambungan internet. Semak sambungan anda, kemudian cuba lagi.",
+    "error": "Ada masalah. Cuba lagi sebentar."
+  },
   "footer": {
     "copyright": "© {{year}} {{owner}}. Hak cipta terpelihara.",
     "version": "Versi {{version}}",
@@ -13,58 +19,80 @@
   },
   "placeholder": {
     "note": "Halaman sementara. Akan dibina dalam fasa seterusnya.",
-    "otherLanguage": "Dalam bahasa Inggeris:",
-    "space": "Ruang",
-    "permanentLink": "Pautan kekal",
-    "alias": "Nama ringkas",
-    "eventSlug": "Majlis",
-    "code": "Kod",
-    "noCode": "Tiada kod",
-    "firebaseConnecting": "Menyambung ke emulator Firebase...",
-    "firebaseConnected": "Emulator Firebase bersambung. ID tetamu: {{uid}}",
-    "firebaseError": "Tidak dapat sambung ke emulator Firebase. Jalankan npm run emulators."
+    "otherLanguage": "Dalam bahasa Inggeris:"
+  },
+  "home": {
+    "title": "Selamat datang",
+    "body": "Imbas kod QR pada kad jemputan untuk masuk ke majlis."
+  },
+  "entry": {
+    "codeTitle": "Masukkan kod majlis",
+    "codeBody": "Kod 4 aksara ada pada kad jemputan, di bawah kod QR.",
+    "codeLabel": "Kod majlis",
+    "submit": "Masuk",
+    "checking": "Menyemak kod...",
+    "wrongCode": "Kod tidak betul. Cuba lagi.",
+    "invalidCode": "Kod ada 4 aksara, contohnya K7Q2.",
+    "tooManyTries": "Terlalu banyak cubaan. Cuba lagi dalam {{minutes}} minit.",
+    "joining": "Membuka majlis...",
+    "aliasInactiveTitle": "Pautan tidak aktif",
+    "aliasInactiveBody": "Pautan ini tidak aktif. Imbas kod QR pada kad anda atau log masuk."
+  },
+  "welcome": {
+    "nameLabel": "Nama anda",
+    "nameHint": "Pengantin akan nampak nama ini pada gambar dan ucapan anda.",
+    "nameRequired": "Sila tulis nama anda.",
+    "continue": "Teruskan"
+  },
+  "selfie": {
+    "title": "Ambil swafoto?",
+    "body": "Swafoto dipaparkan di sebelah gambar yang anda kongsi secara awam.",
+    "take": "Ambil swafoto",
+    "use": "Guna gambar ini",
+    "retake": "Ambil semula",
+    "skip": "Langkau",
+    "preview": "Swafoto anda",
+    "failed": "Gambar tidak dapat dibuka. Cuba lagi."
+  },
+  "menu": {
+    "greeting": "Hai, {{name}}",
+    "snapshot": "Snap Gambar",
+    "galleryUpload": "Muat Naik",
+    "videoWish": "Ucapan Video",
+    "boomerang": "Boomerang",
+    "voiceCall": "Telefon Pengantin",
+    "textWish": "Tulis Ucapan",
+    "sharedFolder": "Folder Kongsi",
+    "gallery": "Galeri",
+    "comingSoon": "Akan datang",
+    "locked": "Berkunci",
+    "galleryLockedNotice": "Kongsi satu detik dahulu untuk buka galeri."
+  },
+  "gallery": {
+    "title": "Galeri",
+    "soon": "Galeri akan dibuka tidak lama lagi."
+  },
+  "mine": {
+    "title": "Majlis saya",
+    "empty": "Belum ada majlis di peranti ini. Imbas kod QR pada kad jemputan."
   },
   "pages": {
-    "devIndex": {
-      "title": "Halaman sementara",
-      "body": "Pilih halaman untuk dilihat."
-    },
-    "currentEvent": {
-      "title": "Majlis semasa"
-    },
-    "eventJoin": {
-      "title": "Masuk majlis"
-    },
-    "codeScreen": {
-      "title": "Masukkan kod majlis",
-      "body": "Kod ada pada kad jemputan anda."
-    },
-    "eventMenu": {
-      "title": "Menu majlis"
-    },
-    "gallery": {
-      "title": "Galeri"
-    },
-    "mine": {
-      "title": "Majlis saya"
-    },
     "login": {
       "title": "Log masuk"
     },
     "admin": {
       "title": "Papan pemuka"
     },
-    "aliasInactive": {
-      "title": "Pautan tidak aktif",
-      "body": "Pautan ini tidak aktif. Imbas kod QR pada kad anda atau log masuk."
-    },
     "notFound": {
       "title": "Halaman tidak dijumpai",
       "back": "Ke laman utama"
     }
   },
-  "menu": {
-    "snapshot": "Snap",
-    "gallery": "Galeri"
+  "dev": {
+    "title": "Halaman pembangunan",
+    "body": "Pautan ke data ujian emulator.",
+    "firebaseConnecting": "Menyambung ke emulator Firebase...",
+    "firebaseConnected": "Emulator Firebase bersambung. ID tetamu: {{uid}}",
+    "firebaseError": "Tidak dapat sambung ke emulator Firebase. Jalankan npm run emulators."
   }
 }
