@@ -12,6 +12,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 - Welcome screen with the couple's names and event title, then the guest's name and an optional selfie (big "Langkau" button). The name and selfie are remembered for the couple's other events on the same phone.
 - Event menu with the functions the couple chose; capture tiles say "Akan datang" until they are built, and Galeri stays locked until the guest's first upload.
 - "Majlis saya" lists the events joined on this phone; an event reopens instantly, even offline.
+- Snap Gambar: take a photo with the phone's own camera straight from the menu; the photo is saved on the phone before it is sent.
+- Muat Naik: send photos and videos from the phone gallery, several at once, any length up to 4 GB. A selection with a file over 50 MB asks once: upload now, or later on wifi.
+- Nothing is lost on bad internet: items wait on the phone, send one at a time (photos first), retry by themselves, and continue after the page is reloaded; the menu shows what is waiting, sending, or needs attention.
+- Galeri unlocks after the guest's first upload reaches the server.
 
 ## [0.1] - 2026-10-27
 
