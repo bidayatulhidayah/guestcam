@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PLANS, PLAN_LIMITS, MAX_FILE_BYTES } from '../src/limits';
-import { firestorePaths, isOriginalPath, storagePaths } from '../src/paths';
+import { derivedPrefixes, firestorePaths, isOriginalPath, parseOriginalPath, storagePaths } from '../src/paths';
 
 describe('paths', () => {
   it('builds firestore paths', () => {
@@ -20,6 +20,26 @@ describe('paths', () => {
     expect(isOriginalPath(storagePaths.mediaDerived('e1', 'u1', 'm1', 'thumb', 'webp'))).toBe(false);
     expect(isOriginalPath(storagePaths.folderDerived('e1', 'f1', 'u1', 'm1', 'display', 'webp'))).toBe(false);
     expect(isOriginalPath(storagePaths.guestSelfie('e1', 'u1', 'jpg'))).toBe(false);
+  });
+});
+
+describe('parseOriginalPath', () => {
+  it('splits event and folder originals, and nothing else', () => {
+    expect(parseOriginalPath(storagePaths.mediaOriginal('e1', 'u1', 'm1'))).toEqual({
+      eventId: 'e1',
+      folderId: null,
+      uid: 'u1',
+      mediaId: 'm1',
+    });
+    expect(parseOriginalPath(storagePaths.folderOriginal('e1', 'f1', 'u1', 'm1'))).toMatchObject({ folderId: 'f1' });
+    expect(parseOriginalPath(storagePaths.mediaDerived('e1', 'u1', 'm1', 'thumb', 'webp'))).toBeNull();
+    expect(parseOriginalPath(storagePaths.guestSelfie('e1', 'u1', 'jpg'))).toBeNull();
+  });
+
+  it('derived prefixes cover every derived copy of an item', () => {
+    const prefixes = derivedPrefixes('e1', 'u1', 'm1');
+    expect(prefixes.some((p) => storagePaths.mediaDerived('e1', 'u1', 'm1', 'thumb', 'webp').startsWith(p))).toBe(true);
+    expect(prefixes.some((p) => storagePaths.mediaOriginal('e1', 'u1', 'm1').startsWith(p))).toBe(false);
   });
 });
 

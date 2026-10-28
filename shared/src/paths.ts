@@ -98,3 +98,27 @@ export const storagePaths = {
 export function isOriginalPath(path: string): boolean {
   return /^events\/[^/]+\/(?:media|folders\/[^/]+)\/[^/]+\/original\/[^/]+$/.test(path);
 }
+
+export interface ParsedOriginalPath {
+  eventId: string;
+  /** Set for shared-folder originals (Phase 3). */
+  folderId: string | null;
+  uid: string;
+  mediaId: string;
+}
+
+/** Splits an original's storage path into its ids; null for anything else. */
+export function parseOriginalPath(path: string): ParsedOriginalPath | null {
+  const match = /^events\/([^/]+)\/(?:media|folders\/([^/]+))\/([^/]+)\/original\/([^/]+)$/.exec(path);
+  if (!match) return null;
+  const [, eventId, folderId, uid, mediaId] = match;
+  if (!eventId || !uid || !mediaId) return null;
+  return { eventId, folderId: folderId ?? null, uid, mediaId };
+}
+
+/** Folder holding every derived copy of one item, e.g. `events/e/media/u/thumb/<id>`; used as a delete prefix. */
+export function derivedPrefixes(eventId: string, uid: string, mediaId: string): string[] {
+  return (['display', 'thumb', 'poster', 'decorated'] as const).map(
+    (variant) => `events/${seg(eventId)}/media/${seg(uid)}/${variant}/${seg(mediaId)}`,
+  );
+}
