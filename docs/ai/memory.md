@@ -140,6 +140,7 @@ Status: **Active** unless marked otherwise. "Why" is the reason at the time of t
 | D-062 | Deleting a media doc triggers a server function that deletes its files (original now, derived copies later); guests cannot delete or overwrite in Storage | Hidayah, 2026-10-27: Storage is create-only for guests |
 | D-063 | "Muat naik sekarang, atau nanti guna wifi?" asked once per selection (not per file) when the selection holds a file over 50 MB | Hidayah, 2026-10-27 |
 | D-064 | Phone testing uses a test space #10001 "Pasangan Ujian" in `guestcam-2026`, seeded by `npm run seed:project` with a random permanent id and code printed only to the terminal. #10001 is the friend's engagement number (D-042): rename/reuse it for the real engagement, or reassign before go-live | Hidayah approved seeding 10001 for Phase 1 tests |
+| D-065 | Admin scripts against the real project (`seed:project`) use Google Application Default Credentials from the Google Cloud CLI (`gcloud auth application-default login`); no service-account key files | Hidayah, 2026-10-28: no long-lived secrets on disk |
 
 ### Process
 
@@ -169,7 +170,6 @@ Status: **Active** unless marked otherwise. "Why" is the reason at the time of t
 
 | Question | Notes |
 | --- | --- |
-| Credentials for `seed:project` | The Admin SDK needs Google Application Default Credentials; options: Google Cloud SDK `gcloud auth application-default login` (recommended, no key file), a service-account key kept outside the repo, or creating the test space by hand. Awaiting Hidayah |
 | Space-wide code lock | A flood of wrong codes can block real guests for 15 min; hosts need an "unlock code entry" action (Phase 4) |
 | Final product name | Favourite Kenang; check domain, Instagram handle, MyIPO trademark |
 | Copyright footer owner line | Default "Hidayah" for now (D-054); per-event owner text still to design |

@@ -53,4 +53,9 @@ Everything the project needs is defined in files inside the repo, so a new compu
 - Use `npm ci` (not `npm install`) on a new computer: it installs exactly what the lock file says.
 - If you add a new system tool, add it to `environment.yml` and commit, so the next computer gets it too.
 - Function settings per project live in `functions/.env.<project-id>` (not committed), e.g. `functions/.env.guestcam-2026` with `PUBLIC_BASE_URL=https://guestcam-2026.web.app`. Copy `functions/.env.example`. Without it, deploys use an empty address.
-- `npm run seed:project` writes to the real project with the Firebase Admin SDK, which needs Google Application Default Credentials (the Firebase CLI login is not enough). Set them up once per computer as described in the Phase 1a work log entry; never commit a key file.
+- `npm run seed:project` writes to the real project with the Firebase Admin SDK, which needs Google Application Default Credentials (the Firebase CLI login is not enough). One-time setup per computer, no key file:
+  1. Install the Google Cloud CLI with Google's Windows installer (https://cloud.google.com/sdk/docs/install). conda-forge does not package it.
+  2. Open a new terminal and run `gcloud auth application-default login`; sign in with the Google account that owns the Firebase project.
+  3. Run `gcloud auth application-default set-quota-project guestcam-2026`.
+  4. Then: `npm run seed:project -- --project guestcam-2026`. The event code is printed to the terminal only; never paste it into docs, commits or chats.
+  Never create or commit a service-account key file.
