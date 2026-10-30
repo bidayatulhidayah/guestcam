@@ -48,6 +48,54 @@ Rules:
 
 ---
 
+## 2026-10-30 17:50 — Phase 1b backend deploy and live check
+
+- **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
+- **Version / branch:** v0.1 (+ unreleased) / `feat/phase-1b-queue` (PR #6)
+- **Phase:** Phase 1 (target v0.2), PR 1b of 3
+- **Goal:** Get the 1b backend live on `guestcam-2026`, update the preview, and check uploads end to end on the real project.
+
+### What changed and why
+- Hidayah ran `npm run deploy:backend -- --force` (Claude is not permitted to use `--force`). It took three tries:
+  1. "User code failed to load ... Timeout after 10000". Nothing was deployed. Claude measured the bundle: it loads in under 1 s, and a `--dry-run` deploy got past the same step, so this was a slow cold start on Windows, not our code.
+  2. Rules, indexes and the three callables deployed, but creating `onOriginalUploaded` and `onMediaDeleted` failed with first-time Eventarc permission errors ("Eventarc Service Agent", "storage.buckets.get denied").
+  3. About 5 minutes later the same command created both triggers. Deploy complete.
+- Claude deployed the preview channel with the 1b web build and ran a live check.
+- `docs/setup/new-computer.md`: troubleshooting notes for these three deploy errors.
+
+### Files touched
+| File | Change |
+| --- | --- |
+| `docs/setup/new-computer.md` | modified: deploy troubleshooting notes |
+| `docs/ai/memory.md` | modified: status (1b backend deployed) |
+| `docs/ai/worklog.md` | modified: this entry |
+
+### Commands run and results
+| Command | Result |
+| --- | --- |
+| `npm run deploy:backend -- --force` (Hidayah) | third run: rules, indexes, 2 new triggers created, 3 callables unchanged |
+| `firebase deploy --only functions --dry-run` | discovery fine; stops at the expected `--force` prompt |
+| `npm run deploy:preview` | preview channel updated, expires 2026-11-07 |
+| `npm run seed:project -- --project guestcam-2026` | #00100 exists, nothing written; links printed to the terminal only |
+| Live check on the preview (headless Chrome, test space #00100) | 6/6: QR link joins; menu with Snap Gambar and Muat Naik, gallery locked; camera photo saved; camera photo + gallery photo + video reach "3 dah dihantar"; gallery unlocks after the trigger; no page errors |
+| Read-only Admin SDK check of the test event | 3 media docs `uploaded` with `sortAt`, all 3 originals in Storage; only the new test guest has `galleryUnlocked: true` |
+
+### Decisions
+- None.
+
+### Problems, risks, open questions
+- The test event on `guestcam-2026` now holds 3 small test uploads from the live check. They are harmless test data in the internal space and can be deleted from My Uploads once 1c ships, which also exercises `onMediaDeleted` live.
+- `onMediaDeleted` has not run live yet (no delete UI until 1c).
+
+### Next steps
+- [ ] Hidayah: phone checklist on the preview (Android Chrome now; iPhone Safari and WhatsApp when available), then review and squash-merge PR #6
+- [ ] PR 1c: privacy step, My Uploads, device handling
+
+### Commits
+- (this commit) docs: record the Phase 1b deploy and live check
+
+---
+
 ## 2026-10-29 01:00 — Phase 1b: Snapshot, Upload from Gallery, upload queue, media records
 
 - **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows

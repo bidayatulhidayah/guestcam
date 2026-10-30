@@ -61,3 +61,7 @@ Everything the project needs is defined in files inside the repo, so a new compu
   3. Run `gcloud auth application-default set-quota-project guestcam-2026`.
   4. Then: `npm run seed:project -- --project guestcam-2026`. It only creates test space #00100 and its test event, never overwrites, and stops if #00100 already exists. The event code is printed to the terminal only; never paste it into docs, commits or chats.
   Never create or commit a service-account key file.
+- `npm run deploy:backend` troubleshooting (seen on the 1b deploy, 2026-10-30):
+  - "User code failed to load ... Timeout after 10000": the CLI gives the functions code 10 seconds to start locally, and a cold Windows start can be slower. Run it again; if it repeats, `set FUNCTIONS_DISCOVERY_TIMEOUT=60` (seconds, in the same terminal) first.
+  - "Permission denied while using the Eventarc Service Agent" or "storage.buckets.get denied" on the first deploy of a trigger function: Google is still setting up permissions for a new project. Wait about 5 minutes and run the same command again.
+  - "Pass the --force option": new triggers that retry on failure need `npm run deploy:backend -- --force` once to accept the retry policy.

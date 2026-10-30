@@ -38,9 +38,9 @@ The couple (hosts) manage everything from an admin dashboard: themes, codes, mod
 | Item | State |
 | --- | --- |
 | Version | **0.1** released 2026-10-27 (tag `v0.1`, Phase 0 skeleton). Not deployed to production (only the `preview` channel) |
-| Phase | Phase 1 (target v0.2) in progress: 1a (entry, identity, menu) merged; 1b (capture, queue, media records, triggers) PR open, backend deploy pending; 1c (privacy step, My Uploads, device handling) next |
+| Phase | Phase 1 (target v0.2) in progress: 1a (entry, identity, menu) merged; 1b (capture, queue, media records, triggers) PR #6 open, backend deployed 2026-10-30 and checked live on the preview; 1c (privacy step, My Uploads, device handling) next |
 | Repo | GitHub, private: `bidayatulhidayah/guestcam` |
-| Firebase | Project `guestcam-2026`; Firestore and Storage confirmed in `asia-southeast1` (Singapore), 2026-10-27; emulators use the `demo-guestcam` demo project. 2026-10-28: Firestore/Storage rules, indexes and functions (`ping`, `resolveCurrentEvent`, `joinEvent`, Node 24) deployed with Hidayah's approval; artifact cleanup policy 1 day. Hosting only on the `preview` channel. No real users yet |
+| Firebase | Project `guestcam-2026`; Firestore and Storage confirmed in `asia-southeast1` (Singapore), 2026-10-27; emulators use the `demo-guestcam` demo project. 2026-10-28: Firestore/Storage rules, indexes and functions (`ping`, `resolveCurrentEvent`, `joinEvent`, Node 24) deployed with Hidayah's approval; artifact cleanup policy 1 day. 2026-10-30: 1b rules, indexes and the triggers `onOriginalUploaded` and `onMediaDeleted` (retry on failure) deployed by Hidayah with `--force`. Hosting only on the `preview` channel. No real users yet |
 | Runtime | Node 24 (D-055) |
 | Hosting | Free Firebase domain (`guestcam-2026.web.app`) until after the friend's engagement; Phase 0 preview channel `preview` |
 | Product name | Not final. Codename `guestcam`; working favourite **Kenang** (`kenang.app`). Shortlist in the spec |
