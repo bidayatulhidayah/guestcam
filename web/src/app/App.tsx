@@ -6,7 +6,6 @@ import { MyEventsPage } from '../features/entry/MyEventsPage';
 import { SpaceHomePage } from '../features/entry/SpaceHomePage';
 import { SpaceLayout } from '../features/entry/SpaceLayout';
 import { LoadingScreen } from '../features/entry/StatusScreens';
-import { loadFirebase } from '../lib/firebase/load';
 import { HomePage } from './HomePage';
 import { NotFoundPage } from './NotFoundPage';
 import { RootLayout } from './RootLayout';
@@ -18,9 +17,6 @@ const AdminPage = lazy(() => import('../features/admin/AdminPage').then((m) => (
 const DevIndexPage = import.meta.env.DEV
   ? lazy(() => import('./DevIndexPage').then((m) => ({ default: m.DevIndexPage })))
   : null;
-
-// Fetch the Firebase core chunk in parallel with the first screen.
-void loadFirebase().catch(() => undefined);
 
 const later = (page: ReactNode) => <Suspense fallback={<LoadingScreen />}>{page}</Suspense>;
 
