@@ -2,6 +2,7 @@ import type { CaptureFeatureKey, FeatureKey } from '@guestcam/shared';
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon, Screen, Tile, type IconName } from '../../components/ui';
+import { allowUpdateOnReturn, holdUpdates } from '../../lib/device/serviceWorker';
 import type { PreparedSelection } from '../capture/captureActions';
 import { LargeFilePrompt } from '../capture/LargeFilePrompt';
 import { QueueIndicator } from '../capture/QueueIndicator';
@@ -41,9 +42,21 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded }: MenuPageP
   const [showLockNotice, setShowLockNotice] = useState(false);
   const [notices, setNotices] = useState<string[]>([]);
   const [wifiQuestion, setWifiQuestion] = useState<PreparedSelection | null>(null);
+  const [saving, setSaving] = useState(false);
 
   // Privacy step and "show my name" arrive in 1c; until then every item is private.
   const context = { eventId: event.eventId, spaceId: event.spaceId, visibility: 'private' as const, showName: false };
+
+  // App updates may reload the menu when the guest comes back to it, but not
+  // while a capture is being saved or the wifi question holds a selection.
+  useEffect(() => {
+    allowUpdateOnReturn(true);
+    return () => allowUpdateOnReturn(false);
+  }, []);
+  useEffect(() => {
+    holdUpdates(saving || wifiQuestion !== null);
+    return () => holdUpdates(false);
+  }, [saving, wifiQuestion]);
 
   useEffect(() => {
     let stop: (() => void) | undefined;
@@ -59,15 +72,20 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded }: MenuPageP
   }, [onUploaded]);
 
   async function finish(selection: PreparedSelection, holdLarge: boolean) {
-    const m = await actions();
-    const { quotaFallback } = await m.commit(selection, holdLarge);
-    const next: string[] = [];
-    if (selection.ready.length > 0) next.push(t('capture.saved'));
-    if (selection.resumed > 0) next.push(t('capture.repicked', { count: selection.resumed }));
-    if (selection.tooLarge > 0) next.push(t('capture.tooLarge', { count: selection.tooLarge }));
-    if (selection.unsupported > 0) next.push(t('capture.unsupported', { count: selection.unsupported }));
-    if (quotaFallback) next.push(t('capture.storageFull'));
-    setNotices(next);
+    setSaving(true);
+    try {
+      const m = await actions();
+      const { quotaFallback } = await m.commit(selection, holdLarge);
+      const next: string[] = [];
+      if (selection.ready.length > 0) next.push(t('capture.saved'));
+      if (selection.resumed > 0) next.push(t('capture.repicked', { count: selection.resumed }));
+      if (selection.tooLarge > 0) next.push(t('capture.tooLarge', { count: selection.tooLarge }));
+      if (selection.unsupported > 0) next.push(t('capture.unsupported', { count: selection.unsupported }));
+      if (quotaFallback) next.push(t('capture.storageFull'));
+      setNotices(next);
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function handleFiles(event: ChangeEvent<HTMLInputElement>, source: 'snapshot' | 'galleryUpload') {
@@ -75,19 +93,24 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded }: MenuPageP
     event.target.value = '';
     const first = files[0];
     if (!first) return;
-    const m = await actions();
-    if (source === 'snapshot') {
-      const photo = await m.takePhoto(first, context);
-      setNotices([
-        ...(photo.saved ? [t('capture.saved')] : []),
-        ...(photo.unsupported ? [t('capture.unsupported', { count: 1 })] : []),
-        ...(photo.quotaFallback ? [t('capture.storageFull')] : []),
-      ]);
-      return;
+    setSaving(true);
+    try {
+      const m = await actions();
+      if (source === 'snapshot') {
+        const photo = await m.takePhoto(first, context);
+        setNotices([
+          ...(photo.saved ? [t('capture.saved')] : []),
+          ...(photo.unsupported ? [t('capture.unsupported', { count: 1 })] : []),
+          ...(photo.quotaFallback ? [t('capture.storageFull')] : []),
+        ]);
+        return;
+      }
+      const selection = await m.pickFromGallery(files, context);
+      if (m.needsWifiQuestion(selection)) setWifiQuestion(selection);
+      else await finish(selection, false);
+    } finally {
+      setSaving(false);
     }
-    const selection = await m.pickFromGallery(files, context);
-    if (m.needsWifiQuestion(selection)) setWifiQuestion(selection);
-    else await finish(selection, false);
   }
 
   if (wifiQuestion) {
