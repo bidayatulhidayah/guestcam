@@ -29,6 +29,14 @@ export interface CommitResult {
   quotaFallback: boolean;
 }
 
+/** My Uploads preview, made in the background; photos only (videos show an icon until Phase 3). */
+async function savePreview(item: QueueItem, file: Blob): Promise<void> {
+  if (item.type !== 'image') return;
+  const { makeThumbnail } = await import('../../lib/media/thumbnail');
+  const thumb = await makeThumbnail(file);
+  if (thumb) await (await getQueue()).saveThumb(item.mediaId, thumb);
+}
+
 async function prepareAll(
   files: File[],
   source: QueueItem['source'],
@@ -74,6 +82,7 @@ export async function takePhoto(file: File, context: CaptureContext, awaitChoice
   void readCaptureDetails(item, file)
     .catch(() => ({}))
     .then((details) => queue.finishPreparing(item.mediaId, details));
+  void savePreview(item, file).catch(() => undefined);
   return { mediaId: item.mediaId, unsupported: false, quotaFallback };
 }
 
@@ -108,6 +117,7 @@ export async function commit(selection: PreparedSelection, holdLargeFiles: boole
     const held = holdLargeFiles && item.sizeBytes > LARGE_FILE_PROMPT_BYTES;
     const result = await queue.add({ ...item, status: held ? 'held' : 'waiting' }, data);
     quotaFallback ||= result.quotaFallback;
+    void savePreview(result.item, data).catch(() => undefined);
   }
   return { quotaFallback };
 }

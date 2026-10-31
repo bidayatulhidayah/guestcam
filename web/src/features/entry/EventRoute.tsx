@@ -15,6 +15,7 @@ import { useEventView } from './useEventView';
 const loadEventHome = () => import('./EventHome');
 const EventHome = lazy(() => loadEventHome().then((m) => ({ default: m.EventHome })));
 const GalleryPage = lazy(() => import('../gallery/GalleryPage').then((m) => ({ default: m.GalleryPage })));
+const MyUploadsPage = lazy(() => import('../uploads/MyUploadsPage').then((m) => ({ default: m.MyUploadsPage })));
 
 /** Passed in navigation state after a failed join, so the code never stays in the address bar. */
 interface CodeErrorState {
@@ -133,6 +134,7 @@ function EventShell({ publicId, eventSlug }: { publicId: string; eventSlug: stri
         <Routes>
           <Route index element={<EventHome />} />
           <Route path="gallery" element={<GalleryPage />} />
+          <Route path="mine" element={<MyUploadsPage />} />
           <Route path="*" element={<Navigate to={base} replace />} />
         </Routes>
       </Suspense>

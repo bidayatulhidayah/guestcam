@@ -1,6 +1,7 @@
 import type { CaptureFeatureKey, FeatureKey } from '@guestcam/shared';
 import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
 import { Button, Icon, Screen, Tile, type IconName } from '../../components/ui';
 import { allowUpdateOnReturn, holdUpdates } from '../../lib/device/serviceWorker';
 import type { PreparedSelection } from '../capture/captureActions';
@@ -49,6 +50,7 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded, onChoiceSav
   const { t } = useTranslation();
   const event = useEvent();
   const summary = useQueueSummary(event.eventId);
+  const navigate = useNavigate();
   const cameraInput = useRef<HTMLInputElement>(null);
   const galleryInput = useRef<HTMLInputElement>(null);
   const [showLockNotice, setShowLockNotice] = useState(false);
@@ -203,6 +205,8 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded, onChoiceSav
   );
 
   const tiles = CAPTURE_TILES.filter((tile) => event.features.includes(tile.feature));
+  const itemCount =
+    summary.waiting + (summary.uploading ? 1 : 0) + summary.held + summary.needsRepick + summary.failed + summary.sent;
   const hasGallery = event.features.includes('publicGallery');
   // The pickers open from the tap itself (iOS needs a user gesture, pitfall C1).
   const open: Partial<Record<CaptureFeatureKey, () => void>> = {
@@ -296,6 +300,12 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded, onChoiceSav
             )
           ) : null}
         </nav>
+
+        {itemCount > 0 ? (
+          <Button icon={<Icon name="upload" />} onClick={() => navigate('mine')}>
+            {t('uploads.openButton')}
+          </Button>
+        ) : null}
 
         {showLockNotice && !galleryUnlocked ? (
           <section role="status" className="flex flex-col gap-3 rounded-card bg-paper-2 p-4">

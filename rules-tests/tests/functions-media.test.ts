@@ -134,6 +134,22 @@ describe('onOriginalUploaded', () => {
     await eventually(async () => ((await fileExists(path)) ? undefined : true));
   });
 
+  it('removes a file that lands after its item was deleted mid-upload, and does not bring the item back', async () => {
+    const mediaId = 'a1a1a1a1-0000-4000-8000-000000000007';
+    const guest = await newGuest();
+    await guest.join({ publicId: ids.publicId, eventSlug: 'tunang', code: 'k7q2' });
+    await setDoc(doc(guest.db, firestorePaths.media(ids.event, mediaId)), validMedia(guest.uid, mediaId));
+    // The guest deletes the item in My Uploads while its upload is still running...
+    await deleteDoc(doc(guest.db, firestorePaths.media(ids.event, mediaId)));
+    // ...and the upload, started while the doc existed, finishes afterwards.
+    const path = storagePaths.mediaOriginal(ids.event, guest.uid, mediaId);
+    await env.withSecurityRulesDisabled(async (context) => {
+      await uploadBytes(ref(context.storage(BUCKET), path), photo, { contentType: 'image/jpeg' });
+    });
+    await eventually(async () => ((await fileExists(path)) ? undefined : true));
+    expect(await adminGet(firestorePaths.media(ids.event, mediaId))).toBeUndefined();
+  });
+
   it('ignores files outside /original/ (pitfall M1)', async () => {
     const path = storagePaths.mediaDerived(ids.event, 'nobody', 'a1a1a1a1-0000-4000-8000-000000000006', 'thumb', 'webp');
     await env.withSecurityRulesDisabled(async (context) => {

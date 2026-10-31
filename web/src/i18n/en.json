@@ -101,7 +101,9 @@
   },
   "mine": {
     "title": "My events",
-    "empty": "No events on this device yet. Scan the QR code on your invitation card."
+    "empty": "No events on this device yet. Scan the QR code on your invitation card.",
+    "uploads": "My Uploads",
+    "sentFromPhone": "{{count}} sent from this phone"
   },
   "pages": {
     "login": {
@@ -179,5 +181,32 @@
     "nameInGallery": "Name in the gallery",
     "shown": "Shown",
     "hidden": "No name"
+  },
+  "uploads": {
+    "title": "My Uploads",
+    "note": "This list belongs to this phone and browser.",
+    "empty": "Nothing uploaded for this event yet.",
+    "back": "Back to the menu",
+    "photo": "Photo",
+    "video": "Video",
+    "audio": "Voice recording",
+    "status": {
+      "waiting": "Waiting to send",
+      "uploading": "Sending {{percent}}%",
+      "held": "Waiting for wifi",
+      "needsRepick": "Pick it again on the menu",
+      "failed": "Could not send",
+      "sent": "Sent",
+      "notArrived": "Not arrived yet",
+      "rejected": "Not accepted"
+    },
+    "delete": "Delete",
+    "deleteTitle": "Delete this item?",
+    "deleteBody": "It will be deleted for everyone, including the couple. This cannot be undone.",
+    "cancel": "Cancel",
+    "deleted": "Item deleted.",
+    "actionFailed": "That did not work. Check your connection, then try again.",
+    "serverError": "Items on the server could not be loaded right now. Items on this phone are still shown.",
+    "openButton": "My Uploads"
   }
 }

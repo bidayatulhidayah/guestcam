@@ -76,6 +76,8 @@ export interface QueueRemote {
   ensureMediaDoc(item: QueueItem, uid: string): Promise<void>;
   /** Writes private/meta once. */
   writeMeta(item: QueueItem): Promise<void>;
+  /** The guest switched privacy while the doc was being created: bring the doc in line. */
+  updateVisibility(item: QueueItem): Promise<void>;
   fileExists(path: string): Promise<boolean>;
   upload(
     path: string,

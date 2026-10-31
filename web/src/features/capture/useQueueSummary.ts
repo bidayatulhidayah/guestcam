@@ -53,9 +53,12 @@ export function summarize(items: QueueItem[]): QueueSummary {
   return summary;
 }
 
-/** Live counts of this event's queue on this phone (Dexie liveQuery, loaded lazily). */
-export function useQueueSummary(eventId: string): QueueSummary {
-  const [summary, setSummary] = useState<QueueSummary>(EMPTY_SUMMARY);
+/** This event's items in the queue on this phone, kept up to date; null until loaded. */
+export function useQueueItems(eventId: string): { items: QueueItem[] | null; memoryOnly: boolean } {
+  const [state, setState] = useState<{ items: QueueItem[] | null; memoryOnly: boolean }>({
+    items: null,
+    memoryOnly: false,
+  });
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
     let active = true;
@@ -68,14 +71,14 @@ export function useQueueSummary(eventId: string): QueueSummary {
         const read = () => db.items.where('eventId').equals(eventId).toArray();
         if (isMemoryOnly()) {
           // Dexie's liveQuery does not observe the in-memory fallback database: re-read it every second.
-          const tick = () => void read().then((items) => active && setSummary({ ...summarize(items), memoryOnly: true }));
+          const tick = () => void read().then((items) => active && setState({ items, memoryOnly: true }));
           tick();
           const timer = setInterval(tick, 1000);
           unsubscribe = () => clearInterval(timer);
           return;
         }
         const subscription = liveQuery(read).subscribe({
-          next: (items) => setSummary({ ...summarize(items), memoryOnly: false }),
+          next: (items) => setState({ items, memoryOnly: false }),
         });
         unsubscribe = () => subscription.unsubscribe();
       })
@@ -85,5 +88,11 @@ export function useQueueSummary(eventId: string): QueueSummary {
       unsubscribe?.();
     };
   }, [eventId]);
-  return summary;
+  return state;
+}
+
+/** Live counts of this event's queue on this phone. */
+export function useQueueSummary(eventId: string): QueueSummary {
+  const { items, memoryOnly } = useQueueItems(eventId);
+  return { ...summarize(items ?? []), memoryOnly };
 }
