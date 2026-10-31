@@ -39,6 +39,7 @@
     "aliasInactiveBody": "Pautan ini tidak aktif. Imbas kod QR pada kad anda atau log masuk."
   },
   "welcome": {
+    "title": "Selamat datang",
     "nameLabel": "Nama anda",
     "nameHint": "Pengantin akan nampak nama ini pada gambar dan ucapan anda.",
     "nameRequired": "Sila tulis nama anda.",

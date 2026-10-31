@@ -39,6 +39,7 @@
     "aliasInactiveBody": "This link is not active. Scan the QR code on your card or log in."
   },
   "welcome": {
+    "title": "Welcome",
     "nameLabel": "Your name",
     "nameHint": "The couple will see this name with your photos and wishes.",
     "nameRequired": "Please write your name.",
