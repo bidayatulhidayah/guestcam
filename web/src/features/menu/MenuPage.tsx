@@ -40,10 +40,20 @@ export interface MenuPageProps {
   onChoiceSaved: () => void;
 }
 
-/** Captures waiting for the first privacy answer: saved camera photos and/or a gallery selection. */
+/** Captures waiting for the first privacy answer: saved camera captures and/or a gallery selection. */
 interface PrivacyQuestion {
-  photoIds: string[];
+  cameraIds: string[];
+  /** Camera videos over 50 MB among them: the wifi question comes next. */
+  heldIds: string[];
+  heldBytes: number;
   selection: PreparedSelection | null;
+}
+
+/** "Now or later on wifi": a gallery selection and/or camera videos already saved as `held`. */
+interface WifiQuestion {
+  selection: PreparedSelection | null;
+  heldIds: string[];
+  largestBytes: number;
 }
 
 export function MenuPage({ displayName, galleryUnlocked, onUploaded, onChoiceSaved }: MenuPageProps) {
@@ -55,7 +65,7 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded, onChoiceSav
   const galleryInput = useRef<HTMLInputElement>(null);
   const [showLockNotice, setShowLockNotice] = useState(false);
   const [notices, setNotices] = useState<string[]>([]);
-  const [wifiQuestion, setWifiQuestion] = useState<PreparedSelection | null>(null);
+  const [wifiQuestion, setWifiQuestion] = useState<WifiQuestion | null>(null);
   const [saving, setSaving] = useState(false);
   const [cameraCancelled, setCameraCancelled] = useState(false);
   const [cameraHelp, setCameraHelp] = useState(false);
@@ -66,13 +76,14 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded, onChoiceSav
   // Until the first answer, captures are made as Peribadi and wait for the question.
   const context = { eventId: event.eventId, spaceId: event.spaceId, ...(privacyChoice ?? DEFAULT_CHOICE) };
 
-  // Leaving the menu at the question: the waiting photos go as Peribadi, and the
-  // question is asked again next time (no choice is saved).
-  const waitingPhotos = useRef<string[]>([]);
-  waitingPhotos.current = privacyQuestion?.photoIds ?? [];
+  // Leaving the menu at the question: the waiting captures go as Peribadi, and the
+  // question is asked again next time (no choice is saved). A held video stays
+  // held; the queue bar offers "Hantar sekarang".
+  const waitingCaptures = useRef<string[]>([]);
+  waitingCaptures.current = privacyQuestion?.cameraIds ?? [];
   useEffect(
     () => () => {
-      const ids = waitingPhotos.current;
+      const ids = waitingCaptures.current;
       if (ids.length > 0) void actions().then((m) => m.choosePrivacy(ids, DEFAULT_CHOICE));
     },
     [],
@@ -140,25 +151,31 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded, onChoiceSav
       if (source === 'snapshot') {
         setCameraCancelled(false);
         const awaitChoice = privacyChoice === null;
-        const photo = await m.takePhoto(first, context, awaitChoice);
+        const capture = await m.takeFromCamera(first, context, awaitChoice);
         setNotices([
-          ...(photo.mediaId ? [t('capture.saved')] : []),
-          ...(photo.unsupported ? [t('capture.unsupported', { count: 1 })] : []),
-          ...(photo.quotaFallback ? [t('capture.storageFull')] : []),
+          ...(capture.mediaId ? [t('capture.saved')] : []),
+          ...(capture.unsupported ? [t('capture.unsupported', { count: 1 })] : []),
+          ...(capture.tooLarge ? [t('capture.tooLarge', { count: 1 })] : []),
+          ...(capture.quotaFallback ? [t('capture.storageFull')] : []),
         ]);
-        const mediaId = photo.mediaId;
-        if (mediaId && awaitChoice) {
+        const mediaId = capture.mediaId;
+        if (!mediaId) return;
+        if (awaitChoice) {
           setPrivacyQuestion((question) => ({
-            photoIds: [...(question?.photoIds ?? []), mediaId],
+            cameraIds: [...(question?.cameraIds ?? []), mediaId],
+            heldIds: [...(question?.heldIds ?? []), ...(capture.held ? [mediaId] : [])],
+            heldBytes: Math.max(question?.heldBytes ?? 0, capture.held ? first.size : 0),
             selection: question?.selection ?? null,
           }));
+        } else if (capture.held) {
+          setWifiQuestion({ selection: null, heldIds: [mediaId], largestBytes: first.size });
         }
         return;
       }
       const selection = await m.pickFromGallery(files, context);
       // Privacy first, then (for big files) the wifi question: one question per screen.
-      if (privacyChoice === null) setPrivacyQuestion({ photoIds: [], selection });
-      else if (m.needsWifiQuestion(selection)) setWifiQuestion(selection);
+      if (privacyChoice === null) setPrivacyQuestion({ cameraIds: [], heldIds: [], heldBytes: 0, selection });
+      else if (m.needsWifiQuestion(selection)) setWifiQuestion({ selection, heldIds: [], largestBytes: selection.largestBytes });
       else await finish(selection, false);
     } finally {
       setSaving(false);
@@ -175,11 +192,25 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded, onChoiceSav
     changeChoice(choice);
     setPrivacyQuestion(null);
     const m = await actions();
-    await m.choosePrivacy(question.photoIds, choice);
-    if (!question.selection) return;
-    const selection = m.withChoice(question.selection, choice);
-    if (m.needsWifiQuestion(selection)) setWifiQuestion(selection);
-    else await finish(selection, false);
+    await m.choosePrivacy(question.cameraIds, choice);
+    const selection = question.selection ? m.withChoice(question.selection, choice) : null;
+    const largeSelection = selection !== null && m.needsWifiQuestion(selection);
+    if (largeSelection || question.heldIds.length > 0) {
+      setWifiQuestion({
+        selection,
+        heldIds: question.heldIds,
+        largestBytes: Math.max(question.heldBytes, largeSelection ? selection.largestBytes : 0),
+      });
+    } else if (selection) {
+      await finish(selection, false);
+    }
+  }
+
+  function answerWifi(question: WifiQuestion, later: boolean) {
+    setWifiQuestion(null);
+    if (question.selection) void finish(question.selection, later);
+    // Camera videos were saved as held: "now" releases only these.
+    if (!later && question.heldIds.length > 0) void actions().then((m) => m.sendHeld(event.eventId, question.heldIds));
   }
 
   // Always mounted, so "Cuba lagi" on a help screen can open the camera from its own tap.
@@ -188,7 +219,7 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded, onChoiceSav
       <input
         ref={cameraInput}
         type="file"
-        accept="image/*"
+        accept="image/*,video/*"
         capture="environment"
         hidden
         onChange={(e) => void handleFiles(e, 'snapshot')}
@@ -236,14 +267,9 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded, onChoiceSav
     content = (
       <LargeFilePrompt
         largestBytes={wifiQuestion.largestBytes}
-        onNow={() => {
-          void finish(wifiQuestion, false);
-          setWifiQuestion(null);
-        }}
-        onLater={() => {
-          void finish(wifiQuestion, true);
-          setWifiQuestion(null);
-        }}
+        cameraVideo={wifiQuestion.selection === null}
+        onNow={() => answerWifi(wifiQuestion, false)}
+        onLater={() => answerWifi(wifiQuestion, true)}
       />
     );
   } else {

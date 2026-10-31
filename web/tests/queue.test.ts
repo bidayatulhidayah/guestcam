@@ -296,6 +296,24 @@ describe('upload queue', () => {
     expect((await db.items.get(big.mediaId))?.status).toBe('sent');
   });
 
+  it('a large camera video waits for privacy and wifi; "now" sends only it, not videos held earlier (D-084)', async () => {
+    const server = fakeRemote();
+    const queue = newQueue(server.remote);
+    const earlier = item({ status: 'held', type: 'video', priority: 1, source: 'galleryUpload', storage: 'picked' });
+    const video = item({ status: 'held', type: 'video', priority: 1, awaitingChoice: true, visibility: 'private' });
+    await queue.add(earlier, bytes());
+    await queue.add(video, bytes());
+
+    await queue.choose([video.mediaId], 'public', false);
+    await queue.drain();
+    expect((await db.items.get(video.mediaId))?.status).toBe('held');
+
+    await queue.release('event1', [video.mediaId]);
+    await queue.drain();
+    expect(await db.items.get(video.mediaId)).toMatchObject({ status: 'sent', visibility: 'public' });
+    expect((await db.items.get(earlier.mediaId))?.status).toBe('held');
+  });
+
   it('subscribing the same callback twice and dropping one keeps the other (menu re-subscribes)', async () => {
     const server = fakeRemote();
     const queue = newQueue(server.remote);

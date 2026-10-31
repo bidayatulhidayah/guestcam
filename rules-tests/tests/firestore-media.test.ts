@@ -68,6 +68,21 @@ describe('creating media docs', () => {
     );
   });
 
+  it('a member creates a queued snapshot video from the phone camera (D-084)', async () => {
+    await assertSucceeds(
+      setDoc(
+        mediaDoc(ids.guest),
+        validMedia(ids.guest, MEDIA_ID, {
+          type: 'video',
+          contentType: 'video/mp4',
+          sizeBytes: 900_000_000,
+          width: null,
+          height: null,
+        }),
+      ),
+    );
+  });
+
   it('non-members and signed-out visitors cannot create', async () => {
     await assertFails(setDoc(mediaDoc(ids.stranger), validMedia(ids.stranger)));
     await assertFails(setDoc(mediaDoc(null), validMedia(ids.guest)));
@@ -79,7 +94,7 @@ describe('creating media docs', () => {
 
   it('rejects wrong sources, types, statuses and server fields', async () => {
     const bad: Record<string, unknown>[] = [
-      { source: 'snapshot', type: 'video', contentType: 'video/mp4' },
+      { source: 'snapshot', type: 'audio', contentType: 'audio/mp4' },
       { source: 'videoWish', type: 'video', contentType: 'video/mp4' },
       { type: 'audio', contentType: 'audio/mp4' },
       { contentType: 'video/mp4' },

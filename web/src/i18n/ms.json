@@ -77,6 +77,7 @@
     "storageFull": "Ruang telefon penuh. Biarkan halaman ini terbuka sehingga semua dihantar.",
     "largeTitle": "Muat naik sekarang, atau nanti guna wifi?",
     "largeBody": "Pilihan anda ada fail besar ({{size}}). Wifi lebih laju dan jimat data.",
+    "largeBodyVideo": "Video ini besar ({{size}}). Wifi lebih laju dan jimat data.",
     "largeNow": "Muat naik sekarang",
     "largeLater": "Nanti, guna wifi",
     "repicked": "{{count}} fail disambung semula."

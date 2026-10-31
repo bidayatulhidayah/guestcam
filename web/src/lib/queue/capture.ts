@@ -1,4 +1,4 @@
-import { MAX_FILE_BYTES, mediaTypeFor, type Visibility } from '@guestcam/shared';
+import { MAX_FILE_BYTES, mediaTypeFor, SOURCE_MEDIA_TYPES, type Visibility } from '@guestcam/shared';
 import { exifDateToMs } from '../media/exifDate';
 import type { QueueItem } from './types';
 
@@ -60,7 +60,7 @@ export function describeCapture(
 ): PreparedCapture {
   const contentType = contentTypeOf(file);
   const type = mediaTypeFor(contentType);
-  if (!type || file.size === 0 || (source === 'snapshot' && type !== 'image')) {
+  if (!type || file.size === 0 || !SOURCE_MEDIA_TYPES[source]?.includes(type)) {
     return { ok: false, reason: 'unsupported' };
   }
   if (file.size > MAX_FILE_BYTES) return { ok: false, reason: 'tooLarge' };
@@ -78,7 +78,7 @@ export function describeCapture(
       sizeBytes: file.size,
       fileName: file.name,
       lastModified: file.lastModified,
-      // Camera photos are copied into IndexedDB; gallery files stream from the original (U5).
+      // Camera photos and videos are copied into IndexedDB; gallery files stream from the original (U5).
       storage: source === 'snapshot' ? 'stored' : 'picked',
       status: 'waiting',
       priority: type === 'image' ? 0 : 1,
@@ -90,7 +90,7 @@ export function describeCapture(
       resumed: false,
       visibility: context.visibility,
       showName: context.showName,
-      // In-app camera photo: taken just now on this phone, until EXIF says otherwise.
+      // Taken just now with this phone's camera, until EXIF says otherwise.
       capturedAtMs: source === 'snapshot' ? now : null,
       capturedAtSource: source === 'snapshot' ? 'device' : 'upload',
       width: null,

@@ -53,7 +53,7 @@ export function mediaTypeFor(contentType: string): Extract<MediaType, 'image' | 
 
 /** Which media types each Phase 1 capture function may create. */
 export const SOURCE_MEDIA_TYPES: Partial<Record<CaptureFeatureKey, readonly MediaType[]>> = {
-  snapshot: ['image'],
+  snapshot: ['image', 'video'],
   galleryUpload: ['image', 'video'],
 };
 
