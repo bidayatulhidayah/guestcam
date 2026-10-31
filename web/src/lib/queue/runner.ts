@@ -131,9 +131,15 @@ export class UploadQueue {
     return true;
   }
 
+  /**
+   * Each call is its own subscription, even with the same function: a screen
+   * that subscribes twice (React re-running an effect) and then drops the old
+   * subscription must keep the new one.
+   */
   onSent(listener: (item: QueueItem) => void): () => void {
-    this.sentListeners.add(listener);
-    return () => this.sentListeners.delete(listener);
+    const subscription = (item: QueueItem) => listener(item);
+    this.sentListeners.add(subscription);
+    return () => this.sentListeners.delete(subscription);
   }
 
   /** Starts working through the queue (or asks the running pass to look again). */

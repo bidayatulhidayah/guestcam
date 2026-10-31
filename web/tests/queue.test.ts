@@ -265,6 +265,19 @@ describe('upload queue', () => {
     expect((await db.items.get(big.mediaId))?.status).toBe('sent');
   });
 
+  it('subscribing the same callback twice and dropping one keeps the other (menu re-subscribes)', async () => {
+    const server = fakeRemote();
+    const queue = newQueue(server.remote);
+    let calls = 0;
+    const onSent = () => calls++;
+    const first = queue.onSent(onSent);
+    queue.onSent(onSent);
+    first();
+    await queue.add(item(), bytes());
+    await queue.drain();
+    expect(calls).toBe(1);
+  });
+
   it('a camera photo is saved while EXIF is read, then sent; a reload mid-way still sends it (rule 4)', async () => {
     const server = fakeRemote();
     const queue = newQueue(server.remote);
