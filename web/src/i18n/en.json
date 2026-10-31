@@ -6,6 +6,7 @@
     "switchTo": "Bahasa Melayu"
   },
   "common": {
+    "back": "Back",
     "loading": "Loading...",
     "retry": "Try again",
     "offline": "No internet connection. Check your connection, then try again.",

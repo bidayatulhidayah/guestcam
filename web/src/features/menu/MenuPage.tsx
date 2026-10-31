@@ -218,6 +218,7 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded, onChoiceSav
   if (cameraHelp) {
     content = (
       <CameraHelpPage
+        onBack={() => setCameraHelp(false)}
         onRetry={() => {
           setCameraHelp(false);
           cameraInput.current?.click();

@@ -7,16 +7,18 @@ export interface PlaceholderPageProps {
   /** i18n key under `pages`, e.g. "gallery". */
   pageKey: string;
   children?: ReactNode;
+  /** Small "Kembali" to the previous page (error pages). */
+  back?: boolean;
 }
 
 /** Phase 0 placeholder: shows the page name in both languages. */
-export function PlaceholderPage({ pageKey, children }: PlaceholderPageProps) {
+export function PlaceholderPage({ pageKey, children, back = false }: PlaceholderPageProps) {
   const { t, i18n } = useTranslation();
   const tOther = i18n.getFixedT(otherLanguage(i18n.language));
   const titleKey = `pages.${pageKey}.title`;
 
   return (
-    <Screen title={t(titleKey)}>
+    <Screen title={t(titleKey)} {...(back ? { back: true as const } : {})}>
       <p className="text-ink-2">
         {t('placeholder.otherLanguage')} <span lang={otherLanguage(i18n.language)}>{tOther(titleKey)}</span>
       </p>

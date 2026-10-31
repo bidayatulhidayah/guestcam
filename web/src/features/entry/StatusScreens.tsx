@@ -18,6 +18,7 @@ export function OfflineScreen({ onRetry }: { onRetry: () => void }) {
   const { t } = useTranslation();
   return (
     <Screen
+      back
       bottom={
         <Button variant="primary" onClick={onRetry}>
           {t('common.retry')}

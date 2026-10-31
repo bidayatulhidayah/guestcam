@@ -5,7 +5,7 @@ import { PlaceholderPage } from '../components/PlaceholderPage';
 export function NotFoundPage() {
   const { t } = useTranslation();
   return (
-    <PlaceholderPage pageKey="notFound">
+    <PlaceholderPage pageKey="notFound" back>
       <Link
         to="/"
         className="flex min-h-16 items-center justify-center rounded-card border border-ink text-button font-bold"

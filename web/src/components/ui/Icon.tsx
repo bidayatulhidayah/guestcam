@@ -3,7 +3,8 @@ import type { ReactNode } from 'react';
 /**
  * One outline icon set: 24px grid, 2px stroke, round joins, current colour
  * (design.md, Icons). Drawn here so there is no icon library in the bundle.
- * Every icon is shown next to a word.
+ * Every icon is shown next to a word, except the My Uploads item icons
+ * (design.md exception; each has an aria-label and the legend).
  */
 const paths: Record<IconName, ReactNode> = {
   camera: (
@@ -76,6 +77,14 @@ const paths: Record<IconName, ReactNode> = {
       <path d="M6 7l1 13h10l1-13" />
     </>
   ),
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18" />
+      <path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18Z" />
+    </>
+  ),
+  arrowLeft: <path d="M19 12H5m6-6-6 6 6 6" />,
 };
 
 export type IconName =
@@ -90,7 +99,9 @@ export type IconName =
   | 'lock'
   | 'user'
   | 'userHidden'
-  | 'trash';
+  | 'trash'
+  | 'globe'
+  | 'arrowLeft';
 
 export function Icon({ name, size = 28 }: { name: IconName; size?: number }) {
   return (

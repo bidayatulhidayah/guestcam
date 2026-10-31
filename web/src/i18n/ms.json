@@ -6,6 +6,7 @@
     "switchTo": "English"
   },
   "common": {
+    "back": "Kembali",
     "loading": "Sedang dimuatkan...",
     "retry": "Cuba lagi",
     "offline": "Tiada sambungan internet. Semak sambungan anda, kemudian cuba lagi.",

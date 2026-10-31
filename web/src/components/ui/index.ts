@@ -1,3 +1,4 @@
+export { BackLink } from './BackLink';
 export { Button, type ButtonProps } from './Button';
 export { Icon, type IconName } from './Icon';
 export { LanguageToggle } from './LanguageToggle';
