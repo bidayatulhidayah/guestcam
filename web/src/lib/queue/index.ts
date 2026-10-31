@@ -19,19 +19,43 @@ export type { QueueItem } from './types';
 export { QueueDb } from './db';
 
 let queue: Promise<UploadQueue> | undefined;
-let db: QueueDb | undefined;
+let db: Promise<QueueDb> | undefined;
+let memoryOnly = false;
 
-export function getQueueDb(): QueueDb {
-  db ??= new QueueDb();
+/**
+ * The queue's database. If the phone refuses IndexedDB (site data blocked),
+ * an in-memory copy keeps the app working until the page closes (pitfall C6);
+ * the menu then asks the guest to keep the page open.
+ */
+export function getQueueDb(): Promise<QueueDb> {
+  db ??= (async () => {
+    const stored = new QueueDb();
+    try {
+      await stored.open();
+      return stored;
+    } catch {
+      memoryOnly = true;
+      const { indexedDB, IDBKeyRange } = await import('fake-indexeddb');
+      const memory = new QueueDb('guestcam-queue', { indexedDB, IDBKeyRange });
+      await memory.open();
+      return memory;
+    }
+  })();
   return db;
+}
+
+/** True when captures live only in this page's memory (see `getQueueDb`). */
+export function isMemoryOnly(): boolean {
+  return memoryOnly;
 }
 
 /** Starts the queue once per page: resumes anything left from before a reload. */
 export function getQueue(): Promise<UploadQueue> {
   queue ??= (async () => {
-    const instance = new UploadQueue({ db: getQueueDb(), remote: firebaseRemote, isOnline: () => navigator.onLine });
-    // An app update must not reload away a gallery pick before it is sent (pitfall U5).
-    setReloadGuard(() => instance.canReloadSafely());
+    const instance = new UploadQueue({ db: await getQueueDb(), remote: firebaseRemote, isOnline: () => navigator.onLine });
+    // An app update must not reload away a gallery pick before it is sent (pitfall U5),
+    // nor anything at all while the database lives only in memory.
+    setReloadGuard(() => instance.canReloadSafely() && !(memoryOnly && instance.hasUnsent()));
     window.addEventListener('online', () => instance.kick());
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') instance.kick();

@@ -39,6 +39,7 @@
     "aliasInactiveBody": "This link is not active. Scan the QR code on your card or log in."
   },
   "welcome": {
+    "title": "Welcome",
     "nameLabel": "Your name",
     "nameHint": "The couple will see this name with your photos and wishes.",
     "nameRequired": "Please write your name.",
@@ -100,7 +101,9 @@
   },
   "mine": {
     "title": "My events",
-    "empty": "No events on this device yet. Scan the QR code on your invitation card."
+    "empty": "No events on this device yet. Scan the QR code on your invitation card.",
+    "uploads": "My Uploads",
+    "sentFromPhone": "{{count}} sent from this phone"
   },
   "pages": {
     "login": {
@@ -120,5 +123,90 @@
     "firebaseConnecting": "Connecting to the Firebase emulators...",
     "firebaseConnected": "Firebase emulators connected. Guest ID: {{uid}}",
     "firebaseError": "Cannot reach the Firebase emulators. Run npm run emulators."
+  },
+  "device": {
+    "inAppTitle": {
+      "android": "Open in Chrome",
+      "ios": "Open in Safari",
+      "other": "Open in your phone's browser"
+    },
+    "inAppBody": "This link opened inside {{app}}. The camera and My Uploads work better in {{browser}}.",
+    "inAppSteps": {
+      "ios": "Tap ••• in the corner of the screen, then choose Open in Safari or Open in external browser.",
+      "other": "Tap ••• in the corner of the screen, then choose Open in browser."
+    },
+    "browser": {
+      "android": "Chrome",
+      "ios": "Safari",
+      "other": "your phone's browser"
+    },
+    "apps": {
+      "instagram": "Instagram",
+      "facebook": "Facebook",
+      "messenger": "Messenger",
+      "tiktok": "TikTok",
+      "line": "LINE"
+    },
+    "openInChrome": "Open in Chrome",
+    "copyLink": "Copy link",
+    "copied": "Link copied. Paste it into {{browser}}.",
+    "copyFailed": "The link could not be copied. Open the ••• menu and choose a browser.",
+    "continueHere": "Continue here",
+    "cameraNotOpened": "Camera didn't open?",
+    "cameraHelpTitle": "Allow the camera",
+    "cameraHelpBody": "Your phone may be blocking the camera for this site. Follow these steps, then try again.",
+    "cameraSteps": {
+      "ios": "Open Settings, choose Safari, then Camera, and choose Allow.",
+      "chrome": "Tap the icon to the left of the site address, choose Permissions, then allow Camera.",
+      "samsung": "Open your phone's Settings, choose Apps, Samsung Internet, Permissions, then allow Camera."
+    },
+    "continueWithoutCamera": "Continue without the camera",
+    "useGalleryHint": "Use {{upload}} to send photos from your phone's gallery.",
+    "storageBlocked": "This phone does not allow storage for this site. Photos are only kept for now, so keep this page open until everything is sent.",
+    "continueWithoutStorage": "Continue without storage"
+  },
+  "privacy": {
+    "title": "Who can see it?",
+    "privateTitle": "Private",
+    "privateBody": "Only for the couple",
+    "publicTitle": "Public",
+    "publicBody": "Share in the gallery",
+    "changeLater": "You can change this any time in My Uploads.",
+    "nameTitle": "Show your name in the gallery?",
+    "showName": "Show my name",
+    "showNameBody": "Your name and selfie appear with the photo.",
+    "hideName": "No name",
+    "hideNameBody": "The photo appears without your name.",
+    "sendAs": "Sending as",
+    "nameInGallery": "Name in the gallery",
+    "shown": "Shown",
+    "hidden": "No name"
+  },
+  "uploads": {
+    "title": "My Uploads",
+    "note": "This list belongs to this phone and browser.",
+    "empty": "Nothing uploaded for this event yet.",
+    "back": "Back to the menu",
+    "photo": "Photo",
+    "video": "Video",
+    "audio": "Voice recording",
+    "status": {
+      "waiting": "Waiting to send",
+      "uploading": "Sending {{percent}}%",
+      "held": "Waiting for wifi",
+      "needsRepick": "Pick it again on the menu",
+      "failed": "Could not send",
+      "sent": "Sent",
+      "notArrived": "Not arrived yet",
+      "rejected": "Not accepted"
+    },
+    "delete": "Delete",
+    "deleteTitle": "Delete this item?",
+    "deleteBody": "It will be deleted for everyone, including the couple. This cannot be undone.",
+    "cancel": "Cancel",
+    "deleted": "Item deleted.",
+    "actionFailed": "That did not work. Check your connection, then try again.",
+    "serverError": "Items on the server could not be loaded right now. Items on this phone are still shown.",
+    "openButton": "My Uploads"
   }
 }

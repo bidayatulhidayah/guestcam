@@ -39,6 +39,7 @@
     "aliasInactiveBody": "Pautan ini tidak aktif. Imbas kod QR pada kad anda atau log masuk."
   },
   "welcome": {
+    "title": "Selamat datang",
     "nameLabel": "Nama anda",
     "nameHint": "Pengantin akan nampak nama ini pada gambar dan ucapan anda.",
     "nameRequired": "Sila tulis nama anda.",
@@ -100,7 +101,9 @@
   },
   "mine": {
     "title": "Majlis saya",
-    "empty": "Belum ada majlis di peranti ini. Imbas kod QR pada kad jemputan."
+    "empty": "Belum ada majlis di peranti ini. Imbas kod QR pada kad jemputan.",
+    "uploads": "Muat Naik Saya",
+    "sentFromPhone": "{{count}} dihantar dari telefon ini"
   },
   "pages": {
     "login": {
@@ -120,5 +123,90 @@
     "firebaseConnecting": "Menyambung ke emulator Firebase...",
     "firebaseConnected": "Emulator Firebase bersambung. ID tetamu: {{uid}}",
     "firebaseError": "Tidak dapat sambung ke emulator Firebase. Jalankan npm run emulators."
+  },
+  "device": {
+    "inAppTitle": {
+      "android": "Buka dalam Chrome",
+      "ios": "Buka dalam Safari",
+      "other": "Buka dalam pelayar telefon"
+    },
+    "inAppBody": "Pautan ini dibuka dalam {{app}}. Kamera dan Muat Naik Saya berfungsi lebih baik dalam {{browser}}.",
+    "inAppSteps": {
+      "ios": "Tekan ••• di penjuru skrin, kemudian pilih Buka dalam Safari atau Buka dalam pelayar luar.",
+      "other": "Tekan ••• di penjuru skrin, kemudian pilih Buka dalam pelayar."
+    },
+    "browser": {
+      "android": "Chrome",
+      "ios": "Safari",
+      "other": "pelayar telefon"
+    },
+    "apps": {
+      "instagram": "Instagram",
+      "facebook": "Facebook",
+      "messenger": "Messenger",
+      "tiktok": "TikTok",
+      "line": "LINE"
+    },
+    "openInChrome": "Buka dalam Chrome",
+    "copyLink": "Salin pautan",
+    "copied": "Pautan disalin. Tampal dalam {{browser}}.",
+    "copyFailed": "Pautan tidak dapat disalin. Buka menu ••• dan pilih pelayar.",
+    "continueHere": "Teruskan di sini",
+    "cameraNotOpened": "Kamera tidak terbuka?",
+    "cameraHelpTitle": "Benarkan kamera",
+    "cameraHelpBody": "Telefon mungkin menyekat kamera untuk laman ini. Ikut langkah ini, kemudian cuba lagi.",
+    "cameraSteps": {
+      "ios": "Buka Tetapan, pilih Safari, kemudian Kamera, dan pilih Benarkan.",
+      "chrome": "Tekan ikon di sebelah kiri alamat laman, pilih Kebenaran, kemudian benarkan Kamera.",
+      "samsung": "Buka Tetapan telefon, pilih Aplikasi, Samsung Internet, Kebenaran, kemudian benarkan Kamera."
+    },
+    "continueWithoutCamera": "Teruskan tanpa kamera",
+    "useGalleryHint": "Guna {{upload}} untuk hantar gambar dari galeri telefon.",
+    "storageBlocked": "Telefon ini tidak membenarkan simpanan untuk laman ini. Gambar disimpan sementara sahaja, jadi biarkan halaman ini terbuka sehingga semua dihantar.",
+    "continueWithoutStorage": "Teruskan tanpa simpanan"
+  },
+  "privacy": {
+    "title": "Siapa boleh lihat?",
+    "privateTitle": "Peribadi",
+    "privateBody": "Hanya untuk pengantin",
+    "publicTitle": "Awam",
+    "publicBody": "Kongsi di galeri",
+    "changeLater": "Boleh tukar bila-bila masa di Muat Naik Saya.",
+    "nameTitle": "Tunjuk nama anda di galeri?",
+    "showName": "Tunjuk nama",
+    "showNameBody": "Nama dan swafoto anda dipaparkan bersama gambar.",
+    "hideName": "Tanpa nama",
+    "hideNameBody": "Gambar dipaparkan tanpa nama anda.",
+    "sendAs": "Dihantar sebagai",
+    "nameInGallery": "Nama di galeri",
+    "shown": "Tunjuk",
+    "hidden": "Tanpa nama"
+  },
+  "uploads": {
+    "title": "Muat Naik Saya",
+    "note": "Senarai ini terikat pada telefon dan pelayar ini.",
+    "empty": "Belum ada muat naik untuk majlis ini.",
+    "back": "Kembali ke menu",
+    "photo": "Gambar",
+    "video": "Video",
+    "audio": "Rakaman suara",
+    "status": {
+      "waiting": "Menunggu dihantar",
+      "uploading": "Sedang dihantar {{percent}}%",
+      "held": "Menunggu wifi",
+      "needsRepick": "Perlu dipilih semula di menu",
+      "failed": "Gagal dihantar",
+      "sent": "Dihantar",
+      "notArrived": "Belum sampai",
+      "rejected": "Tidak diterima"
+    },
+    "delete": "Padam",
+    "deleteTitle": "Padam item ini?",
+    "deleteBody": "Item ini akan dipadam untuk semua, termasuk pengantin. Tindakan ini tidak boleh dibatalkan.",
+    "cancel": "Batal",
+    "deleted": "Item dipadam.",
+    "actionFailed": "Tidak berjaya. Semak sambungan anda, kemudian cuba lagi.",
+    "serverError": "Item di pelayan tidak dapat dimuatkan sekarang. Item di telefon ini masih dipaparkan.",
+    "openButton": "Muat Naik Saya"
   }
 }

@@ -9,6 +9,7 @@ import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firest
 import { getDb } from '../../lib/firebase/firestore';
 import { loadFirebase } from '../../lib/firebase/load';
 import { storage } from '../../lib/storage';
+import { readPrivacyChoice, savePrivacyChoice } from '../privacy/privacyChoice';
 import { readProfile, readSelfie } from './profileStore';
 
 export interface GuestStatus {
@@ -49,6 +50,15 @@ export async function syncGuest(event: EventView, language: Language): Promise<G
       language,
     });
     guest = (await getDoc(ref)).data() as Guest;
+  }
+
+  // The privacy answer lives on the phone and on the guest record (lastVisibility,
+  // showName). Before the first answer lastVisibility stays null, so the question returns.
+  const choice = readPrivacyChoice(event.eventId);
+  if (choice && (guest.lastVisibility !== choice.visibility || guest.showName !== choice.showName)) {
+    await updateDoc(ref, { lastVisibility: choice.visibility, showName: choice.showName });
+  } else if (!choice && guest.lastVisibility) {
+    savePrivacyChoice(event.eventId, { visibility: guest.lastVisibility, showName: guest.showName });
   }
 
   if (profile.hasSelfie && !guest.selfiePath) {

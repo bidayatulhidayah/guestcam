@@ -1,13 +1,21 @@
 import { parseEntry } from '@guestcam/shared';
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router';
-import { GalleryPage } from '../gallery/GalleryPage';
+import { readProfile, saveProfile } from '../onboarding/profileStore';
+import { WelcomePage } from '../onboarding/WelcomePage';
 import { CodeScreen, type CodeError } from './CodeScreen';
 import { EventProvider } from './EventContext';
-import { EventHome } from './EventHome';
 import { LoadingScreen, OfflineScreen } from './StatusScreens';
 import { useEventView } from './useEventView';
+
+// The event screens (selfie, menu, capture, gallery) are not part of the first
+// screen: a QR scan starts on the name screen, and they are fetched while the
+// guest types (and precached for reopening offline).
+const loadEventHome = () => import('./EventHome');
+const EventHome = lazy(() => loadEventHome().then((m) => ({ default: m.EventHome })));
+const GalleryPage = lazy(() => import('../gallery/GalleryPage').then((m) => ({ default: m.GalleryPage })));
+const MyUploadsPage = lazy(() => import('../uploads/MyUploadsPage').then((m) => ({ default: m.MyUploadsPage })));
 
 /** Passed in navigation state after a failed join, so the code never stays in the address bar. */
 interface CodeErrorState {
@@ -33,36 +41,73 @@ export function EventRoute() {
   return <CodeScreen publicId={publicId} />;
 }
 
+/** After "Teruskan", how long to wait for the join before offering a retry (no connection). */
+const JOIN_WAIT_MS = 15_000;
+
+type JoinState = { status: 'pending' } | { status: 'joined'; eventSlug: string } | { status: 'offline' };
+
+/**
+ * QR link. A guest this phone does not know yet types their name on a neutral
+ * screen while sign-in and `joinEvent` run in the background (D-078); couple
+ * names and theme appear from the next screen. A wrong code goes straight to
+ * the code screen; the name is saved only after a successful join. A guest the
+ * phone already knows waits for the join, since their next screen is the menu.
+ */
 function JoinWithCode({ publicId, eventSlug, code }: { publicId: string; eventSlug: string; code: string }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [offline, setOffline] = useState(false);
+  const [askName] = useState(() => readProfile(publicId) === null);
+  const [typedName, setTypedName] = useState<string | null>(null);
+  const [join, setJoin] = useState<JoinState>({ status: 'pending' });
+  const [timedOut, setTimedOut] = useState(false);
   const [attempt, setAttempt] = useState(0);
   // React StrictMode runs effects twice in development; one wrong code must count once.
   const started = useRef(-1);
 
   useEffect(() => {
+    void loadEventHome();
+  }, []);
+
+  useEffect(() => {
     if (started.current === attempt) return;
     started.current = attempt;
-    const eventPath = `/s/${publicId}/${eventSlug}`;
+    const current = () => started.current === attempt;
     import('./eventApi')
       .then(({ joinEvent }) => joinEvent({ publicId, eventSlug, code }))
       .then((result) => {
         if (result.kind === 'joined') {
-          navigate(`/s/${publicId}/${result.event.eventSlug}`, { replace: true });
-        } else {
+          setJoin({ status: 'joined', eventSlug: result.event.eventSlug });
+        } else if (current()) {
           const state: CodeErrorState = { codeError: result };
-          navigate(eventPath, { replace: true, state });
+          navigate(`/s/${publicId}/${eventSlug}`, { replace: true, state });
         }
       })
-      .catch(() => setOffline(true));
+      .catch(() => {
+        if (current()) setJoin({ status: 'offline' });
+      });
   }, [publicId, eventSlug, code, attempt, navigate]);
 
-  if (offline) {
+  // Joined, and the name is in (if it was asked): on to the event, without the code in the address.
+  useEffect(() => {
+    if (join.status !== 'joined' || (askName && typedName === null)) return;
+    if (typedName !== null) saveProfile(publicId, { displayName: typedName, selfieDecided: false, hasSelfie: false });
+    navigate(`/s/${publicId}/${join.eventSlug}`, { replace: true });
+  }, [join, askName, typedName, publicId, navigate]);
+
+  const waiting = join.status === 'pending' && (!askName || typedName !== null);
+  useEffect(() => {
+    if (!waiting) return;
+    const timer = setTimeout(() => setTimedOut(true), JOIN_WAIT_MS);
+    return () => clearTimeout(timer);
+  }, [waiting, attempt]);
+
+  if (askName && typedName === null) return <WelcomePage event={null} onDone={setTypedName} />;
+  if (join.status === 'offline' || (waiting && timedOut)) {
     return (
       <OfflineScreen
         onRetry={() => {
-          setOffline(false);
+          setTimedOut(false);
+          setJoin({ status: 'pending' });
           setAttempt((n) => n + 1);
         }}
       />
@@ -85,11 +130,14 @@ function EventShell({ publicId, eventSlug }: { publicId: string; eventSlug: stri
   const base = `/s/${publicId}/${eventSlug}`;
   return (
     <EventProvider event={state.event}>
-      <Routes>
-        <Route index element={<EventHome />} />
-        <Route path="gallery" element={<GalleryPage />} />
-        <Route path="*" element={<Navigate to={base} replace />} />
-      </Routes>
+      <Suspense fallback={<LoadingScreen />}>
+        <Routes>
+          <Route index element={<EventHome />} />
+          <Route path="gallery" element={<GalleryPage />} />
+          <Route path="mine" element={<MyUploadsPage />} />
+          <Route path="*" element={<Navigate to={base} replace />} />
+        </Routes>
+      </Suspense>
     </EventProvider>
   );
 }

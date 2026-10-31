@@ -51,7 +51,7 @@ export function EventHome() {
 
   if (step === 'name') {
     return (
-      <WelcomePage onDone={(displayName) => update({ displayName, selfieDecided: false, hasSelfie: false })} />
+      <WelcomePage event={event} onDone={(displayName) => update({ displayName, selfieDecided: false, hasSelfie: false })} />
     );
   }
   if (step === 'selfie' && profile) {
@@ -72,6 +72,11 @@ export function EventHome() {
     );
   }
   return (
-    <MenuPage displayName={profile?.displayName ?? ''} galleryUnlocked={galleryUnlocked} onUploaded={onUploaded} />
+    <MenuPage
+      displayName={profile?.displayName ?? ''}
+      galleryUnlocked={galleryUnlocked}
+      onUploaded={onUploaded}
+      onChoiceSaved={sync}
+    />
   );
 }

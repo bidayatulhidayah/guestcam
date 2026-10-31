@@ -30,6 +30,12 @@ export interface AddResult {
 export class UploadQueue {
   /** Bytes of `picked` and `memory` items. Lost on reload by nature. */
   readonly files = new Map<string, Blob>();
+  /** Items added on this page and not sent yet. */
+  private readonly unsent = new Set<string>();
+  /** Items the guest deleted in My Uploads: never sent again on this page. */
+  private readonly removed = new Set<string>();
+  /** The item being sent now, so a delete can stop it. */
+  private sending: { mediaId: string; controller: AbortController; done: Promise<void> } | undefined;
   private readonly now: () => number;
   private readonly random: () => number;
   private readonly isOnline: () => boolean;
@@ -63,6 +69,10 @@ export class UploadQueue {
   async start(): Promise<void> {
     // A photo whose EXIF was still being read when the page closed: send it without.
     await this.db.items.where('status').equals('preparing').modify({ status: 'waiting', nextAttemptAt: this.now() });
+    // The page closed at the privacy question: send as Peribadi; the question is asked again next time.
+    await this.db.items
+      .filter((item) => item.awaitingChoice === true)
+      .modify({ awaitingChoice: false, visibility: 'private', showName: false });
     const items = await this.db.items.where('status').anyOf('waiting', 'uploading').toArray();
     for (const item of items) {
       const lostFile = item.storage !== 'stored' && !this.files.has(item.mediaId);
@@ -87,6 +97,7 @@ export class UploadQueue {
       }
     }
     if (storage !== 'stored') this.files.set(item.mediaId, data);
+    this.unsent.add(item.mediaId);
     const saved = { ...item, storage };
     await this.db.items.put(saved);
     this.kick();
@@ -97,6 +108,51 @@ export class UploadQueue {
   async finishPreparing(mediaId: string, details: Partial<QueueItem>): Promise<void> {
     await this.db.items.update(mediaId, { ...details, status: 'waiting', nextAttemptAt: this.now() });
     this.kick();
+  }
+
+  /** The guest answered the privacy question: these items may go, with their choice. */
+  async choose(mediaIds: string[], visibility: QueueItem['visibility'], showName: boolean): Promise<void> {
+    await this.db.items.where('mediaId').anyOf(mediaIds).modify({ awaitingChoice: false, visibility, showName });
+    this.kick();
+  }
+
+  /**
+   * My Uploads: switch an item that has not reached the server yet. If its doc
+   * is being created at this moment, `send` notices the change and updates it.
+   */
+  async setVisibility(mediaId: string, visibility: QueueItem['visibility'], showName: boolean): Promise<void> {
+    await this.db.items.update(mediaId, { visibility, showName, awaitingChoice: false });
+    this.kick();
+  }
+
+  /**
+   * My Uploads "Padam": stops the item's upload if it is running and forgets
+   * it on this phone. Returns whether its media doc may exist on the server
+   * (the caller deletes it; the server then removes any file, rule 11).
+   */
+  async remove(mediaId: string): Promise<{ docCreated: boolean }> {
+    this.removed.add(mediaId);
+    if (this.sending?.mediaId === mediaId) {
+      this.sending.controller.abort();
+      await this.sending.done.catch(() => undefined);
+    }
+    let docCreated = false;
+    await this.db.transaction('rw', this.db.items, this.db.blobs, this.db.thumbs, async () => {
+      docCreated = (await this.db.items.get(mediaId))?.docCreated === true;
+      await this.db.items.delete(mediaId);
+      await this.db.blobs.delete(mediaId);
+      await this.db.thumbs.delete(mediaId);
+    });
+    this.files.delete(mediaId);
+    this.unsent.delete(mediaId);
+    return { docCreated };
+  }
+
+  /** Keeps a small preview for My Uploads, unless the item was deleted meanwhile. */
+  async saveThumb(mediaId: string, blob: Blob): Promise<void> {
+    await this.db.transaction('rw', this.db.items, this.db.thumbs, async () => {
+      if (await this.db.items.get(mediaId)) await this.db.thumbs.put({ mediaId, blob });
+    });
   }
 
   /** "Hantar sekarang": items held for wifi go into the queue. */
@@ -126,9 +182,15 @@ export class UploadQueue {
       .first();
     if (!match) return false;
     this.files.set(match.mediaId, file);
+    this.unsent.add(match.mediaId);
     await this.db.items.update(match.mediaId, { status: 'waiting', nextAttemptAt: this.now(), resumed: true });
     this.kick();
     return true;
+  }
+
+  /** True while any item is not sent yet (synchronous: tracked as items are added and sent). */
+  hasUnsent(): boolean {
+    return this.unsent.size > 0;
   }
 
   /** False while a file lives only in this page's memory (gallery pick or storage-full capture) and is not sent yet. */
@@ -186,16 +248,26 @@ export class UploadQueue {
     const due = await this.db.items
       .where('status')
       .equals('waiting')
-      .filter((item) => item.nextAttemptAt <= now)
+      .filter((item) => item.nextAttemptAt <= now && item.awaitingChoice !== true)
       .toArray();
     due.sort((a, b) => a.priority - b.priority || a.createdAt - b.createdAt);
     const next = due[0];
     if (!next) return false;
-    await this.send(next);
+    const controller = new AbortController();
+    const done = this.send(next, controller.signal);
+    this.sending = { mediaId: next.mediaId, controller, done };
+    try {
+      await done;
+    } finally {
+      this.sending = undefined;
+    }
     return true;
   }
 
-  private async send(item: QueueItem): Promise<void> {
+  private async send(item: QueueItem, signal: AbortSignal): Promise<void> {
+    // Deleted in My Uploads while this step was running: stop, change nothing.
+    const stopped = () => signal.aborted || this.removed.has(item.mediaId);
+    if (stopped()) return;
     const data =
       item.storage === 'stored' ? (await this.db.blobs.get(item.mediaId))?.blob : this.files.get(item.mediaId);
     if (!data) {
@@ -210,10 +282,16 @@ export class UploadQueue {
     const { remote } = this.options;
     try {
       const uid = await remote.uid();
+      if (stopped()) return;
       if (!item.docCreated) {
         await remote.ensureMediaDoc(item, uid);
         await this.db.items.update(item.mediaId, { docCreated: true });
+        const now = await this.db.items.get(item.mediaId);
+        if (now && (now.visibility !== item.visibility || now.showName !== item.showName)) {
+          await remote.updateVisibility(now);
+        }
       }
+      if (stopped()) return;
       if (!item.metaWritten) {
         await remote.writeMeta(item);
         await this.db.items.update(item.mediaId, { metaWritten: true });
@@ -232,9 +310,10 @@ export class UploadQueue {
             lastSaved = t;
             void this.db.items.update(item.mediaId, { bytesTransferred: bytes });
           },
-          new AbortController().signal,
+          signal,
         );
       }
+      if (stopped()) return;
       await this.db.transaction('rw', this.db.items, this.db.blobs, async () => {
         await this.db.items.update(item.mediaId, {
           status: 'sent',
@@ -244,9 +323,11 @@ export class UploadQueue {
         await this.db.blobs.delete(item.mediaId);
       });
       this.files.delete(item.mediaId);
+      this.unsent.delete(item.mediaId);
       const sent = await this.db.items.get(item.mediaId);
       if (sent) this.sentListeners.forEach((listener) => listener(sent));
     } catch (error) {
+      if (stopped()) return;
       const attempts = item.attempts + 1;
       const lastError = (error as { code?: string; message?: string } | null)?.code ?? String(error);
       await this.db.items.update(
