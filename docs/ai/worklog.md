@@ -48,6 +48,67 @@ Rules:
 
 ---
 
+## 2026-10-31 10:20 — First-load speed, safe app updates, sent-listener fix
+
+- **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
+- **Version / branch:** v0.1 (+ unreleased) / `perf/first-load` (on top of `feat/phase-1b-queue`)
+- **Phase:** Phase 1 (target v0.2), between PR 1b and 1c
+- **Goal:** Hidayah found the event link slow to open and asked how to speed it up; she approved the plan (preload, early connections, earlier sign-in, drop the duplicate call, plus the app-update fix). She also asked for a guest "share the QR" feature, approved as D-076 and planned after 1c.
+
+### What changed and why
+- **Measured first** on the preview (headless Chrome, DevTools Slow 4G + 4x CPU, test space #00100): name screen 6.6-6.9 s. Most of it was waiting: Firebase code fetched only after the main code ran, then three server steps in a row (anonymous sign-up, Firebase's account lookup, `joinEvent`).
+- **Speed (D-075):**
+  - `web/src/boot.ts` is a separate async entry: it loads the Firebase core and starts anonymous sign-in on `/s/` links while the main code is still downloading. `main.tsx` imports it too, so the dev server behaves the same.
+  - The build adds modulepreload links for the Firebase core chunks and preconnect links to the sign-in and functions servers (`firstLoadHints` plugin in `vite.config.ts`).
+  - Dexie now has its own chunk. The bundler had put its shared helpers in Dexie's chunk, so the first screen loaded all of Dexie (~31 KB gzipped). The earlier "about 145 KB" first-screen figure in the 1b entry missed this: the 1b first screen was really about 175 KB. Now it is about 145 KB (main 109 + Firebase core 34 + small chunks).
+  - Right after `joinEvent`, the app no longer asks the server for the same event again (`isEventFresh`, one minute, in memory only).
+  - The Firebase chunk is precached for offline reopen, and a failed Firebase load is retried instead of staying broken until a reload.
+- **Safe app updates (D-074):** a waiting new version is applied at a screen change or 5 s after the guest returns to the menu; never while saving a capture, during the wifi question, or while the queue holds a file only in memory (`canReloadSafely`). An open page checks for a new version on return at most every 30 minutes. Before this, a guest who stayed on the menu never got a fix deployed during the event.
+- **Bug fix found by the smoke test (`73b072a`, also pushed to PR #6):** the queue kept "item sent" listeners in a Set; when the menu subscribed the same callback twice (React re-running the effect) and dropped the stale subscription, it removed the only entry, so the menu stopped re-checking the gallery unlock after uploads. Each subscription now has its own entry, with a test that fails without the fix.
+
+### Files touched
+| File | Change |
+| --- | --- |
+| `web/vite.config.ts` | first-load hints plugin, boot entry, Dexie chunk, Firebase chunk precached |
+| `web/src/boot.ts`, `web/src/main.tsx`, `web/src/app/App.tsx` | early Firebase load and sign-in moved into the boot entry |
+| `web/src/lib/firebase/region.ts`, `functions.ts`, `load.ts` | region constant shared with the build; retry a failed load |
+| `web/src/features/entry/eventStore.ts`, `useEventView.ts` | skip the refresh right after joining |
+| `web/src/lib/device/serviceWorker.ts`, `web/src/features/menu/MenuPage.tsx`, `web/src/lib/queue/index.ts`, `runner.ts` | safe app updates; queue reload guard; sent-listener fix |
+| `web/tests/queue.test.ts` | 2 tests (reload guard, duplicate subscription) |
+| `CHANGELOG.md`, `docs/ai/memory.md`, `docs/architecture/architecture.md`, `docs/ai/worklog.md` | D-074 to D-076, status, pitfall A1, this entry |
+
+### Commands run and results
+| Command | Result |
+| --- | --- |
+| Load timing on the preview, before | name screen 6.6 / 6.9 s (one cold run 8.3 s); sign-in started at 3.5-3.8 s |
+| Load timing on the preview, after (4 runs) | name screen 5.2 / 5.3 / 5.3 / 5.7 s; sign-in starts at about 2.1 s. Unthrottled about 2.5-3 s. A batch taken while Google's sign-in server was slow measured 6.3-7.2 s, so server speed varies run to run |
+| `npm test` (with `FUNCTIONS_DISCOVERY_TIMEOUT=60`) | shared 46, web 24, emulators 80, all passed |
+| Smoke test in the emulators | 14/14 (first run 13/14: the sent-listener bug above) |
+| Live check on the preview (`npm run deploy:preview`, test space #00100) | 6/6, no page errors |
+
+### Decisions
+- D-074 safe app updates, D-075 first-load hints, D-076 "Jemput Kawan" (approved, built after 1c).
+
+### Problems, risks, open questions
+- The name screen is still above the 3 s budget on Slow 4G: the three server steps take about 3 s and Firebase anonymous sign-in cannot skip them. Options for later: keep one `joinEvent` instance warm on event days (minimum instances, a few dollars a month; a cold start can add 2-5 s), and a lighter main bundle (343 KB raw; React, router, i18n and both language files).
+- The functions emulator sometimes takes over 10 s to load our functions on this computer and every call fails with `internal`; `FUNCTIONS_DISCOVERY_TIMEOUT=60` fixes it (same cause as the first 1b deploy).
+- Safe app updates are covered by code review and unit tests only; an end-to-end check needs a real phone (see next steps).
+- Correction: the previous entry's time "2026-10-30 17:50" was UTC (Git Bash ignored the time zone); it was written on 2026-10-31 at about 01:50 Asia/Kuala_Lumpur.
+- A stuck smoke-test process from this session (node, PID 19108, holding port 5175) could not be stopped by Claude; Hidayah can end it in Task Manager.
+
+### Next steps
+- [ ] Hidayah: review PR #6 (now including `73b072a`) and this PR; phone checklist
+- [ ] After PR #6 is squash-merged, rebase `perf/first-load` onto `main`
+- [ ] PR 1c, then "Jemput Kawan" (D-076)
+
+### Commits
+- `73b072a` fix(queue): keep a sent subscription when the same callback subscribes twice
+- (this PR) perf(web): load Firebase and start guest sign-in while the app downloads
+- (this PR) fix(web): apply app updates when guests return to the menu, never mid-upload
+- (this PR) docs: record first-load speed, safe updates and Jemput Kawan
+
+---
+
 ## 2026-10-30 17:50 — Phase 1b backend deploy and live check
 
 - **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows

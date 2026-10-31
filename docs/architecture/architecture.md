@@ -139,7 +139,7 @@ Severity: **High** = privacy leak, data loss or broken core flow. **Med** = visi
 
 | # | Pitfall | Sev | Fix | Phase |
 | --- | --- | --- | --- | --- |
-| A1 | Stale service worker: guests at the event run an old version after a fix is deployed | High | Never cache `index.html` long; on new version, update at the next screen change, not mid-capture; version shown in footer and bug reports | 0 |
+| A1 | Stale service worker: guests at the event run an old version after a fix is deployed | High | Never cache `index.html` long; on new version, update at the next screen change or when the guest returns to the menu, never mid-capture or while an unsent gallery pick lives only in memory (D-074); version shown in footer and bug reports | 0 |
 | A2 | Cached event theme never updates after host edits it | Med | Stale-while-revalidate for event data; theme versioned | 1 |
 | A3 | Missing key in `en.json` shows the raw key | Low | Unit test: `ms.json` and `en.json` have identical keys | 0 |
 | A4 | Deleting an event leaves subcollections and files behind | Med | Recursive delete function for events | 4 |

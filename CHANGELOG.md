@@ -17,6 +17,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 - Nothing is lost on bad internet: items wait on the phone, send one at a time (photos first), retry by themselves, and continue after the page is reloaded; the menu shows what is waiting, sending, or needs attention.
 - Galeri unlocks after the guest's first upload reaches the server.
 
+### Changed
+
+- The event link opens faster on slow phones and networks: on a slow 4G connection the name screen appears about 1.4 seconds sooner, and less code loads before the first screen.
+- App updates reach guests who keep the menu open: a new version is applied when they come back to the app, never while a photo is being saved or a gallery upload still needs the picked file.
+
 ## [0.1] - 2026-10-27
 
 Phase 0: the empty but working skeleton. Details: [docs/versions/v0.1.md](docs/versions/v0.1.md).
