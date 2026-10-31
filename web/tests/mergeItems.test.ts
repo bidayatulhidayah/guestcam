@@ -58,6 +58,11 @@ describe('My Uploads: phone and server merged by mediaId', () => {
     expect(rows.find((r) => r.mediaId === 'refused')).toMatchObject({ status: 'rejected' });
   });
 
+  it('sent on the phone but not yet processed on the server: still "sent", not "not arrived"', () => {
+    const rows = mergeItems([local('a', { status: 'sent', docCreated: true })], [server('a', { status: 'queued' })]);
+    expect(rows[0]?.status).toBe('sent');
+  });
+
   it('privacy comes from the server once the doc exists, from the phone before', () => {
     const rows = mergeItems(
       [local('onServer', { visibility: 'private', docCreated: true }), local('phoneOnly', { visibility: 'public', showName: true })],

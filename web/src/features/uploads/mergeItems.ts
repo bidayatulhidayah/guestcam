@@ -65,8 +65,9 @@ function serverStatus(status: MediaStatus): RowStatus {
 /**
  * My Uploads: the queue on this phone and the guest's media docs, merged by
  * `mediaId` so nothing shows twice. The phone knows best how an upload is
- * going; once sent, the server knows best (a refused file, privacy changed
- * elsewhere). Newest first.
+ * going and that its file arrived (the server may not have processed it
+ * yet); the server adds only a refusal, and the privacy once its doc exists.
+ * Newest first.
  */
 export function mergeItems(local: QueueItem[], server: ServerItem[]): UploadRow[] {
   const rows = new Map<string, UploadRow>();
@@ -89,7 +90,7 @@ export function mergeItems(local: QueueItem[], server: ServerItem[]): UploadRow[
     rows.set(item.mediaId, {
       mediaId: item.mediaId,
       type: item.type,
-      status: status === 'sent' && doc ? doc.status : status,
+      status: status === 'sent' && doc?.status === 'rejected' ? 'rejected' : status,
       percent:
         status === 'uploading' && item.sizeBytes > 0
           ? Math.min(100, Math.round((item.bytesTransferred / item.sizeBytes) * 100))
