@@ -278,6 +278,16 @@ describe('upload queue', () => {
     expect(calls).toBe(1);
   });
 
+  it('knows whether anything added on this page is still unsent (memory-only storage guard)', async () => {
+    const server = fakeRemote();
+    const queue = newQueue(server.remote);
+    expect(queue.hasUnsent()).toBe(false);
+    await queue.add(item(), bytes());
+    expect(queue.hasUnsent()).toBe(true);
+    await queue.drain();
+    expect(queue.hasUnsent()).toBe(false);
+  });
+
   it('an app update may reload only when nothing lives just in memory (gallery picks, storage-full captures)', async () => {
     const server = fakeRemote();
     const queue = newQueue(server.remote);

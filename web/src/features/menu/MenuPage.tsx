@@ -1,12 +1,13 @@
 import type { CaptureFeatureKey, FeatureKey } from '@guestcam/shared';
-import { useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Icon, Screen, Tile, type IconName } from '../../components/ui';
+import { Button, Icon, Screen, Tile, type IconName } from '../../components/ui';
 import { allowUpdateOnReturn, holdUpdates } from '../../lib/device/serviceWorker';
 import type { PreparedSelection } from '../capture/captureActions';
 import { LargeFilePrompt } from '../capture/LargeFilePrompt';
 import { QueueIndicator } from '../capture/QueueIndicator';
 import { useQueueSummary } from '../capture/useQueueSummary';
+import { CameraHelpPage } from '../device/CameraHelpPage';
 import { useEvent } from '../entry/EventContext';
 import { CoupleHeader } from '../onboarding/CoupleHeader';
 
@@ -43,6 +44,9 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded }: MenuPageP
   const [notices, setNotices] = useState<string[]>([]);
   const [wifiQuestion, setWifiQuestion] = useState<PreparedSelection | null>(null);
   const [saving, setSaving] = useState(false);
+  const [cameraCancelled, setCameraCancelled] = useState(false);
+  const [cameraHelp, setCameraHelp] = useState(false);
+  const [storageAcknowledged, setStorageAcknowledged] = useState(false);
 
   // Privacy step and "show my name" arrive in 1c; until then every item is private.
   const context = { eventId: event.eventId, spaceId: event.spaceId, visibility: 'private' as const, showName: false };
@@ -57,6 +61,16 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded }: MenuPageP
     holdUpdates(saving || wifiQuestion !== null);
     return () => holdUpdates(false);
   }, [saving, wifiQuestion]);
+
+  // The camera closed without a photo: maybe the guest changed their mind,
+  // maybe the browser blocks it. Offer help without getting in the way (C6).
+  useEffect(() => {
+    const input = cameraInput.current;
+    if (!input) return;
+    const cancelled = () => setCameraCancelled(true);
+    input.addEventListener('cancel', cancelled);
+    return () => input.removeEventListener('cancel', cancelled);
+  }, []);
 
   useEffect(() => {
     let stop: (() => void) | undefined;
@@ -97,6 +111,7 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded }: MenuPageP
     try {
       const m = await actions();
       if (source === 'snapshot') {
+        setCameraCancelled(false);
         const photo = await m.takePhoto(first, context);
         setNotices([
           ...(photo.saved ? [t('capture.saved')] : []),
@@ -113,83 +128,9 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded }: MenuPageP
     }
   }
 
-  if (wifiQuestion) {
-    return (
-      <LargeFilePrompt
-        largestBytes={wifiQuestion.largestBytes}
-        onNow={() => {
-          void finish(wifiQuestion, false);
-          setWifiQuestion(null);
-        }}
-        onLater={() => {
-          void finish(wifiQuestion, true);
-          setWifiQuestion(null);
-        }}
-      />
-    );
-  }
-
-  const tiles = CAPTURE_TILES.filter((tile) => event.features.includes(tile.feature));
-  const hasGallery = event.features.includes('publicGallery');
-  // The pickers open from the tap itself (iOS needs a user gesture, pitfall C1).
-  const open: Partial<Record<CaptureFeatureKey, () => void>> = {
-    snapshot: () => cameraInput.current?.click(),
-    galleryUpload: () => galleryInput.current?.click(),
-  };
-
-  return (
-    <Screen>
-      <CoupleHeader event={event} />
-      <p className="-mt-4 mb-2 font-bold">{t('menu.greeting', { name: displayName })}</p>
-
-      <QueueIndicator
-        summary={summary}
-        onSendNow={() => void actions().then((m) => m.sendHeld(event.eventId))}
-        onRepick={() => galleryInput.current?.click()}
-        onRetry={() => void actions().then((m) => m.retryFailed(event.eventId))}
-      />
-      {notices.map((notice) => (
-        <p key={notice} role="status" className="text-caption">
-          {notice}
-        </p>
-      ))}
-
-      <nav aria-label={event.displayNames} className="grid grid-cols-2 gap-4">
-        {tiles.map((tile, index) => {
-          const ready = READY.has(tile.feature);
-          return (
-            <Tile
-              key={tile.feature}
-              icon={<Icon name={tile.icon} />}
-              label={t(`menu.${tile.feature}`)}
-              disabled={!ready}
-              {...(ready ? { onClick: open[tile.feature] } : { note: t('menu.comingSoon') })}
-              // An odd last tile spans the full width (design.md).
-              wide={index === tiles.length - 1 && tiles.length % 2 === 1}
-            />
-          );
-        })}
-        {hasGallery ? (
-          galleryUnlocked ? (
-            <Tile icon={<Icon name="gallery" />} label={t('menu.gallery')} to="gallery" wide />
-          ) : (
-            <Tile
-              icon={<Icon name="lock" />}
-              label={t('menu.gallery')}
-              note={t('menu.locked')}
-              onClick={() => setShowLockNotice(true)}
-              wide
-            />
-          )
-        ) : null}
-      </nav>
-
-      {showLockNotice && !galleryUnlocked ? (
-        <p role="status" className="rounded-card bg-paper-2 p-4">
-          {t('menu.galleryLockedNotice')}
-        </p>
-      ) : null}
-
+  // Always mounted, so "Cuba lagi" on a help screen can open the camera from its own tap.
+  const pickers = (
+    <>
       <input
         ref={cameraInput}
         type="file"
@@ -206,6 +147,115 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded }: MenuPageP
         hidden
         onChange={(e) => void handleFiles(e, 'galleryUpload')}
       />
-    </Screen>
+    </>
+  );
+
+  const tiles = CAPTURE_TILES.filter((tile) => event.features.includes(tile.feature));
+  const hasGallery = event.features.includes('publicGallery');
+  // The pickers open from the tap itself (iOS needs a user gesture, pitfall C1).
+  const open: Partial<Record<CaptureFeatureKey, () => void>> = {
+    snapshot: () => cameraInput.current?.click(),
+    galleryUpload: () => galleryInput.current?.click(),
+  };
+
+  let content: ReactNode;
+  if (cameraHelp) {
+    content = (
+      <CameraHelpPage
+        onRetry={() => {
+          setCameraHelp(false);
+          cameraInput.current?.click();
+        }}
+        onContinue={() => {
+          setCameraHelp(false);
+          setCameraCancelled(false);
+          setNotices([t('device.useGalleryHint', { upload: t('menu.galleryUpload') })]);
+        }}
+      />
+    );
+  } else if (wifiQuestion) {
+    content = (
+      <LargeFilePrompt
+        largestBytes={wifiQuestion.largestBytes}
+        onNow={() => {
+          void finish(wifiQuestion, false);
+          setWifiQuestion(null);
+        }}
+        onLater={() => {
+          void finish(wifiQuestion, true);
+          setWifiQuestion(null);
+        }}
+      />
+    );
+  } else {
+    content = (
+      <Screen>
+        <CoupleHeader event={event} />
+        <p className="-mt-4 mb-2 font-bold">{t('menu.greeting', { name: displayName })}</p>
+
+        <QueueIndicator
+          summary={summary}
+          onSendNow={() => void actions().then((m) => m.sendHeld(event.eventId))}
+          onRepick={() => galleryInput.current?.click()}
+          onRetry={() => void actions().then((m) => m.retryFailed(event.eventId))}
+        />
+        {summary.memoryOnly && !storageAcknowledged ? (
+          <section role="alert" className="flex flex-col gap-3 rounded-card border border-line bg-paper-2 p-4">
+            <p>{t('device.storageBlocked')}</p>
+            <Button onClick={() => setStorageAcknowledged(true)}>{t('device.continueWithoutStorage')}</Button>
+          </section>
+        ) : null}
+        {notices.map((notice) => (
+          <p key={notice} role="status" className="text-caption">
+            {notice}
+          </p>
+        ))}
+        {cameraCancelled ? <Button onClick={() => setCameraHelp(true)}>{t('device.cameraNotOpened')}</Button> : null}
+
+        <nav aria-label={event.displayNames} className="grid grid-cols-2 gap-4">
+          {tiles.map((tile, index) => {
+            const ready = READY.has(tile.feature);
+            return (
+              <Tile
+                key={tile.feature}
+                icon={<Icon name={tile.icon} />}
+                label={t(`menu.${tile.feature}`)}
+                disabled={!ready}
+                {...(ready ? { onClick: open[tile.feature] } : { note: t('menu.comingSoon') })}
+                // An odd last tile spans the full width (design.md).
+                wide={index === tiles.length - 1 && tiles.length % 2 === 1}
+              />
+            );
+          })}
+          {hasGallery ? (
+            galleryUnlocked ? (
+              <Tile icon={<Icon name="gallery" />} label={t('menu.gallery')} to="gallery" wide />
+            ) : (
+              <Tile
+                icon={<Icon name="lock" />}
+                label={t('menu.gallery')}
+                note={t('menu.locked')}
+                onClick={() => setShowLockNotice(true)}
+                wide
+              />
+            )
+          ) : null}
+        </nav>
+
+        {showLockNotice && !galleryUnlocked ? (
+          <p role="status" className="rounded-card bg-paper-2 p-4">
+            {t('menu.galleryLockedNotice')}
+          </p>
+        ) : null}
+      </Screen>
+    );
+  }
+
+  // The pickers stay first in every state, so React keeps the same input elements.
+  return (
+    <>
+      {pickers}
+      {content}
+    </>
   );
 }

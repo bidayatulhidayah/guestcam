@@ -121,5 +121,46 @@
     "firebaseConnecting": "Menyambung ke emulator Firebase...",
     "firebaseConnected": "Emulator Firebase bersambung. ID tetamu: {{uid}}",
     "firebaseError": "Tidak dapat sambung ke emulator Firebase. Jalankan npm run emulators."
+  },
+  "device": {
+    "inAppTitle": {
+      "android": "Buka dalam Chrome",
+      "ios": "Buka dalam Safari",
+      "other": "Buka dalam pelayar telefon"
+    },
+    "inAppBody": "Pautan ini dibuka dalam {{app}}. Kamera dan Muat Naik Saya berfungsi lebih baik dalam {{browser}}.",
+    "inAppSteps": {
+      "ios": "Tekan ••• di penjuru skrin, kemudian pilih Buka dalam Safari atau Buka dalam pelayar luar.",
+      "other": "Tekan ••• di penjuru skrin, kemudian pilih Buka dalam pelayar."
+    },
+    "browser": {
+      "android": "Chrome",
+      "ios": "Safari",
+      "other": "pelayar telefon"
+    },
+    "apps": {
+      "instagram": "Instagram",
+      "facebook": "Facebook",
+      "messenger": "Messenger",
+      "tiktok": "TikTok",
+      "line": "LINE"
+    },
+    "openInChrome": "Buka dalam Chrome",
+    "copyLink": "Salin pautan",
+    "copied": "Pautan disalin. Tampal dalam {{browser}}.",
+    "copyFailed": "Pautan tidak dapat disalin. Buka menu ••• dan pilih pelayar.",
+    "continueHere": "Teruskan di sini",
+    "cameraNotOpened": "Kamera tidak terbuka?",
+    "cameraHelpTitle": "Benarkan kamera",
+    "cameraHelpBody": "Telefon mungkin menyekat kamera untuk laman ini. Ikut langkah ini, kemudian cuba lagi.",
+    "cameraSteps": {
+      "ios": "Buka Tetapan, pilih Safari, kemudian Kamera, dan pilih Benarkan.",
+      "chrome": "Tekan ikon di sebelah kiri alamat laman, pilih Kebenaran, kemudian benarkan Kamera.",
+      "samsung": "Buka Tetapan telefon, pilih Aplikasi, Samsung Internet, Kebenaran, kemudian benarkan Kamera."
+    },
+    "continueWithoutCamera": "Teruskan tanpa kamera",
+    "useGalleryHint": "Guna {{upload}} untuk hantar gambar dari galeri telefon.",
+    "storageBlocked": "Telefon ini tidak membenarkan simpanan untuk laman ini. Gambar disimpan sementara sahaja, jadi biarkan halaman ini terbuka sehingga semua dihantar.",
+    "continueWithoutStorage": "Teruskan tanpa simpanan"
   }
 }

@@ -1,4 +1,4 @@
-import Dexie, { type EntityTable } from 'dexie';
+import Dexie, { type DexieOptions, type EntityTable } from 'dexie';
 import type { QueueItem } from './types';
 
 interface StoredBlob {
@@ -11,8 +11,9 @@ export class QueueDb extends Dexie {
   items!: EntityTable<QueueItem, 'mediaId'>;
   blobs!: EntityTable<StoredBlob, 'mediaId'>;
 
-  constructor(name = 'guestcam-queue') {
-    super(name);
+  /** `options` can supply another IndexedDB implementation (the in-memory fallback). */
+  constructor(name = 'guestcam-queue', options?: DexieOptions) {
+    super(name, options);
     this.version(1).stores({
       items: 'mediaId, eventId, status, [eventId+status]',
       blobs: 'mediaId',

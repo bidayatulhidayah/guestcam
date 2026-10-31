@@ -30,6 +30,8 @@ export interface AddResult {
 export class UploadQueue {
   /** Bytes of `picked` and `memory` items. Lost on reload by nature. */
   readonly files = new Map<string, Blob>();
+  /** Items added on this page and not sent yet. */
+  private readonly unsent = new Set<string>();
   private readonly now: () => number;
   private readonly random: () => number;
   private readonly isOnline: () => boolean;
@@ -87,6 +89,7 @@ export class UploadQueue {
       }
     }
     if (storage !== 'stored') this.files.set(item.mediaId, data);
+    this.unsent.add(item.mediaId);
     const saved = { ...item, storage };
     await this.db.items.put(saved);
     this.kick();
@@ -126,9 +129,15 @@ export class UploadQueue {
       .first();
     if (!match) return false;
     this.files.set(match.mediaId, file);
+    this.unsent.add(match.mediaId);
     await this.db.items.update(match.mediaId, { status: 'waiting', nextAttemptAt: this.now(), resumed: true });
     this.kick();
     return true;
+  }
+
+  /** True while any item is not sent yet (synchronous: tracked as items are added and sent). */
+  hasUnsent(): boolean {
+    return this.unsent.size > 0;
   }
 
   /** False while a file lives only in this page's memory (gallery pick or storage-full capture) and is not sent yet. */
@@ -244,6 +253,7 @@ export class UploadQueue {
         await this.db.blobs.delete(item.mediaId);
       });
       this.files.delete(item.mediaId);
+      this.unsent.delete(item.mediaId);
       const sent = await this.db.items.get(item.mediaId);
       if (sent) this.sentListeners.forEach((listener) => listener(sent));
     } catch (error) {
