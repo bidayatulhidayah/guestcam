@@ -278,6 +278,37 @@ describe('upload queue', () => {
     expect(calls).toBe(1);
   });
 
+  it('a photo taken before the first privacy answer waits, then goes with the answer', async () => {
+    const server = fakeRemote();
+    const queue = newQueue(server.remote);
+    const photo = item({ awaitingChoice: true, visibility: 'private', showName: false });
+    await queue.add(photo, bytes());
+    await queue.drain();
+    expect((await db.items.get(photo.mediaId))?.status).toBe('waiting');
+    expect(server.calls.docCreates).toBe(0);
+
+    await queue.choose([photo.mediaId], 'public', true);
+    await queue.drain();
+    expect(await db.items.get(photo.mediaId)).toMatchObject({ status: 'sent', visibility: 'public', showName: true });
+  });
+
+  it('if the page closed at the privacy question, the photo is sent as Peribadi after a reload', async () => {
+    const server = fakeRemote();
+    const photo = item({ awaitingChoice: true, visibility: 'public', showName: true });
+    await db.items.put(photo);
+    await db.blobs.put({ mediaId: photo.mediaId, blob: bytes() });
+
+    const queue = newQueue(server.remote);
+    await queue.start();
+    await queue.drain();
+    expect(await db.items.get(photo.mediaId)).toMatchObject({
+      status: 'sent',
+      awaitingChoice: false,
+      visibility: 'private',
+      showName: false,
+    });
+  });
+
   it('knows whether anything added on this page is still unsent (memory-only storage guard)', async () => {
     const server = fakeRemote();
     const queue = newQueue(server.remote);

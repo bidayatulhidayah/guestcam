@@ -9,6 +9,9 @@ import { QueueIndicator } from '../capture/QueueIndicator';
 import { useQueueSummary } from '../capture/useQueueSummary';
 import { CameraHelpPage } from '../device/CameraHelpPage';
 import { useEvent } from '../entry/EventContext';
+import { DEFAULT_CHOICE, readPrivacyChoice, savePrivacyChoice, type PrivacyChoice } from '../privacy/privacyChoice';
+import { PrivacyPage } from '../privacy/PrivacyPage';
+import { PrivacySwitch } from '../privacy/PrivacySwitch';
 import { CoupleHeader } from '../onboarding/CoupleHeader';
 
 /** Menu order (D-045). Only effective features appear; the grid reflows. */
@@ -32,9 +35,17 @@ export interface MenuPageProps {
   galleryUnlocked: boolean;
   /** An item reached the server: the gallery may have just unlocked. */
   onUploaded: () => void;
+  /** The privacy choice changed: put it on the guest record. */
+  onChoiceSaved: () => void;
 }
 
-export function MenuPage({ displayName, galleryUnlocked, onUploaded }: MenuPageProps) {
+/** Captures waiting for the first privacy answer: saved camera photos and/or a gallery selection. */
+interface PrivacyQuestion {
+  photoIds: string[];
+  selection: PreparedSelection | null;
+}
+
+export function MenuPage({ displayName, galleryUnlocked, onUploaded, onChoiceSaved }: MenuPageProps) {
   const { t } = useTranslation();
   const event = useEvent();
   const summary = useQueueSummary(event.eventId);
@@ -47,9 +58,23 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded }: MenuPageP
   const [cameraCancelled, setCameraCancelled] = useState(false);
   const [cameraHelp, setCameraHelp] = useState(false);
   const [storageAcknowledged, setStorageAcknowledged] = useState(false);
+  const [privacyChoice, setPrivacyChoice] = useState<PrivacyChoice | null>(() => readPrivacyChoice(event.eventId));
+  const [privacyQuestion, setPrivacyQuestion] = useState<PrivacyQuestion | null>(null);
 
-  // Privacy step and "show my name" arrive in 1c; until then every item is private.
-  const context = { eventId: event.eventId, spaceId: event.spaceId, visibility: 'private' as const, showName: false };
+  // Until the first answer, captures are made as Peribadi and wait for the question.
+  const context = { eventId: event.eventId, spaceId: event.spaceId, ...(privacyChoice ?? DEFAULT_CHOICE) };
+
+  // Leaving the menu at the question: the waiting photos go as Peribadi, and the
+  // question is asked again next time (no choice is saved).
+  const waitingPhotos = useRef<string[]>([]);
+  waitingPhotos.current = privacyQuestion?.photoIds ?? [];
+  useEffect(
+    () => () => {
+      const ids = waitingPhotos.current;
+      if (ids.length > 0) void actions().then((m) => m.choosePrivacy(ids, DEFAULT_CHOICE));
+    },
+    [],
+  );
 
   // App updates may reload the menu when the guest comes back to it, but not
   // while a capture is being saved or the wifi question holds a selection.
@@ -58,9 +83,9 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded }: MenuPageP
     return () => allowUpdateOnReturn(false);
   }, []);
   useEffect(() => {
-    holdUpdates(saving || wifiQuestion !== null);
+    holdUpdates(saving || wifiQuestion !== null || privacyQuestion !== null);
     return () => holdUpdates(false);
-  }, [saving, wifiQuestion]);
+  }, [saving, wifiQuestion, privacyQuestion]);
 
   // The camera closed without a photo: maybe the guest changed their mind,
   // maybe the browser blocks it. Offer help without getting in the way (C6).
@@ -112,20 +137,47 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded }: MenuPageP
       const m = await actions();
       if (source === 'snapshot') {
         setCameraCancelled(false);
-        const photo = await m.takePhoto(first, context);
+        const awaitChoice = privacyChoice === null;
+        const photo = await m.takePhoto(first, context, awaitChoice);
         setNotices([
-          ...(photo.saved ? [t('capture.saved')] : []),
+          ...(photo.mediaId ? [t('capture.saved')] : []),
           ...(photo.unsupported ? [t('capture.unsupported', { count: 1 })] : []),
           ...(photo.quotaFallback ? [t('capture.storageFull')] : []),
         ]);
+        const mediaId = photo.mediaId;
+        if (mediaId && awaitChoice) {
+          setPrivacyQuestion((question) => ({
+            photoIds: [...(question?.photoIds ?? []), mediaId],
+            selection: question?.selection ?? null,
+          }));
+        }
         return;
       }
       const selection = await m.pickFromGallery(files, context);
-      if (m.needsWifiQuestion(selection)) setWifiQuestion(selection);
+      // Privacy first, then (for big files) the wifi question: one question per screen.
+      if (privacyChoice === null) setPrivacyQuestion({ photoIds: [], selection });
+      else if (m.needsWifiQuestion(selection)) setWifiQuestion(selection);
       else await finish(selection, false);
     } finally {
       setSaving(false);
     }
+  }
+
+  function changeChoice(choice: PrivacyChoice) {
+    savePrivacyChoice(event.eventId, choice);
+    setPrivacyChoice(choice);
+    onChoiceSaved();
+  }
+
+  async function answerPrivacy(question: PrivacyQuestion, choice: PrivacyChoice) {
+    changeChoice(choice);
+    setPrivacyQuestion(null);
+    const m = await actions();
+    await m.choosePrivacy(question.photoIds, choice);
+    if (!question.selection) return;
+    const selection = m.withChoice(question.selection, choice);
+    if (m.needsWifiQuestion(selection)) setWifiQuestion(selection);
+    else await finish(selection, false);
   }
 
   // Always mounted, so "Cuba lagi" on a help screen can open the camera from its own tap.
@@ -173,6 +225,8 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded }: MenuPageP
         }}
       />
     );
+  } else if (privacyQuestion) {
+    content = <PrivacyPage onDone={(choice) => void answerPrivacy(privacyQuestion, choice)} />;
   } else if (wifiQuestion) {
     content = (
       <LargeFilePrompt
@@ -211,6 +265,7 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded }: MenuPageP
           </p>
         ))}
         {cameraCancelled ? <Button onClick={() => setCameraHelp(true)}>{t('device.cameraNotOpened')}</Button> : null}
+        {privacyChoice ? <PrivacySwitch choice={privacyChoice} onChange={changeChoice} /> : null}
 
         <nav aria-label={event.displayNames} className="grid grid-cols-2 gap-4">
           {tiles.map((tile, index) => {
@@ -243,9 +298,14 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded }: MenuPageP
         </nav>
 
         {showLockNotice && !galleryUnlocked ? (
-          <p role="status" className="rounded-card bg-paper-2 p-4">
-            {t('menu.galleryLockedNotice')}
-          </p>
+          <section role="status" className="flex flex-col gap-3 rounded-card bg-paper-2 p-4">
+            <p>{t('menu.galleryLockedNotice')}</p>
+            {open.snapshot && tiles.some((tile) => tile.feature === 'snapshot') ? (
+              <Button icon={<Icon name="camera" />} onClick={open.snapshot}>
+                {t('menu.snapshot')}
+              </Button>
+            ) : null}
+          </section>
         ) : null}
       </Screen>
     );

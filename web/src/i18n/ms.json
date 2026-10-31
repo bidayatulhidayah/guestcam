@@ -162,5 +162,22 @@
     "useGalleryHint": "Guna {{upload}} untuk hantar gambar dari galeri telefon.",
     "storageBlocked": "Telefon ini tidak membenarkan simpanan untuk laman ini. Gambar disimpan sementara sahaja, jadi biarkan halaman ini terbuka sehingga semua dihantar.",
     "continueWithoutStorage": "Teruskan tanpa simpanan"
+  },
+  "privacy": {
+    "title": "Siapa boleh lihat?",
+    "privateTitle": "Peribadi",
+    "privateBody": "Hanya untuk pengantin",
+    "publicTitle": "Awam",
+    "publicBody": "Kongsi di galeri",
+    "changeLater": "Boleh tukar bila-bila masa di Muat Naik Saya.",
+    "nameTitle": "Tunjuk nama anda di galeri?",
+    "showName": "Tunjuk nama",
+    "showNameBody": "Nama dan swafoto anda dipaparkan bersama gambar.",
+    "hideName": "Tanpa nama",
+    "hideNameBody": "Gambar dipaparkan tanpa nama anda.",
+    "sendAs": "Dihantar sebagai",
+    "nameInGallery": "Nama di galeri",
+    "shown": "Tunjuk",
+    "hidden": "Tanpa nama"
   }
 }

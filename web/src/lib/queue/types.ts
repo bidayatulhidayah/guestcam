@@ -61,6 +61,11 @@ export interface QueueItem {
   meta: ItemMeta;
   docCreated: boolean;
   metaWritten: boolean;
+  /**
+   * Captured before the guest answered the first privacy question: not sent
+   * until they answer. After a reload it is sent as Peribadi (the safe default).
+   */
+  awaitingChoice?: boolean;
 }
 
 /** The server side of an upload, so the runner can be tested without Firebase. */

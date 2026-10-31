@@ -162,5 +162,22 @@
     "useGalleryHint": "Use {{upload}} to send photos from your phone's gallery.",
     "storageBlocked": "This phone does not allow storage for this site. Photos are only kept for now, so keep this page open until everything is sent.",
     "continueWithoutStorage": "Continue without storage"
+  },
+  "privacy": {
+    "title": "Who can see it?",
+    "privateTitle": "Private",
+    "privateBody": "Only for the couple",
+    "publicTitle": "Public",
+    "publicBody": "Share in the gallery",
+    "changeLater": "You can change this any time in My Uploads.",
+    "nameTitle": "Show your name in the gallery?",
+    "showName": "Show my name",
+    "showNameBody": "Your name and selfie appear with the photo.",
+    "hideName": "No name",
+    "hideNameBody": "The photo appears without your name.",
+    "sendAs": "Sending as",
+    "nameInGallery": "Name in the gallery",
+    "shown": "Shown",
+    "hidden": "No name"
   }
 }

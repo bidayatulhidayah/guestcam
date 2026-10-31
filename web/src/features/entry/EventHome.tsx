@@ -72,6 +72,11 @@ export function EventHome() {
     );
   }
   return (
-    <MenuPage displayName={profile?.displayName ?? ''} galleryUnlocked={galleryUnlocked} onUploaded={onUploaded} />
+    <MenuPage
+      displayName={profile?.displayName ?? ''}
+      galleryUnlocked={galleryUnlocked}
+      onUploaded={onUploaded}
+      onChoiceSaved={sync}
+    />
   );
 }

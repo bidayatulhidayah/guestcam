@@ -62,6 +62,20 @@ const paths: Record<IconName, ReactNode> = {
       <path d="M4 21a8 8 0 0 1 16 0" />
     </>
   ),
+  userHidden: (
+    <>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21a8 8 0 0 1 16 0" />
+      <path d="m3 3 18 18" />
+    </>
+  ),
+  trash: (
+    <>
+      <path d="M4 7h16" />
+      <path d="M9 7V4h6v3" />
+      <path d="M6 7l1 13h10l1-13" />
+    </>
+  ),
 };
 
 export type IconName =
@@ -74,7 +88,9 @@ export type IconName =
   | 'folderLock'
   | 'gallery'
   | 'lock'
-  | 'user';
+  | 'user'
+  | 'userHidden'
+  | 'trash';
 
 export function Icon({ name, size = 28 }: { name: IconName; size?: number }) {
   return (

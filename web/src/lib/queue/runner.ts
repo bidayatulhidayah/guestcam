@@ -65,6 +65,10 @@ export class UploadQueue {
   async start(): Promise<void> {
     // A photo whose EXIF was still being read when the page closed: send it without.
     await this.db.items.where('status').equals('preparing').modify({ status: 'waiting', nextAttemptAt: this.now() });
+    // The page closed at the privacy question: send as Peribadi; the question is asked again next time.
+    await this.db.items
+      .filter((item) => item.awaitingChoice === true)
+      .modify({ awaitingChoice: false, visibility: 'private', showName: false });
     const items = await this.db.items.where('status').anyOf('waiting', 'uploading').toArray();
     for (const item of items) {
       const lostFile = item.storage !== 'stored' && !this.files.has(item.mediaId);
@@ -99,6 +103,12 @@ export class UploadQueue {
   /** Adds the details read after saving (EXIF) and lets a `preparing` item be sent. */
   async finishPreparing(mediaId: string, details: Partial<QueueItem>): Promise<void> {
     await this.db.items.update(mediaId, { ...details, status: 'waiting', nextAttemptAt: this.now() });
+    this.kick();
+  }
+
+  /** The guest answered the privacy question: these items may go, with their choice. */
+  async choose(mediaIds: string[], visibility: QueueItem['visibility'], showName: boolean): Promise<void> {
+    await this.db.items.where('mediaId').anyOf(mediaIds).modify({ awaitingChoice: false, visibility, showName });
     this.kick();
   }
 
@@ -195,7 +205,7 @@ export class UploadQueue {
     const due = await this.db.items
       .where('status')
       .equals('waiting')
-      .filter((item) => item.nextAttemptAt <= now)
+      .filter((item) => item.nextAttemptAt <= now && item.awaitingChoice !== true)
       .toArray();
     due.sort((a, b) => a.priority - b.priority || a.createdAt - b.createdAt);
     const next = due[0];
