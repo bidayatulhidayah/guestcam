@@ -20,12 +20,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 - Muat Naik Saya (My Uploads): everything the guest sent to the event, with its status, a Peribadi / Awam switch, and delete; photos show a small preview. "Majlis saya" links to each event's uploads.
 - Links opened inside Instagram, Facebook, Messenger, TikTok or LINE first offer to open in Chrome or Safari (with "Salin pautan"), or to continue there.
 - If the camera does not open, "Kamera tidak terbuka?" shows how to allow it, or to continue without it; if the phone refuses storage, captures are kept in the open page and the guest is asked to keep it open.
+- Snap Gambar can also record a video with the phone's own camera, at full quality and any length (up to 4 GB). The video is saved on the phone first; one over 50 MB asks whether to send now or later on wifi.
+- After choosing "Teruskan di sini" inside Instagram, Facebook and similar apps, a small "Buka dalam Chrome" or "Buka dalam Safari" link stays at the top of every screen.
+- The code, error and help screens have a small "Kembali" link.
 
 ### Changed
 
 - The event link opens faster on slow phones and networks: on a slow 4G connection the name screen appears about 1.4 seconds sooner, and less code loads before the first screen.
 - App updates reach guests who keep the menu open: a new version is applied when they come back to the app, never while a photo is being saved or a gallery upload still needs the picked file.
 - The QR link shows the name screen right away (about 2.5 s on a slow 4G phone, was about 4.5 s) while the code is checked in the background; the couple's names appear from the next screen.
+- Muat Naik Saya is a compact grid of previews: small icons switch Peribadi / Awam, show or hide the name, or delete (still with a confirmation), and a corner mark shows whether each item is sent.
 
 ## [0.1] - 2026-10-27
 

@@ -48,6 +48,95 @@ Rules:
 
 ---
 
+## 2026-11-01 04:10 — Phase 1d polish: in-app link, back links, Snap Gambar video, My Uploads grid; theme directions
+
+- **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
+- **Version / branch:** v0.1 (+ unreleased) / `feat/phase-1d-polish` (from `main` after PR #8 was merged)
+- **Phase:** Phase 1 (target v0.2), polish from Hidayah's phone test, before "Jemput Kawan"
+- **Goal:** Hidayah's four requests:
+  1. A very small "Buka dalam Chrome/Safari" link after "Teruskan di sini", and a very small back arrow on code, error and help screens.
+  2. Snap Gambar opens the native camera in photo or video mode.
+  3. My Uploads as a compact preview grid with small icons.
+  4. Two or three theme directions shown as phone screenshots, then wait for a choice.
+
+### What changed and why
+- **In-app link (D-086):** after "Teruskan di sini", the top row (left of the language switch) shows a small link.
+  - Android: "Buka dalam Chrome" opens Chrome directly.
+  - iPhone: "Buka dalam Safari" shows the Safari steps and "Salin pautan" again, with "Kembali".
+  - The link is the address as first opened, so it still has the event code even after joining removed it from the address bar. It is kept in memory only.
+  - The page underneath stays mounted while the notice is open, so a capture or question in progress is kept.
+  - Built with a small top-bar slot (`components/TopBar.tsx`) that `RootLayout` provides.
+- **Back links (D-086):** `Screen` has a `back` prop that renders a small "Kembali" (arrow + word, caption size, 44 px tall).
+  - Used on the code screen, the offline screen, the alias-inactive page, the not-found page, the camera help and the in-app notice when reopened.
+  - Without a handler it goes to the previous page, and it is hidden when there is none (a QR scan opens a fresh tab).
+  - I kept the word next to the arrow because design.md asks for icon + word everywhere except the My Uploads exception.
+- **Snap Gambar video (D-084, plan approved by Hidayah):**
+  - The camera picker accepts `image/*,video/*`. A camera video is saved to IndexedDB first like a photo, unchanged and with no length limit (4 GB cap), and goes after photos.
+  - A video over 50 MB is saved as `held` and gets the "now or later on wifi" question, after the first privacy question when there is one. "Now" releases only that video (`release(eventId, mediaIds)`). Closing the page at the question leaves it held, and the queue bar offers "Hantar sekarang".
+  - Rules: a `snapshot` media doc may be `image` or `video`. `shared` `SOURCE_MEDIA_TYPES` matches. The functions already treat camera and gallery videos alike.
+  - This narrows S-03 and D-009 in memory.md.
+- **My Uploads grid (D-085):**
+  - Two columns of previews on phones (three from 480 px) with a printed-photo border.
+  - Per item, 48 px icon buttons: lock/globe, person (Awam only), bin (same confirmation screen). A corner status mark: dot with a check = sent, ring = sending, empty ring = waiting, "!" = needs the guest.
+  - A one-line legend sits on top, and every icon has an aria-label. "Cuba lagi" and "Hantar sekarang" moved above the grid.
+  - Recorded in design.md as the exception to "icon + word".
+  - Two columns rather than three: three 48 px buttons don't fit under a third of a 360 px screen, and smaller targets would fail older guests.
+- **Theme directions (item 4, not built):** a mockup board with three directions on the welcome (after the code check), menu and My Uploads screens. All three stay inside design.md (paper, ink, one olive accent, Instrument Serif names, Atkinson body, no shadows or gradients):
+  - A Kad Klasik: framed and centred, monogram in a double ring.
+  - B Moden Tenang: left-aligned, square stamp monogram, prints with a deeper bottom margin, no grain.
+  - C Gerbang: the cover photo in an arch with the monogram on its sill, and faint paper fibres.
+
+  The board is a private claude.ai artifact plus nine PNG screenshots in the session scratchpad. Waiting for Hidayah's choice before building.
+
+### Files touched
+| File | Change |
+| --- | --- |
+| `web/src/components/ui/BackLink.tsx`, `components/TopBar.tsx` | added: small "Kembali"; top-row slot |
+| `web/src/components/ui/Screen.tsx`, `Icon.tsx`, `index.ts` | modified: `back` prop; `globe`, `arrowLeft` icons |
+| `web/src/app/RootLayout.tsx`, `NotFoundPage.tsx`, `components/PlaceholderPage.tsx` | modified: top-row slot; back link |
+| `web/src/features/entry/SpaceLayout.tsx`, `device/InAppBrowserScreen.tsx` | modified: in-app link, notice reopened with "Kembali", link with the code |
+| `web/src/features/entry/CodeScreen.tsx`, `StatusScreens.tsx`, `AliasInactivePage.tsx`, `device/CameraHelpPage.tsx` | modified: back links |
+| `firestore.rules`, `shared/src/media.ts`, `rules-tests/tests/firestore-media.test.ts` | modified: snapshot may be video; tests |
+| `web/src/lib/queue/capture.ts`, `runner.ts`, `features/capture/captureActions.ts`, `LargeFilePrompt.tsx`, `features/menu/MenuPage.tsx` | modified: camera video, held large video, wifi question for it |
+| `web/tests/queue.test.ts` | modified: held camera video test |
+| `web/src/features/uploads/MyUploadsPage.tsx` | modified: grid, icons, status marks, legend |
+| `web/src/i18n/ms.json`, `en.json` | modified: `common.back`, `capture.largeBodyVideo`, `uploads.legendName`, `uploads.icons.*` |
+| `CHANGELOG.md`, `docs/ai/memory.md`, `docs/product/design.md`, `docs/ai/worklog.md` | modified: entries, D-084 to D-086, S-03/D-009 notes, design exception, this entry |
+
+### Commands run and results
+| Command | Result |
+| --- | --- |
+| `npm run typecheck` | clean (also each commit on its own) |
+| `npm run test:unit` | shared 46, web 40 passed (+1 held camera video) |
+| `npm run test:emulators` | 83 passed (+1 snapshot video rule) |
+| Mockup screenshots (headless Chrome, 390 px) | 9 screens rendered and reviewed |
+
+### Decisions
+- D-084, D-085, D-086 (memory.md). S-03 and D-009 marked as narrowed by D-084.
+
+### Problems, risks, open questions
+- **Backend deploy needed after merge:** the rule change only takes effect after Hidayah runs `npm run deploy:backend`. Until then the live project refuses camera videos (the item would fail with a permission error and show "!").
+- **Android picker behaviour:** with both `image/*` and `video/*`, some Android phones open a chooser (camera / camcorder) instead of the camera directly. Needs the phone test; iPhone opens the camera with a Photo/Video switch.
+- Camera videos are copied into IndexedDB. Very long videos rely on the browser's storage quota; when it is full the existing fallback keeps the file in the page and asks the guest to keep it open.
+- The in-app link loses the event code after a reload in the in-app browser (memory only). Then Chrome/Safari shows the code screen. "Jemput Kawan" (D-076) will let members get the code back.
+- Emulator smoke tests and a live preview check of the new screens are still to run, after the theme is built, before the PR.
+- Tooling: staging single hunks with `git apply --unidiff-zero` put one line in the wrong place, and a stash pop carried it into the working copy. Caught by typechecking each commit alone and fixed before committing. Staging now uses HEAD + exact edits (`git update-index --cacheinfo`).
+
+### Next steps
+- [ ] Hidayah picks a theme direction (A, B or C, or a mix); build it.
+- [ ] Smoke tests on the emulators, preview deploy, live check, then open the PR.
+- [ ] After merge: Hidayah runs `npm run deploy:backend` for the snapshot video rule.
+- [ ] Phone checks: Snap Gambar video on Android (picker) and iPhone, the in-app link in Instagram/Facebook, the My Uploads grid.
+- [ ] Then "Jemput Kawan" (D-076).
+
+### Commits
+- `3cd643d` feat(device): small open-in-browser link and back links
+- `051414a` security(capture): Snap Gambar opens the phone camera for photo or video
+- `f1bf42a` feat(uploads): My Uploads as a compact preview grid with small icons
+- docs commit with this entry
+
+---
+
 ## 2026-10-31 11:30 — Phase 1c: fast name screen, privacy step, My Uploads, device handling
 
 - **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows

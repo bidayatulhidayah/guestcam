@@ -53,11 +53,13 @@ Measured contrast with the test accent: ink on paper 13.3:1, olive on paper 7.2:
 - Borders: 1px `--line` hairlines. No drop shadows. Elevation is shown by `--paper-2`, not shadow.
 - One quiet decorative element allowed: a thin double rule in `--line` under the couple's names, echoing an invitation card. Nothing else ornamental on working screens.
 - Photos get a slim paper-coloured border like a printed photo.
+- Small text links are allowed only in the top row and above a screen title: "Kembali" on code, error and help screens, and "Buka dalam Chrome/Safari" after a guest chose to stay in an in-app browser (D-086). Caption size, at least 44 px tall to tap.
 
 ## Icons
 
 - One outline icon set, 2px stroke, 28-32px in tiles (e.g. Phosphor or Lucide, restyled consistently).
-- Every icon has a word next to it. No icon-only buttons except the camera flip.
+- Every icon has a word next to it. No icon-only buttons except the camera flip and the My Uploads item icons.
+- **Exception, My Uploads (D-085):** under each preview, icon-only 48 px buttons (lock/globe = Peribadi/Awam, person = show name, bin = delete) and a corner status mark. A one-line legend with words sits above the grid, and every icon has an aria-label. Delete still asks on its own screen.
 - Custom-draw the five that define the app: shutter, phone (Telefon Pengantin), letter (Tulis Ucapan), boomerang loop, folder with lock (Folder Kongsi).
 
 ## Motion, sound, touch
