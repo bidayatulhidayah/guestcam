@@ -209,6 +209,13 @@
     "deleted": "Item dipadam.",
     "actionFailed": "Tidak berjaya. Semak sambungan anda, kemudian cuba lagi.",
     "serverError": "Item di pelayan tidak dapat dimuatkan sekarang. Item di telefon ini masih dipaparkan.",
-    "openButton": "Muat Naik Saya"
+    "openButton": "Muat Naik Saya",
+    "legendName": "Nama",
+    "icons": {
+      "private": "Peribadi. Tekan untuk jadikan Awam",
+      "public": "Awam. Tekan untuk jadikan Peribadi",
+      "nameShown": "Nama ditunjuk. Tekan untuk sembunyikan",
+      "nameHidden": "Tanpa nama. Tekan untuk tunjuk nama"
+    }
   }
 }

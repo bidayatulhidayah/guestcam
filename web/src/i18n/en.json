@@ -209,6 +209,13 @@
     "deleted": "Item deleted.",
     "actionFailed": "That did not work. Check your connection, then try again.",
     "serverError": "Items on the server could not be loaded right now. Items on this phone are still shown.",
-    "openButton": "My Uploads"
+    "openButton": "My Uploads",
+    "legendName": "Name",
+    "icons": {
+      "private": "Private. Tap to make it Public",
+      "public": "Public. Tap to make it Private",
+      "nameShown": "Name shown. Tap to hide it",
+      "nameHidden": "No name. Tap to show your name"
+    }
   }
 }
