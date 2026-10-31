@@ -61,6 +61,11 @@ export interface QueueItem {
   meta: ItemMeta;
   docCreated: boolean;
   metaWritten: boolean;
+  /**
+   * Captured before the guest answered the first privacy question: not sent
+   * until they answer. After a reload it is sent as Peribadi (the safe default).
+   */
+  awaitingChoice?: boolean;
 }
 
 /** The server side of an upload, so the runner can be tested without Firebase. */
@@ -71,6 +76,8 @@ export interface QueueRemote {
   ensureMediaDoc(item: QueueItem, uid: string): Promise<void>;
   /** Writes private/meta once. */
   writeMeta(item: QueueItem): Promise<void>;
+  /** The guest switched privacy while the doc was being created: bring the doc in line. */
+  updateVisibility(item: QueueItem): Promise<void>;
   fileExists(path: string): Promise<boolean>;
   upload(
     path: string,

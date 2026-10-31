@@ -16,11 +16,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 - Muat Naik: send photos and videos from the phone gallery, several at once, any length up to 4 GB. A selection with a file over 50 MB asks once: upload now, or later on wifi.
 - Nothing is lost on bad internet: items wait on the phone, send one at a time (photos first), retry by themselves, and continue after the page is reloaded; the menu shows what is waiting, sending, or needs attention.
 - Galeri unlocks after the guest's first upload reaches the server.
+- Privacy step: the first upload of an event asks Peribadi ("Hanya untuk pengantin") or Awam ("Kongsi di galeri"), and for Awam whether to show the guest's name; later uploads use a small switch on the menu that remembers the choice. Peribadi is the default.
+- Muat Naik Saya (My Uploads): everything the guest sent to the event, with its status, a Peribadi / Awam switch, and delete; photos show a small preview. "Majlis saya" links to each event's uploads.
+- Links opened inside Instagram, Facebook, Messenger, TikTok or LINE first offer to open in Chrome or Safari (with "Salin pautan"), or to continue there.
+- If the camera does not open, "Kamera tidak terbuka?" shows how to allow it, or to continue without it; if the phone refuses storage, captures are kept in the open page and the guest is asked to keep it open.
 
 ### Changed
 
 - The event link opens faster on slow phones and networks: on a slow 4G connection the name screen appears about 1.4 seconds sooner, and less code loads before the first screen.
 - App updates reach guests who keep the menu open: a new version is applied when they come back to the app, never while a photo is being saved or a gallery upload still needs the picked file.
+- The QR link shows the name screen right away (about 2.5 s on a slow 4G phone, was about 4.5 s) while the code is checked in the background; the couple's names appear from the next screen.
 
 ## [0.1] - 2026-10-27
 

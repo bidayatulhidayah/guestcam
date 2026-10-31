@@ -202,6 +202,19 @@ describe('updating and deleting media docs', () => {
     }
   });
 
+  it('My Uploads: after the server marked it uploaded, the owner still switches it both ways and deletes it', async () => {
+    await patchAsAdmin(firestorePaths.media(ids.event, MEDIA_ID), { status: 'uploaded' });
+    await assertSucceeds(
+      updateDoc(mediaDoc(ids.guest), { visibility: 'public', showName: true, updatedAt: serverTimestamp() }),
+    );
+    await assertSucceeds(
+      updateDoc(mediaDoc(ids.guest), { visibility: 'private', showName: false, updatedAt: serverTimestamp() }),
+    );
+    await assertFails(updateDoc(mediaDoc(ids.otherGuest), { visibility: 'public', updatedAt: serverTimestamp() }));
+    await assertFails(getDoc(mediaDoc(ids.otherGuest)));
+    await assertSucceeds(deleteDoc(mediaDoc(ids.guest)));
+  });
+
   it('other guests cannot change an item', async () => {
     await assertFails(updateDoc(mediaDoc(ids.otherGuest), { visibility: 'public', updatedAt: serverTimestamp() }));
   });

@@ -48,6 +48,97 @@ Rules:
 
 ---
 
+## 2026-10-31 11:30 — Phase 1c: fast name screen, privacy step, My Uploads, device handling
+
+- **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
+- **Version / branch:** v0.1 (+ unreleased) / `feat/phase-1c`
+- **Phase:** Phase 1 (target v0.2), PR 1c of 3
+- **Goal:** The approved 1c plan with Hidayah's choices (privacy question after capture, small previews kept on the phone, in-app notice that never blocks) and additions:
+  1. Fast name screen: "Cuba lagi" after 15 s, name kept.
+  2. In-app notice before any join or address change.
+  3. A file landing after its item was deleted mid-upload is removed, with a test.
+  4. Closing at the privacy question sends Peribadi and keeps `lastVisibility` null.
+  5. My Uploads merges phone and server by `mediaId`.
+
+  Also recorded D-077: keep `joinEvent` warm only during an event's window, planned for Phase 4/5.
+
+### What changed and why
+- **Fast name screen (D-078):** a first-time guest on a QR link types their name on a neutral screen while sign-in and `joinEvent` run. The couple's names and theme now appear on the selfie screen (it gained the couple header). Wrong code → code screen. 15 s without an answer after "Teruskan" → "Cuba lagi", with the typed name kept.
+- **Event screens load during the name step (D-083):**
+  - Selfie, menu, privacy, My Uploads and gallery moved to a lazy chunk, fetched while the guest types.
+  - The first screen is now 144.6 KB (gzip -9 sum of the scripts the page preloads). Before the move it was close to the 150 KB limit.
+- **Device handling (D-081, D-082):**
+  - In-app browser notice ("Buka dalam Chrome" / Safari steps, "Salin pautan", "Teruskan di sini"), shown before anything joins.
+  - "Kamera tidak terbuka?" help after a cancelled camera.
+  - In-memory queue database (`fake-indexeddb`, now a runtime dependency loaded only in this case) when the phone refuses IndexedDB. Dexie's live updates do not see that database, so the menu re-reads it every second.
+  - Found while testing: the menu's hidden file pickers changed place between screens, so a photo taken from the help screen would have been lost. They now keep one position.
+- **Privacy step (D-079):**
+  - Full-screen Peribadi / Awam, then the name question for Awam.
+  - Camera photos wait with `awaitingChoice`; a gallery selection is asked before the wifi question.
+  - Leaving or reloading at the question → Peribadi, asked again next time.
+  - Menu switch afterwards; the choice is kept on the phone and on the guest record.
+  - The locked-gallery notice has a Snap Gambar shortcut.
+- **My Uploads (D-080):**
+  - `/s/:publicId/:eventSlug/mine`, merged by `mediaId`.
+  - Status per item, Peribadi / Awam switch, Padam with a confirmation screen.
+  - Deleting during an upload aborts it and the queue never sends that item again.
+  - A privacy switch made while the doc is being created is applied right after.
+  - Photo previews (~320 px) are made in a Web Worker and kept on the phone.
+  - The menu button appears once there is an item; "Majlis saya" links to each event's uploads with the count sent from this phone.
+- **Bug fixed, found in the preview screenshots:** My Uploads showed "Belum sampai" for a sent photo, because the server list was read before the server had processed the upload. The phone now decides "sent"; the server only adds a refusal (`d2e7ab7`, with a test).
+- **No security-rule or function code changes.** The existing rules already allowed every 1c flow. New tests prove them: switching and deleting after the upload landed, and the trigger removing a file that lands after a mid-upload delete.
+
+### Files touched
+| File | Change |
+| --- | --- |
+| `web/src/features/entry/EventRoute.tsx`, `SpaceLayout.tsx`, `MyEventsPage.tsx` | neutral join flow, lazy event screens, in-app gate, My Uploads links |
+| `web/src/features/onboarding/WelcomePage.tsx`, `SelfiePage.tsx`, `guestSync.ts`, `EventHome.tsx` | neutral mode, couple header on the selfie screen, privacy choice on the guest record |
+| `web/src/features/menu/MenuPage.tsx` | privacy step and switch, camera help, storage notice, My Uploads button, fixed picker position |
+| `web/src/features/privacy/*`, `features/uploads/*`, `features/device/*` | added: privacy screens, My Uploads, in-app and camera help screens |
+| `web/src/lib/queue/*` | `awaitingChoice`, `choose`, `setVisibility`, `remove` with abort, `saveThumb`, `hasUnsent`, thumbs table (Dexie v2), in-memory fallback |
+| `web/src/lib/media/thumbnail*.ts`, `lib/device/inAppBrowser.ts`, `copyText.ts` | added: preview worker, in-app detection, copy link |
+| `web/src/components/ui/Icon.tsx`, `web/src/i18n/{ms,en}.json` | icons `userHidden`, `trash`; strings `device`, `privacy`, `uploads`, `mine`, `welcome.title` |
+| `web/tests/{queue,inAppBrowser,mergeItems}.test.ts`, `rules-tests/tests/{firestore-media,functions-media}.test.ts` | new tests |
+| `web/package.json`, `package-lock.json` | `fake-indexeddb` moved to dependencies |
+| `CHANGELOG.md`, `docs/ai/memory.md`, `docs/ai/worklog.md` | changelog, D-077 to D-083, status, this entry |
+
+### Commands run and results
+| Command | Result |
+| --- | --- |
+| Name box ready, preview, Slow 4G + 4x CPU, 4 runs each | before (main): 4.45 / 4.49 / 4.54 / 4.62 s; after: 2.43 / 2.46 / 2.56 / 2.62 s |
+| Name-screen edge cases on the preview | 8/8: wrong code → code screen without couple info; offline → "Cuba lagi" keeps the name; join held 15.0 s → "Cuba lagi" → joins |
+| `npm test` (with `FUNCTIONS_DISCOVERY_TIMEOUT=60`) | shared 46, web 38 (39 after the merge fix, unit run), emulators 82; typecheck clean |
+| Emulator smoke tests on the final code | 1b 15/15 (now answers the privacy question), device 15/15, privacy 15/15, My Uploads 16/16 |
+| Preview deploy + live check on `guestcam-2026` (test space #00100) | 8/8: in-app notice, neutral name screen, selfie with couple, privacy question, upload, My Uploads with preview, delete; no page errors. The delete ran `onMediaDeleted` live for the first time |
+| Screenshots of every new screen (390 px) | reviewed against design.md: paper, one accent, 64 px buttons, no banned patterns |
+
+### Decisions
+- D-077 to D-083 in memory.md.
+
+### Problems, risks, open questions
+- First-screen size: the commit message of `c11f33c` compares Vite's reported sizes (about 147 KB before) with a gzip -9 sum (about 143 KB after); from now on sizes in docs are gzip -9 sums of every script the page preloads.
+- Previews are not made where the browser cannot decode the photo in a worker (HEIC on Android Chrome, older Safari without OffscreenCanvas); those show an icon. Not yet tried on a real iPhone.
+- The "Buka dalam Chrome" link and "Salin pautan" have not been tried inside a real Instagram or Facebook app yet; the iPhone Safari steps text is generic for each app's menu.
+- The camera "cancel" event exists only in newer browsers (Chrome 113+, Safari 16.4+); older ones simply never show "Kamera tidak terbuka?".
+- Phase 3 still open: copy the guest's name onto public items (P2), stale `queued` clean-up (U2).
+
+### Next steps
+- [ ] Hidayah: phone checklist on the preview (Android Chrome; iPhone Safari and WhatsApp/Instagram when available), review and squash-merge
+- [ ] "Jemput Kawan" (D-076) as its own PR
+- [ ] iPhone checks, then v0.2 when Hidayah asks
+
+### Commits
+- `a229bbd` docs: record event-day warm joinEvent as a Phase 4/5 task
+- `ec24ec9` perf(entry): show a neutral name screen while the QR code is checked
+- `4e4c2f1` feat(device): offer Chrome or Safari in in-app browsers; camera and storage help
+- `c11f33c` perf(web): load the event screens while the guest types their name
+- `562056f` feat(privacy): ask Peribadi or Awam on the first upload, then a switch
+- `94945c0` feat(uploads): My Uploads with status, privacy switch, delete and previews
+- `d2e7ab7` fix(uploads): show a sent item as sent before the server has processed it
+- (this commit) docs: record Phase 1c decisions, changelog and work log
+
+---
+
 ## 2026-10-31 10:20 — First-load speed, safe app updates, sent-listener fix
 
 - **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows

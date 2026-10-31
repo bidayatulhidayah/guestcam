@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { QueueDb } from '../src/lib/queue/db';
 import { UploadQueue } from '../src/lib/queue/runner';
 import type { QueueItem, QueueRemote } from '../src/lib/queue/types';
@@ -13,13 +13,17 @@ let dbCount = 0;
 function fakeRemote() {
   const docs = new Set<string>();
   const files = new Set<string>();
-  const calls = { docCreates: 0, metaWrites: 0, uploads: 0 };
+  const calls = { docCreates: 0, metaWrites: 0, uploads: 0, visibilityUpdates: [] as string[] };
+  // Hold a step open until the test lets it go (or the upload is aborted).
+  let docGate: Promise<void> | null = null;
+  let uploadGate: Promise<void> | null = null;
   let failUploads = 0;
   let failWith: { code: string } | Error = new Error('network down');
   let loseReply = false;
   const remote: QueueRemote = {
     uid: async () => UID,
     ensureMediaDoc: async (item) => {
+      if (docGate) await docGate;
       if (docs.has(item.mediaId)) return;
       calls.docCreates++;
       docs.add(item.mediaId);
@@ -27,8 +31,18 @@ function fakeRemote() {
     writeMeta: async () => {
       calls.metaWrites++;
     },
+    updateVisibility: async (item) => {
+      calls.visibilityUpdates.push(`${item.visibility}/${item.showName}`);
+    },
     fileExists: async (path) => files.has(path),
-    upload: async (path, _data, _type, onProgress) => {
+    upload: async (path, _data, _type, onProgress, signal) => {
+      if (uploadGate) {
+        const gate = uploadGate;
+        await new Promise<void>((resolve, reject) => {
+          void gate.then(resolve);
+          signal.addEventListener('abort', () => reject(new Error('aborted')));
+        });
+      }
       if (failUploads > 0) {
         failUploads--;
         throw failWith;
@@ -52,6 +66,23 @@ function fakeRemote() {
     },
     loseNextReply() {
       loseReply = true;
+    },
+    /** Holds the next doc creations / uploads; returns the function that lets them go. */
+    holdDocs() {
+      let release = () => {};
+      docGate = new Promise((resolve) => (release = resolve));
+      return () => {
+        docGate = null;
+        release();
+      };
+    },
+    holdUploads() {
+      let release = () => {};
+      uploadGate = new Promise((resolve) => (release = resolve));
+      return () => {
+        uploadGate = null;
+        release();
+      };
     },
   };
 }
@@ -126,7 +157,7 @@ describe('upload queue', () => {
     await queue.drain();
     expect((await db.items.get(first.mediaId))?.status).toBe('sent');
     expect(await db.blobs.get(first.mediaId)).toBeUndefined();
-    expect(server.calls).toEqual({ docCreates: 1, metaWrites: 1, uploads: 1 });
+    expect(server.calls).toEqual({ docCreates: 1, metaWrites: 1, uploads: 1, visibilityUpdates: [] });
   });
 
   it('sends one at a time, photos before videos, oldest first', async () => {
@@ -276,6 +307,91 @@ describe('upload queue', () => {
     await queue.add(item(), bytes());
     await queue.drain();
     expect(calls).toBe(1);
+  });
+
+  it('My Uploads delete: a waiting item is forgotten and never sent', async () => {
+    const server = fakeRemote();
+    const queue = newQueue(server.remote, { isOnline: () => false });
+    const one = item();
+    await queue.add(one, bytes());
+    expect(await queue.remove(one.mediaId)).toEqual({ docCreated: false });
+    expect(await db.items.count()).toBe(0);
+    expect(await db.blobs.count()).toBe(0);
+    expect(server.calls.uploads).toBe(0);
+  });
+
+  it('My Uploads delete during the upload stops it, and reports that the doc may exist', async () => {
+    const server = fakeRemote();
+    const release = server.holdUploads();
+    const queue = newQueue(server.remote);
+    const one = item();
+    await queue.add(one, bytes());
+    const draining = queue.drain();
+    await vi.waitFor(async () => expect((await db.items.get(one.mediaId))?.status).toBe('uploading'));
+
+    expect(await queue.remove(one.mediaId)).toEqual({ docCreated: true });
+    release();
+    await draining;
+    expect(await db.items.get(one.mediaId)).toBeUndefined();
+    expect(server.calls.uploads).toBe(0);
+    expect(server.files.size).toBe(0);
+  });
+
+  it('switching privacy while the doc is being created updates the doc afterwards', async () => {
+    const server = fakeRemote();
+    const release = server.holdDocs();
+    const queue = newQueue(server.remote);
+    const one = item({ visibility: 'private', showName: false });
+    await queue.add(one, bytes());
+    const draining = queue.drain();
+    await vi.waitFor(async () => expect((await db.items.get(one.mediaId))?.status).toBe('uploading'));
+
+    await queue.setVisibility(one.mediaId, 'public', true);
+    release();
+    await draining;
+    expect(server.calls.visibilityUpdates).toEqual(['public/true']);
+    expect(await db.items.get(one.mediaId)).toMatchObject({ status: 'sent', visibility: 'public', showName: true });
+  });
+
+  it('a photo taken before the first privacy answer waits, then goes with the answer', async () => {
+    const server = fakeRemote();
+    const queue = newQueue(server.remote);
+    const photo = item({ awaitingChoice: true, visibility: 'private', showName: false });
+    await queue.add(photo, bytes());
+    await queue.drain();
+    expect((await db.items.get(photo.mediaId))?.status).toBe('waiting');
+    expect(server.calls.docCreates).toBe(0);
+
+    await queue.choose([photo.mediaId], 'public', true);
+    await queue.drain();
+    expect(await db.items.get(photo.mediaId)).toMatchObject({ status: 'sent', visibility: 'public', showName: true });
+  });
+
+  it('if the page closed at the privacy question, the photo is sent as Peribadi after a reload', async () => {
+    const server = fakeRemote();
+    const photo = item({ awaitingChoice: true, visibility: 'public', showName: true });
+    await db.items.put(photo);
+    await db.blobs.put({ mediaId: photo.mediaId, blob: bytes() });
+
+    const queue = newQueue(server.remote);
+    await queue.start();
+    await queue.drain();
+    expect(await db.items.get(photo.mediaId)).toMatchObject({
+      status: 'sent',
+      awaitingChoice: false,
+      visibility: 'private',
+      showName: false,
+    });
+  });
+
+  it('knows whether anything added on this page is still unsent (memory-only storage guard)', async () => {
+    const server = fakeRemote();
+    const queue = newQueue(server.remote);
+    expect(queue.hasUnsent()).toBe(false);
+    await queue.add(item(), bytes());
+    expect(queue.hasUnsent()).toBe(true);
+    await queue.drain();
+    expect(queue.hasUnsent()).toBe(false);
   });
 
   it('an app update may reload only when nothing lives just in memory (gallery picks, storage-full captures)', async () => {

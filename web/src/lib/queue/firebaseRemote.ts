@@ -1,5 +1,5 @@
 import { firestorePaths, storagePaths } from '@guestcam/shared';
-import { Timestamp, doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore/lite';
+import { Timestamp, doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore/lite';
 import { getDb } from '../firebase/firestore';
 import { loadFirebase } from '../firebase/load';
 import { storage } from '../storage';
@@ -59,6 +59,14 @@ export const firebaseRemote: QueueRemote = {
       if (item.attempts > 0 && (error as { code?: string }).code === 'permission-denied') return;
       throw error;
     }
+  },
+
+  async updateVisibility(item: QueueItem) {
+    await updateDoc(doc(getDb(), firestorePaths.media(item.eventId, item.mediaId)), {
+      visibility: item.visibility,
+      showName: item.showName,
+      updatedAt: serverTimestamp(),
+    });
   },
 
   fileExists: (path) => storage.fileExists(path),
