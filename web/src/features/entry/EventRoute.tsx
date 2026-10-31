@@ -1,15 +1,20 @@
 import { parseEntry } from '@guestcam/shared';
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router';
-import { GalleryPage } from '../gallery/GalleryPage';
 import { readProfile, saveProfile } from '../onboarding/profileStore';
 import { WelcomePage } from '../onboarding/WelcomePage';
 import { CodeScreen, type CodeError } from './CodeScreen';
 import { EventProvider } from './EventContext';
-import { EventHome } from './EventHome';
 import { LoadingScreen, OfflineScreen } from './StatusScreens';
 import { useEventView } from './useEventView';
+
+// The event screens (selfie, menu, capture, gallery) are not part of the first
+// screen: a QR scan starts on the name screen, and they are fetched while the
+// guest types (and precached for reopening offline).
+const loadEventHome = () => import('./EventHome');
+const EventHome = lazy(() => loadEventHome().then((m) => ({ default: m.EventHome })));
+const GalleryPage = lazy(() => import('../gallery/GalleryPage').then((m) => ({ default: m.GalleryPage })));
 
 /** Passed in navigation state after a failed join, so the code never stays in the address bar. */
 interface CodeErrorState {
@@ -57,6 +62,10 @@ function JoinWithCode({ publicId, eventSlug, code }: { publicId: string; eventSl
   const [attempt, setAttempt] = useState(0);
   // React StrictMode runs effects twice in development; one wrong code must count once.
   const started = useRef(-1);
+
+  useEffect(() => {
+    void loadEventHome();
+  }, []);
 
   useEffect(() => {
     if (started.current === attempt) return;
@@ -120,11 +129,13 @@ function EventShell({ publicId, eventSlug }: { publicId: string; eventSlug: stri
   const base = `/s/${publicId}/${eventSlug}`;
   return (
     <EventProvider event={state.event}>
-      <Routes>
-        <Route index element={<EventHome />} />
-        <Route path="gallery" element={<GalleryPage />} />
-        <Route path="*" element={<Navigate to={base} replace />} />
-      </Routes>
+      <Suspense fallback={<LoadingScreen />}>
+        <Routes>
+          <Route index element={<EventHome />} />
+          <Route path="gallery" element={<GalleryPage />} />
+          <Route path="*" element={<Navigate to={base} replace />} />
+        </Routes>
+      </Suspense>
     </EventProvider>
   );
 }
