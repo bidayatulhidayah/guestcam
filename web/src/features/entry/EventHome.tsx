@@ -34,6 +34,12 @@ export function EventHome() {
       .catch(() => undefined);
   }, [event, i18n.language]);
 
+  // The server unlocks the gallery a moment after the first upload lands (trigger).
+  const onUploaded = useCallback(() => {
+    setTimeout(sync, 2500);
+    setTimeout(sync, 8000);
+  }, [sync]);
+
   useEffect(() => {
     if (step === 'menu') sync();
   }, [step, sync]);
@@ -65,5 +71,7 @@ export function EventHome() {
       />
     );
   }
-  return <MenuPage displayName={profile?.displayName ?? ''} galleryUnlocked={galleryUnlocked} />;
+  return (
+    <MenuPage displayName={profile?.displayName ?? ''} galleryUnlocked={galleryUnlocked} onUploaded={onUploaded} />
+  );
 }

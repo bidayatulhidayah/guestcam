@@ -48,6 +48,126 @@ Rules:
 
 ---
 
+## 2026-10-30 17:50 — Phase 1b backend deploy and live check
+
+- **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
+- **Version / branch:** v0.1 (+ unreleased) / `feat/phase-1b-queue` (PR #6)
+- **Phase:** Phase 1 (target v0.2), PR 1b of 3
+- **Goal:** Get the 1b backend live on `guestcam-2026`, update the preview, and check uploads end to end on the real project.
+
+### What changed and why
+- Hidayah ran `npm run deploy:backend -- --force` (Claude is not permitted to use `--force`). It took three tries:
+  1. "User code failed to load ... Timeout after 10000". Nothing was deployed. Claude measured the bundle: it loads in under 1 s, and a `--dry-run` deploy got past the same step, so this was a slow cold start on Windows, not our code.
+  2. Rules, indexes and the three callables deployed, but creating `onOriginalUploaded` and `onMediaDeleted` failed with first-time Eventarc permission errors ("Eventarc Service Agent", "storage.buckets.get denied").
+  3. About 5 minutes later the same command created both triggers. Deploy complete.
+- Claude deployed the preview channel with the 1b web build and ran a live check.
+- `docs/setup/new-computer.md`: troubleshooting notes for these three deploy errors.
+
+### Files touched
+| File | Change |
+| --- | --- |
+| `docs/setup/new-computer.md` | modified: deploy troubleshooting notes |
+| `docs/ai/memory.md` | modified: status (1b backend deployed) |
+| `docs/ai/worklog.md` | modified: this entry |
+
+### Commands run and results
+| Command | Result |
+| --- | --- |
+| `npm run deploy:backend -- --force` (Hidayah) | third run: rules, indexes, 2 new triggers created, 3 callables unchanged |
+| `firebase deploy --only functions --dry-run` | discovery fine; stops at the expected `--force` prompt |
+| `npm run deploy:preview` | preview channel updated, expires 2026-11-07 |
+| `npm run seed:project -- --project guestcam-2026` | #00100 exists, nothing written; links printed to the terminal only |
+| Live check on the preview (headless Chrome, test space #00100) | 6/6: QR link joins; menu with Snap Gambar and Muat Naik, gallery locked; camera photo saved; camera photo + gallery photo + video reach "3 dah dihantar"; gallery unlocks after the trigger; no page errors |
+| Read-only Admin SDK check of the test event | 3 media docs `uploaded` with `sortAt`, all 3 originals in Storage; only the new test guest has `galleryUnlocked: true` |
+
+### Decisions
+- None.
+
+### Problems, risks, open questions
+- The test event on `guestcam-2026` now holds 3 small test uploads from the live check. They are harmless test data in the internal space and can be deleted from My Uploads once 1c ships, which also exercises `onMediaDeleted` live.
+- `onMediaDeleted` has not run live yet (no delete UI until 1c).
+
+### Next steps
+- [ ] Hidayah: phone checklist on the preview (Android Chrome now; iPhone Safari and WhatsApp when available), then review and squash-merge PR #6
+- [ ] PR 1c: privacy step, My Uploads, device handling
+
+### Commits
+- (this commit) docs: record the Phase 1b deploy and live check
+
+---
+
+## 2026-10-29 01:00 — Phase 1b: Snapshot, Upload from Gallery, upload queue, media records
+
+- **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
+- **Version / branch:** v0.1 (+ unreleased) / `feat/phase-1b-queue`
+- **Phase:** Phase 1 (target v0.2), PR 1b of 3
+- **Goal:** Snapshot, Upload from Gallery, the offline upload queue, media records with host-only metadata, Storage rules, and the upload and delete triggers (plan approved earlier, with Hidayah's changes: the server deletes files when a doc is deleted; the wifi question is asked once per selection at 50 MB).
+
+### What changed and why
+- **Rules (with 32 new tests):**
+  - Media docs are created by members only, as `queued`, with every field validated. The feature must be entitled and enabled (rule 17), the upload window open, and `originalPath` tied to the uid and mediaId.
+  - Owners may only switch visibility and show-name. The owner or space owners may delete.
+  - `private/meta` is written once by the item's owner and read only by space owners.
+  - Storage originals are create-only (`resource == null`): a matching queued doc must exist, and size and type must match it.
+  - Members may see that a media doc doesn't exist (D-070).
+- **Functions:**
+  - `onOriginalUploaded`: queued → uploaded, `sortAt`, gallery unlock, plan limits enforced, orphans removed.
+  - `onMediaDeleted`: deletes the original, derived copies and `private/meta`.
+  - Server storage adapter on firebase-admin.
+- **Web:**
+  - Dexie upload queue: one item at a time, photos first, backoff, permanent errors stop at `failed`, resume after reload, re-pick by fingerprint, storage-full fallback, persistent storage.
+  - Camera photos are saved before EXIF is read (D-071).
+  - EXIF is read in a Web Worker with a whitelist; GPS goes to `private/meta`; capture time uses the photo's offset or Malaysia time.
+  - The wifi question is asked once per selection and holds only the large files (D-072).
+  - The menu gets a queue indicator, and the gallery tile unlocks after the first upload lands.
+- Bundle: main 109.5 KB plus the Firebase core about 34 KB, so the first screen is about 145 KB gzipped. The queue, Firestore Lite, Storage and EXIF load lazily.
+
+### Files touched
+| File | Change |
+| --- | --- |
+| `firestore.rules`, `storage.rules` | media, private/meta, originals, existence check |
+| `rules-tests/tests/{firestore-media,storage-media,functions-media}.test.ts`, `media.ts`, `guestClient.ts` | added; `functions-access.test.ts` uses the shared guest client |
+| `functions/src/triggers/*`, `functions/src/storage/index.ts`, `functions/src/index.ts` | triggers, server storage adapter |
+| `shared/src/media.ts`, `paths.ts`, `limits.ts`, `index.ts`, tests | media helpers, path parsing, 50 MB threshold |
+| `web/src/lib/queue/*`, `web/src/lib/media/*`, `web/src/features/capture/*`, `MenuPage.tsx`, `EventHome.tsx`, `guestSync.ts`, i18n | queue, EXIF worker, capture UI |
+| `web/tests/{queue,exifDate}.test.ts`, `web/package.json`, `package-lock.json` | tests; dexie, exifr, fake-indexeddb |
+| `AGENTS.md`, `CHANGELOG.md`, `docs/ai/memory.md`, `docs/ai/worklog.md` | commands, changelog, D-070 to D-073, this entry |
+
+### Commands run and results
+| Command | Result |
+| --- | --- |
+| `npm run test:unit` | shared 46, web 22 (12 queue tests cover retry, duplicates, quota error, restart after reload, re-pick, held, offline and preparing) |
+| `npm run test:emulators` | 80 passed (rules, callables, triggers), several runs |
+| `npm run typecheck`, `vite build` | clean; first screen about 145 KB gzipped |
+| Smoke test in the emulators (headless Chrome, throttled network) | 14/14: camera photo + gallery photo + video uploaded; gallery unlocks; offline capture sent when back online; 60 MB file asks the wifi question once; reload mid-upload → "perlu dipilih semula" → re-pick continues the same item; exactly 5 items on the server, the large file whole; no page errors |
+| `firebase deploy --only firestore:rules,firestore:indexes,storage,functions` | **Not deployed.** The CLI requires `--force` to accept the retry policy of the new triggers, and Claude was not permitted to run the `--force` deploy. Nothing was released; the live project still runs the 1a rules and functions |
+
+### Decisions
+- D-070 to D-073 in memory.md.
+
+### Problems, risks, open questions
+- The smoke test found a real bug: the owner-only read rule blocked the queue's "does it exist" check, so every first upload failed. Fixed in `e2d678f` with tests (D-070). The rules tests had missed it because they only read existing docs.
+- Two emulator quirks were worked around in tests, not in rules:
+  - An overwrite attempt right after an upload can arrive before the emulator has registered the file, so the test waits for its metadata first.
+  - Storage clean-up between tests can lag, so the overwrite test uses its own media id.
+- `npm audit`: 4 low-severity findings in `deepmerge` (via `workbox-build` in `vite-plugin-pwa`), build-time only. The only offered fix is a breaking downgrade; left as is.
+- The backend deploy for 1b needs `npm run deploy:backend -- --force` run by Hidayah (or permission for Claude).
+- Phase 3 task still open: clean up stale `queued` media docs (U2).
+
+### Next steps
+- [ ] Hidayah: run `npm run deploy:backend -- --force`; then Claude deploys the preview and runs a live check
+- [ ] Phone checklist (Android Chrome now; iPhone Safari and WhatsApp when available)
+- [ ] PR 1c: privacy step, My Uploads, device handling
+
+### Commits
+- `af1f5e7` security(rules): add media, private/meta and original upload rules
+- `8e3f35c` feat(functions): add upload and delete triggers and the server storage adapter
+- `2b5f656` feat(capture): add Snapshot, Upload from Gallery and the offline upload queue
+- `e2d678f` fix(rules): let members check that a media doc does not exist yet
+- (this commit) docs: record Phase 1b decisions, changelog and work log
+
+---
+
 ## 2026-10-28 02:00 — Phase 1a follow-up: test space #00100, lock scope, safe seed
 
 - **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows

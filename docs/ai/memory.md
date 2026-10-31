@@ -8,7 +8,7 @@ Maintenance rules:
 - Keep facts here; keep session-by-session detail in `worklog.md`.
 - No secrets, keys, event codes or guest personal data.
 
-Last updated: 2026-10-28 (Phase 1a: entry, identity, menu; backend deployed to guestcam-2026)
+Last updated: 2026-10-29 (Phase 1b: capture, upload queue, media records, triggers)
 
 ---
 
@@ -38,9 +38,9 @@ The couple (hosts) manage everything from an admin dashboard: themes, codes, mod
 | Item | State |
 | --- | --- |
 | Version | **0.1** released 2026-10-27 (tag `v0.1`, Phase 0 skeleton). Not deployed to production (only the `preview` channel) |
-| Phase | Phase 1 (target v0.2) in progress, split into PRs 1a (entry, identity, menu: built, PR open), 1b (capture, queue, media records), 1c (privacy step, My Uploads, device handling) |
+| Phase | Phase 1 (target v0.2) in progress: 1a (entry, identity, menu) merged; 1b (capture, queue, media records, triggers) PR #6 open, backend deployed 2026-10-30 and checked live on the preview; 1c (privacy step, My Uploads, device handling) next |
 | Repo | GitHub, private: `bidayatulhidayah/guestcam` |
-| Firebase | Project `guestcam-2026`; Firestore and Storage confirmed in `asia-southeast1` (Singapore), 2026-10-27; emulators use the `demo-guestcam` demo project. 2026-10-28: Firestore/Storage rules, indexes and functions (`ping`, `resolveCurrentEvent`, `joinEvent`, Node 24) deployed with Hidayah's approval; artifact cleanup policy 1 day. Hosting only on the `preview` channel. No real users yet |
+| Firebase | Project `guestcam-2026`; Firestore and Storage confirmed in `asia-southeast1` (Singapore), 2026-10-27; emulators use the `demo-guestcam` demo project. 2026-10-28: Firestore/Storage rules, indexes and functions (`ping`, `resolveCurrentEvent`, `joinEvent`, Node 24) deployed with Hidayah's approval; artifact cleanup policy 1 day. 2026-10-30: 1b rules, indexes and the triggers `onOriginalUploaded` and `onMediaDeleted` (retry on failure) deployed by Hidayah with `--force`. Hosting only on the `preview` channel. No real users yet |
 | Runtime | Node 24 (D-055) |
 | Hosting | Free Firebase domain (`guestcam-2026.web.app`) until after the friend's engagement; Phase 0 preview channel `preview` |
 | Product name | Not final. Codename `guestcam`; working favourite **Kenang** (`kenang.app`). Shortlist in the spec |
@@ -145,6 +145,10 @@ Status: **Active** unless marked otherwise. "Why" is the reason at the time of t
 | D-067 | The space-wide wrong-code lock blocks only codes typed without an event slug (the plain code screen). QR links (event slug + code) keep working during a lock, still under the per-device and per-IP limits. Every wrong code, with or without a slug, still counts toward the space limit and its audit entry | Hidayah, 2026-10-28: a flood of typed guesses must not stop guests scanning printed QR cards. Known trade-off: a caller can always send a slug, so the space lock mainly stops guessing across all events; slug guesses are limited by device (5 then 5 min) and IP (100 per 15 min), and App Check follows in Phase 5 |
 | D-068 | `seed:project` against a live project creates only test space #00100 and its event (four `create()` writes: space, publicIds entry, event, private/access); stops without writing if #00100 exists; refuses any number outside 00002-09999; never writes counters, the catalog, #00000 or #10000+ | Hidayah, 2026-10-28: the live project must never be overwritten by a script |
 | D-069 | The Google Cloud CLI is a non-conda tool installed with Google's Windows installer (conda-forge has no Windows build); it is not in `environment.yml` | Hidayah, 2026-10-28 |
+| D-070 | Members may `get` a media doc that does not exist (`resource == null && isMember`), so the queue can check before creating; existing items stay readable only by their owner and space owners | Found by the 1b smoke test: the owner-only read rule errors on a missing doc and blocked every first upload. Ids are random UUIDs, so nothing leaks |
+| D-071 | Camera photos are written to IndexedDB with status `preparing` the moment the camera returns them; EXIF is read afterwards and the item released. A reload turns `preparing` into `waiting` (sent without EXIF) | Rule 4: EXIF reading can take seconds; the photo must never wait in memory |
+| D-072 | "Nanti guna wifi" holds only the files over 50 MB in that selection; smaller files in the same selection send at once. Held items wait for "Hantar sekarang" (phones cannot reliably report wifi). Refines D-063 | Small photos should not wait behind a long video |
+| D-073 | Upload and delete triggers retry on failure and are idempotent (skip items not `queued`; deleting missing files is fine). A file over the plan limits, of the wrong type or without a media doc is deleted and its item marked `failed` | Rule 11; pitfalls M1, U2, U6 |
 
 ### Process
 

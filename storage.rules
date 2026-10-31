@@ -1,7 +1,7 @@
 rules_version = '2';
 
 // Storage rules. Every change needs tests in rules-tests/ in the same commit
-// (AGENTS.md rule 13). Phase 1a: the guest selfie. Media originals arrive in 1b.
+// (AGENTS.md rule 13). Phase 1: the guest selfie (1a) and media originals (1b).
 service firebase.storage {
   match /b/{bucket}/o {
 
@@ -36,6 +36,32 @@ service firebase.storage {
         && request.resource.contentType.matches('image/(jpeg|png|webp)')
         && isMember(eventId);
       allow delete: if false;
+    }
+
+    // Media originals (rule 11): a guest uploads only into their own folder,
+    // only after creating the queued media doc (pitfall U2), with the size and
+    // type that doc declares. Create-only: originals are never overwritten
+    // (rule 3) and guests never delete files; a server trigger does (D-062).
+    match /events/{eventId}/media/{uid}/original/{mediaId} {
+      allow read: if (signedIn() && request.auth.uid == uid) || isEventSpaceOwner(eventId);
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        // No file there yet: never overwrite an original, even if the
+        // platform treats a re-upload as a create.
+        && resource == null
+        && request.resource.size > 0
+        && request.resource.size <= 4 * 1024 * 1024 * 1024
+        && request.resource.contentType.matches('(image|video)/.+')
+        && queuedMediaMatches(eventId, mediaId, uid);
+      allow update, delete: if false;
+    }
+
+    function queuedMediaMatches(eventId, mediaId, uid) {
+      let media = firestore.get(/databases/(default)/documents/events/$(eventId)/media/$(mediaId)).data;
+      return media.ownerUid == uid
+        && media.status == 'queued'
+        && media.sizeBytes == request.resource.size
+        && media.contentType == request.resource.contentType;
     }
 
     // Everything else: denied until its phase adds rules.

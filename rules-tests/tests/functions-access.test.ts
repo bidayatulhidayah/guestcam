@@ -2,26 +2,15 @@
  * resolveCurrentEvent and joinEvent, called through the Functions emulator
  * exactly as the web app calls them (anonymous guest, callable SDK).
  */
-import {
-  CALLABLES,
-  EVENT_CODE_RATE_LIMITS,
-  firestorePaths,
-  type JoinEventRequest,
-  type JoinEventResponse,
-  type ResolveCurrentEventRequest,
-  type ResolveCurrentEventResponse,
-} from '@guestcam/shared';
+import { EVENT_CODE_RATE_LIMITS, firestorePaths } from '@guestcam/shared';
 import type { RulesTestEnvironment } from '@firebase/rules-unit-testing';
-import { deleteApp, initializeApp, type FirebaseApp } from 'firebase/app';
-import { connectAuthEmulator, getAuth, signInAnonymously } from 'firebase/auth';
 import { collection, doc, getDoc, getDocs, setDoc, Timestamp } from 'firebase/firestore';
-import { connectFunctionsEmulator, getFunctions, httpsCallable } from 'firebase/functions';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { ids, seedBasics } from './fixtures';
-import { PROJECT_ID, createTestEnv } from './setup';
+import { closeGuests, newGuest } from './guestClient';
+import { createTestEnv } from './setup';
 
 let env: RulesTestEnvironment;
-const apps: FirebaseApp[] = [];
 
 beforeAll(async () => {
   env = await createTestEnv();
@@ -38,7 +27,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await Promise.all(apps.splice(0).map((app) => deleteApp(app)));
+  await closeGuests();
 });
 
 const HOUR = 3_600_000;
@@ -58,27 +47,6 @@ async function seedMoreEvents() {
     await setDoc(doc(db, firestorePaths.event('event4')), { ...base, eventSlug: 'draf', status: 'draft' });
     await setDoc(doc(db, firestorePaths.eventAccess('event4')), { code: 'd2d2', linkedEventIds: [] });
   });
-}
-
-/** A fresh phone: its own app, anonymous user and callables. */
-async function newGuest() {
-  const app = initializeApp({ projectId: PROJECT_ID, apiKey: 'demo-api-key' }, `guest-${Math.random()}`);
-  apps.push(app);
-  const auth = getAuth(app);
-  connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
-  const { user } = await signInAnonymously(auth);
-  const functions = getFunctions(app, 'asia-southeast1');
-  connectFunctionsEmulator(functions, '127.0.0.1', 5001);
-  const join = httpsCallable<JoinEventRequest, JoinEventResponse>(functions, CALLABLES.joinEvent);
-  const resolve = httpsCallable<ResolveCurrentEventRequest, ResolveCurrentEventResponse>(
-    functions,
-    CALLABLES.resolveCurrentEvent,
-  );
-  return {
-    uid: user.uid,
-    join: async (data: JoinEventRequest) => (await join(data)).data,
-    resolve: async (data: ResolveCurrentEventRequest) => (await resolve(data)).data,
-  };
 }
 
 async function readAsAdmin(path: string) {

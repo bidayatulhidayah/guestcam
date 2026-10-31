@@ -3,7 +3,7 @@ rules_version = '2';
 // Security rules. Every change needs tests in rules-tests/ in the same commit
 // (AGENTS.md rule 13). Rules are not filters: queries must match them.
 //
-// Phase 1a: spaces, events, members and guests. Media rules arrive in 1b.
+// Phase 1: spaces, events, members, guests (1a) and media (1b).
 // Guests never read spaces/*: it holds the plan, space number and
 // entitlements, and rules cannot hide single fields (pitfall P1). The guest
 // app gets what it needs from the resolveCurrentEvent / joinEvent functions.
@@ -109,6 +109,133 @@ service cloud.firestore {
         allow update: if isSelf(uid) && isMember(eventId) && validGuestUpdate(eventId, uid);
         allow delete: if false;
       }
+
+      // Media items. The guest creates the doc as "queued" before uploading
+      // (pitfall U2); the upload trigger moves it on. Phase 1 has no gallery,
+      // so only the owner and space owners can read items (public reads
+      // arrive with the gallery lock in Phase 3, pitfall P3).
+      match /media/{mediaId} {
+        // A member may learn that an item does NOT exist yet: the upload queue
+        // checks before creating, so a retry never duplicates (pitfall U1).
+        // Ids are random UUIDs, so this reveals nothing.
+        allow get: if resource == null && isMember(eventId);
+        allow read: if (signedIn() && resource.data.ownerUid == request.auth.uid)
+          || isSpaceOwner(resource.data.spaceId);
+        allow create: if isMember(eventId) && validMediaCreate(eventId, mediaId);
+        allow update: if signedIn()
+          && resource.data.ownerUid == request.auth.uid
+          && isMember(eventId)
+          && validMediaUpdate();
+        // A server trigger deletes the files when the doc goes (D-062).
+        allow delete: if (signedIn() && resource.data.ownerUid == request.auth.uid)
+          || isSpaceOwner(resource.data.spaceId);
+
+        // Location and whitelisted EXIF: written once by the item's owner,
+        // readable only by space owners (rule 10, pitfall P1).
+        match /private/{docId} {
+          allow read: if isSpaceOwner(eventSpaceId(eventId));
+          allow create: if docId == 'meta'
+            && signedIn()
+            && get(/databases/$(database)/documents/events/$(eventId)/media/$(mediaId)).data.ownerUid == request.auth.uid
+            && validMetaCreate();
+          allow update, delete: if false;
+        }
+      }
+    }
+
+    // ---- Media validation --------------------------------------------------
+
+    function eventDoc(eventId) {
+      return get(/databases/$(database)/documents/events/$(eventId)).data;
+    }
+
+    // Feature toggles (rule 17): the space is entitled AND the event enabled it.
+    function featureAvailable(spaceId, eventData, feature) {
+      return get(/databases/$(database)/documents/spaces/$(spaceId)).data.entitlements.get(feature, false) == true
+        && eventData.enabledFeatures.get(feature, false) == true;
+    }
+
+    function nullOrNumber(value) {
+      return value == null || value is number;
+    }
+
+    function validMediaCreate(eventId, mediaId) {
+      let data = request.resource.data;
+      let event = eventDoc(eventId);
+      return mediaId.matches('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+        && data.keys().hasOnly([
+          'eventId', 'spaceId', 'folderId', 'ownerUid', 'source', 'type', 'status', 'visibility',
+          'hidden', 'showName', 'ownerName', 'ownerSelfieThumbPath', 'contentType', 'sizeBytes',
+          'width', 'height', 'durationMs', 'originalPath', 'displayPath', 'thumbPath', 'posterPath',
+          'decoration', 'decoratedPath', 'capturedAt', 'capturedAtSource', 'uploadedAt', 'sortAt',
+          'createdAt', 'updatedAt'])
+        && data.keys().hasAll([
+          'eventId', 'spaceId', 'folderId', 'ownerUid', 'source', 'type', 'status', 'visibility',
+          'hidden', 'showName', 'ownerName', 'ownerSelfieThumbPath', 'contentType', 'sizeBytes',
+          'width', 'height', 'durationMs', 'originalPath', 'displayPath', 'thumbPath', 'posterPath',
+          'decoration', 'decoratedPath', 'capturedAt', 'capturedAtSource', 'uploadedAt', 'sortAt',
+          'createdAt', 'updatedAt'])
+        && data.eventId == eventId
+        && data.spaceId == event.spaceId
+        && data.folderId == null
+        && data.ownerUid == request.auth.uid
+        // Phase 1 capture functions and the media types each may create.
+        && ((data.source == 'snapshot' && data.type == 'image')
+          || (data.source == 'galleryUpload' && data.type in ['image', 'video']))
+        && featureAvailable(event.spaceId, event, data.source)
+        && request.time < event.uploadUntil
+        && data.status == 'queued'
+        && data.visibility in ['private', 'public']
+        && data.hidden == false
+        && data.showName is bool
+        // Server-written fields start empty.
+        && data.ownerName == null
+        && data.ownerSelfieThumbPath == null
+        && data.displayPath == null
+        && data.thumbPath == null
+        && data.posterPath == null
+        && data.decoration == null
+        && data.decoratedPath == null
+        && data.uploadedAt == null
+        && data.sortAt == null
+        && data.contentType is string
+        && data.contentType.matches(data.type + '/[-+.a-zA-Z0-9]+')
+        && data.sizeBytes is int
+        && data.sizeBytes > 0
+        && data.sizeBytes <= 4 * 1024 * 1024 * 1024
+        && nullOrNumber(data.width)
+        && nullOrNumber(data.height)
+        && nullOrNumber(data.durationMs)
+        && data.originalPath == 'events/' + eventId + '/media/' + request.auth.uid + '/original/' + mediaId
+        && (data.capturedAt == null || data.capturedAt is timestamp)
+        && data.capturedAtSource in ['exif', 'device', 'upload']
+        && data.createdAt == request.time
+        && data.updatedAt == request.time;
+    }
+
+    // Owners may switch private/public and show-name; nothing else.
+    function validMediaUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['visibility', 'showName', 'updatedAt'])
+        && request.resource.data.visibility in ['private', 'public']
+        && request.resource.data.showName is bool
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    function validMetaCreate() {
+      let data = request.resource.data;
+      return data.keys().hasOnly(['location', 'exif', 'originalFileName'])
+        && data.keys().hasAll(['location', 'exif', 'originalFileName'])
+        && (data.location == null
+          || (data.location.keys().hasOnly(['lat', 'lng', 'accuracyM', 'source'])
+            && data.location.lat is number
+            && data.location.lng is number
+            && nullOrNumber(data.location.accuracyM)
+            && data.location.source in ['exif', 'device']))
+        && data.exif is map
+        && data.exif.size() <= 40
+        && (data.originalFileName == null
+          || (data.originalFileName is string && data.originalFileName.size() <= 255));
     }
 
     // ---- Guest validation --------------------------------------------------
