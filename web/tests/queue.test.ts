@@ -278,6 +278,23 @@ describe('upload queue', () => {
     expect(calls).toBe(1);
   });
 
+  it('an app update may reload only when nothing lives just in memory (gallery picks, storage-full captures)', async () => {
+    const server = fakeRemote();
+    const queue = newQueue(server.remote);
+    const camera = item();
+    await queue.add(camera, bytes());
+    expect(queue.canReloadSafely()).toBe(true);
+
+    const picked = item({ storage: 'picked', source: 'galleryUpload', status: 'held', type: 'video', priority: 1 });
+    await queue.add(picked, bytes());
+    expect(queue.canReloadSafely()).toBe(false);
+
+    await queue.release('event1');
+    await queue.drain();
+    expect((await db.items.get(picked.mediaId))?.status).toBe('sent');
+    expect(queue.canReloadSafely()).toBe(true);
+  });
+
   it('a camera photo is saved while EXIF is read, then sent; a reload mid-way still sends it (rule 4)', async () => {
     const server = fakeRemote();
     const queue = newQueue(server.remote);

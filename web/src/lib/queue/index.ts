@@ -2,6 +2,7 @@
  * The app's single upload queue. Loaded lazily (Dexie, Firestore Lite and
  * Storage), first when the menu opens, so it never weighs on the first screen.
  */
+import { setReloadGuard } from '../device/serviceWorker';
 import { QueueDb } from './db';
 import { firebaseRemote } from './firebaseRemote';
 import { UploadQueue } from './runner';
@@ -29,6 +30,8 @@ export function getQueueDb(): QueueDb {
 export function getQueue(): Promise<UploadQueue> {
   queue ??= (async () => {
     const instance = new UploadQueue({ db: getQueueDb(), remote: firebaseRemote, isOnline: () => navigator.onLine });
+    // An app update must not reload away a gallery pick before it is sent (pitfall U5).
+    setReloadGuard(() => instance.canReloadSafely());
     window.addEventListener('online', () => instance.kick());
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') instance.kick();

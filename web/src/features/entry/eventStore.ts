@@ -29,8 +29,19 @@ export function forgetEvent(publicId: string, eventSlug: string): void {
   );
 }
 
+/** When this page last got each view from the server, so a fresh one is not fetched again. */
+const fetchedAtMs = new Map<string, number>();
+const FRESH_MS = 60_000;
+
+/** True if the server sent this view in the last minute (e.g. `joinEvent` just now). */
+export function isEventFresh(publicId: string, eventSlug: string): boolean {
+  const at = fetchedAtMs.get(viewKey(publicId, eventSlug));
+  return at !== undefined && Date.now() - at < FRESH_MS;
+}
+
 /** Saves the view, remembers it as the space's current event and lists it in "My events". */
 export function rememberEvent(event: EventView): void {
+  fetchedAtMs.set(viewKey(event.publicId, event.eventSlug), Date.now());
   writeJson(viewKey(event.publicId, event.eventSlug), event);
   writeJson(currentKey(event.publicId), event.eventSlug);
   const others = listJoinedEvents().filter(

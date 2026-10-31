@@ -131,6 +131,11 @@ export class UploadQueue {
     return true;
   }
 
+  /** False while a file lives only in this page's memory (gallery pick or storage-full capture) and is not sent yet. */
+  canReloadSafely(): boolean {
+    return this.files.size === 0;
+  }
+
   /**
    * Each call is its own subscription, even with the same function: a screen
    * that subscribes twice (React re-running an effect) and then drops the old

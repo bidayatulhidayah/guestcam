@@ -1,6 +1,6 @@
 import type { EventView } from '@guestcam/shared';
 import { useCallback, useEffect, useState } from 'react';
-import { forgetEvent, readCachedEvent } from './eventStore';
+import { forgetEvent, isEventFresh, readCachedEvent } from './eventStore';
 
 export type EventViewState =
   | { status: 'loading' }
@@ -10,7 +10,8 @@ export type EventViewState =
 
 /**
  * The event for `/s/:publicId/:eventSlug`. Shows the saved copy at once (works
- * offline) and refreshes it from the server in the background (pitfall A2).
+ * offline) and refreshes it from the server in the background (pitfall A2),
+ * unless the server sent it moments ago (right after `joinEvent`).
  */
 export function useEventView(publicId: string, eventSlug: string): { state: EventViewState; retry: () => void } {
   const [state, setState] = useState<EventViewState>(() => {
@@ -20,6 +21,7 @@ export function useEventView(publicId: string, eventSlug: string): { state: Even
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
+    if (attempt === 0 && isEventFresh(publicId, eventSlug) && readCachedEvent(publicId, eventSlug)) return;
     let active = true;
     import('./eventApi')
       .then(({ resolveEvent }) => resolveEvent({ publicId, eventSlug }))
