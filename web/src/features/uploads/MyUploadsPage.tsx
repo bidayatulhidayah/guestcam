@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
-import { Button, Icon, Screen, type IconName } from '../../components/ui';
+import { Button, Icon, ProgressRing, Screen, type IconName } from '../../components/ui';
 import { useQueueItems } from '../capture/useQueueSummary';
 import { useEvent } from '../entry/EventContext';
 import { LoadingScreen } from '../entry/StatusScreens';
@@ -44,7 +44,10 @@ function usePreview(row: UploadRow): string | null {
 /** Statuses that need the guest (or "Cuba lagi"): an exclamation mark in the corner. */
 const PROBLEM: ReadonlySet<UploadRow['status']> = new Set(['failed', 'needsRepick', 'rejected']);
 
-/** Small corner mark: a dot with a check once sent, a ring while sending, an empty ring while waiting. */
+/** Items on their way: a progress circle over the preview instead of a corner mark. */
+const ON_THE_WAY: ReadonlySet<UploadRow['status']> = new Set(['waiting', 'uploading']);
+
+/** Small corner mark: a dot with a check once sent, "!" when the guest must act, an empty ring otherwise (wifi, not arrived). */
 function StatusMark({ row, label }: { row: UploadRow; label: string }) {
   const base = 'absolute top-2 right-2 flex size-7 items-center justify-center rounded-full';
   if (row.status === 'sent') {
@@ -52,26 +55,6 @@ function StatusMark({ row, label }: { row: UploadRow; label: string }) {
       <span role="img" aria-label={label} className={`${base} bg-accent text-on-accent`}>
         <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={3} aria-hidden="true">
           <path d="m5 12 5 5 9-10" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </span>
-    );
-  }
-  if (row.status === 'uploading') {
-    const circumference = 2 * Math.PI * 9;
-    return (
-      <span role="img" aria-label={label} className={`${base} bg-paper`}>
-        <svg viewBox="0 0 24 24" width={24} height={24} aria-hidden="true" className="-rotate-90">
-          <circle cx="12" cy="12" r="9" fill="none" className="stroke-line" strokeWidth={3} />
-          <circle
-            cx="12"
-            cy="12"
-            r="9"
-            fill="none"
-            className="stroke-accent"
-            strokeWidth={3}
-            strokeDasharray={circumference}
-            strokeDashoffset={circumference * (1 - (row.percent ?? 0) / 100)}
-          />
         </svg>
       </span>
     );
@@ -128,7 +111,7 @@ function UploadItem({ row, onPrivacy, onDelete }: ItemProps) {
         {preview ? (
           <>
             <img src={preview} alt={`${kind}, ${when}`} className="size-full object-cover" />
-            {row.type === 'video' ? (
+            {row.type === 'video' && !ON_THE_WAY.has(row.status) ? (
               <span
                 aria-hidden="true"
                 className="absolute inset-0 m-auto flex size-10 items-center justify-center rounded-full border border-line bg-paper text-ink"
@@ -146,7 +129,14 @@ function UploadItem({ row, onPrivacy, onDelete }: ItemProps) {
             <Icon name={row.type === 'video' ? 'video' : 'camera'} size={32} />
           </span>
         )}
-        <StatusMark row={row} label={status} />
+        {ON_THE_WAY.has(row.status) ? (
+          // The file being sent shows its percentage; the rest wait their turn (one at a time, rule 4).
+          <span className="absolute inset-0 m-auto size-16">
+            <ProgressRing percent={row.status === 'uploading' ? (row.percent ?? 0) : null} label={status} size={64} />
+          </span>
+        ) : (
+          <StatusMark row={row} label={status} />
+        )}
       </div>
       <div className="flex items-center justify-between">
         <ItemButton

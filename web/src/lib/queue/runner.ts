@@ -13,6 +13,16 @@ export interface QueueOptions {
   setTimer?: (callback: () => void, ms: number) => () => void;
 }
 
+/** A network step (sign-in, media doc, file check) that takes longer is given up and retried. */
+export const STEP_TIMEOUT_MS = 45_000;
+/** An upload with no bytes moving for this long is given up and retried (Firebase alone retries for 10 minutes). */
+export const STALL_MS = 60_000;
+
+/** A step that hung: retried like a network error, never blocking the queue. */
+class StalledError extends Error {
+  readonly code = 'stalled';
+}
+
 export interface AddResult {
   item: QueueItem;
   /** IndexedDB was full: the capture is only in memory, so the page must stay open (pitfall U4). */
@@ -82,7 +92,34 @@ export class UploadQueue {
         await this.db.items.update(item.mediaId, { status: 'waiting', resumed: true, nextAttemptAt: this.now() });
       }
     }
+    // A reload is the guest asking to try now: no item keeps waiting out an earlier retry delay.
+    await this.retryNow();
+  }
+
+  /**
+   * Waiting items are due at once (the page was reloaded, the phone is back
+   * online, or the guest came back to the app), then the queue starts.
+   */
+  async retryNow(): Promise<void> {
+    await this.db.items.where('status').equals('waiting').modify({ nextAttemptAt: this.now() });
     this.kick();
+  }
+
+  /** Rejects with `StalledError` if `work` takes longer than `ms`. */
+  private within<T>(work: Promise<T>, ms = STEP_TIMEOUT_MS): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      const cancel = this.setTimer(() => reject(new StalledError('step timed out')), ms);
+      work.then(
+        (value) => {
+          cancel();
+          resolve(value);
+        },
+        (error: unknown) => {
+          cancel();
+          reject(error instanceof Error ? error : new Error(String(error)));
+        },
+      );
+    });
   }
 
   /** Records a new capture, then starts sending. */
@@ -288,38 +325,25 @@ export class UploadQueue {
     await this.db.items.update(item.mediaId, { status: 'uploading' });
     const { remote } = this.options;
     try {
-      const uid = await remote.uid();
+      // Every network step has a time limit: one hung step must never block the queue.
+      const uid = await this.within(remote.uid());
       if (stopped()) return;
       if (!item.docCreated) {
-        await remote.ensureMediaDoc(item, uid);
+        await this.within(remote.ensureMediaDoc(item, uid));
         await this.db.items.update(item.mediaId, { docCreated: true });
         const now = await this.db.items.get(item.mediaId);
         if (now && (now.visibility !== item.visibility || now.showName !== item.showName)) {
-          await remote.updateVisibility(now);
+          await this.within(remote.updateVisibility(now));
         }
       }
       if (stopped()) return;
       if (!item.metaWritten) {
-        await remote.writeMeta(item);
+        await this.within(remote.writeMeta(item));
         await this.db.items.update(item.mediaId, { metaWritten: true });
       }
       const path = storagePaths.mediaOriginal(item.eventId, uid, item.mediaId);
       // The upload may have finished last time even if its reply was lost.
-      if (!(await remote.fileExists(path))) {
-        let lastSaved = 0;
-        await remote.upload(
-          path,
-          data,
-          item.contentType,
-          (bytes) => {
-            const t = this.now();
-            if (t - lastSaved < 500) return;
-            lastSaved = t;
-            void this.db.items.update(item.mediaId, { bytesTransferred: bytes });
-          },
-          signal,
-        );
-      }
+      if (!(await this.within(remote.fileExists(path)))) await this.upload(item, data, path, signal);
       if (stopped()) return;
       await this.db.transaction('rw', this.db.items, this.db.blobs, async () => {
         await this.db.items.update(item.mediaId, {
@@ -343,6 +367,47 @@ export class UploadQueue {
           ? { status: 'failed', attempts, lastError }
           : { status: 'waiting', attempts, lastError, nextAttemptAt: this.now() + retryDelayMs(attempts, this.random) },
       );
+    }
+  }
+
+  /**
+   * Sends the file. If no bytes move for `STALL_MS` (a dead connection the
+   * SDK would keep retrying), it is cancelled and retried from the queue.
+   */
+  private async upload(item: QueueItem, data: Blob, path: string, signal: AbortSignal): Promise<void> {
+    const controller = new AbortController();
+    const stop = () => controller.abort();
+    signal.addEventListener('abort', stop, { once: true });
+    let stalled = false;
+    let cancelWatch = () => {};
+    const watch = () => {
+      cancelWatch();
+      cancelWatch = this.setTimer(() => {
+        stalled = true;
+        controller.abort();
+      }, STALL_MS);
+    };
+    let lastSaved = 0;
+    watch();
+    try {
+      await this.options.remote.upload(
+        path,
+        data,
+        item.contentType,
+        (bytes) => {
+          watch();
+          const t = this.now();
+          if (t - lastSaved < 500) return;
+          lastSaved = t;
+          void this.db.items.update(item.mediaId, { bytesTransferred: bytes });
+        },
+        controller.signal,
+      );
+    } catch (error) {
+      throw stalled ? new StalledError('upload stalled') : error;
+    } finally {
+      cancelWatch();
+      signal.removeEventListener('abort', stop);
     }
   }
 

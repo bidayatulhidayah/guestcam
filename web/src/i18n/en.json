@@ -99,6 +99,7 @@
     "failed": "{{count}} could not be sent",
     "retry": "Try again",
     "allSent": "{{count}} sent",
+    "percent": "{{percent}}%",
     "progressLabel": "Sending progress"
   },
   "gallery": {

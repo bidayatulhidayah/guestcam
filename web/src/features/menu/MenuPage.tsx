@@ -268,6 +268,16 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded, onChoiceSav
     input.current?.click();
   };
 
+  // Shown on the menu and the Snap screen, so every upload under way has its circle.
+  const queueStatus = (
+    <QueueIndicator
+      summary={summary}
+      onSendNow={() => void actions().then((m) => m.sendHeld(event.eventId))}
+      onRepick={() => galleryInput.current?.click()}
+      onRetry={() => void actions().then((m) => m.retryFailed(event.eventId))}
+    />
+  );
+
   const captureNotices = (
     <>
       {notices.map((notice) => (
@@ -322,6 +332,7 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded, onChoiceSav
         onMine={() => navigate('mine')}
       >
         {captureNotices}
+        {queueStatus}
       </SnapScreen>
     );
   } else {
@@ -330,12 +341,7 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded, onChoiceSav
         <CoupleHeader event={event} />
         <p className="-mt-4 mb-2 font-bold">{t('menu.greeting', { name: displayName })}</p>
 
-        <QueueIndicator
-          summary={summary}
-          onSendNow={() => void actions().then((m) => m.sendHeld(event.eventId))}
-          onRepick={() => galleryInput.current?.click()}
-          onRetry={() => void actions().then((m) => m.retryFailed(event.eventId))}
-        />
+        {queueStatus}
         {summary.memoryOnly && !storageAcknowledged ? (
           <section role="alert" className="flex flex-col gap-3 rounded-card border border-line bg-paper-2 p-4">
             <p>{t('device.storageBlocked')}</p>

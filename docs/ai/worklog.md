@@ -48,6 +48,66 @@ Rules:
 
 ---
 
+## 2026-11-02 00:06 — Upload progress circles; stuck uploads no longer block the queue
+
+- **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
+- **Version / branch:** v0.1 (+ unreleased) / `feat/upload-progress` (from `main` after PR #11)
+- **Phase:** Phase 1 (target v0.2), polish from the phone test
+- **Goal:** Hidayah asked for:
+  1. "A percentage or circle loading for everything going up".
+  2. A fix for "sometimes it does not finish uploading; after a refresh it shows nothing; I must close and reopen the link".
+
+### What changed and why (D-090)
+- **Progress circle** (`components/ui/ProgressRing.tsx`): an accent arc on a paper disc with the percentage in 15 px bold. Without a percentage, a quarter arc turns slowly; it stays still with reduced motion, or while offline on the menu.
+  - My Uploads: the file being sent shows a 64 px circle with its percentage over its preview. Files waiting their turn show the turning circle. Both replace the old small corner ring; the corner marks stay for sent, "!", wifi and not arrived.
+  - The menu queue status uses the circle instead of the bar, beside "N menunggu dihantar".
+  - The same queue status now also shows on the Snap Gambar screen.
+  - The number stops at 99% until the server confirms; then the "Dihantar" mark shows. Rendered at 2x in headless Chrome to check it on light, dark and photo backgrounds; "100%" touched the ring, which the cap also fixes.
+- **Stuck uploads** (`lib/queue/runner.ts`): no network step had a time limit, so one hung step blocked every upload behind it (the queue sends one at a time). Firebase Storage also retries a dead resumable upload for up to 10 minutes on its own.
+  - Every step (sign-in, media doc, privacy update, meta, file check) now has 45 s.
+  - The upload is cancelled after 60 s with no bytes moving.
+  - Both are recorded as `stalled` and retried from the queue with the usual delays. Steps are idempotent, so a late step that finished meanwhile is not repeated twice (pitfall U1).
+- **Retry at once:** `UploadQueue.retryNow()` makes waiting items due now. It runs on page start (a reload), when the guest comes back to the app, and when the phone comes back online. Before, a reload kept any retry delay (up to 5 minutes), so nothing seemed to happen.
+- **Not explained yet:** what "shows nothing" after a refresh is. It is recorded as an open question in memory.md, with the IndexedDB-open suspicion, and questions were sent to Hidayah.
+
+### Files touched
+| File | Change |
+| --- | --- |
+| `web/src/components/ui/ProgressRing.tsx`, `index.ts` | added / export |
+| `web/src/features/capture/QueueIndicator.tsx`, `features/menu/MenuPage.tsx` | modified: circle; queue status on the Snap screen |
+| `web/src/features/uploads/MyUploadsPage.tsx` | modified: circles over the previews |
+| `web/src/i18n/ms.json`, `en.json` | modified: `queue.percent` |
+| `web/src/lib/queue/runner.ts`, `index.ts` | modified: step limits, upload watchdog, `retryNow` |
+| `web/tests/queue.test.ts` | modified: hung step, stalled upload, reload retries at once |
+| `CHANGELOG.md`, `docs/ai/memory.md`, `docs/ai/worklog.md` | modified |
+
+### Commands run and results
+| Command | Result |
+| --- | --- |
+| `npm run typecheck` | clean |
+| `npm test` | shared 46, web 52 (+3), emulators 86 passed |
+| `npm run build` | built; `ui` chunk +0.35 KB gzip, entry unchanged |
+| `npm run deploy:preview` | same channel, expires 2026-11-09 |
+
+### Decisions
+- D-090.
+
+### Problems, risks, open questions
+- "Refresh shows nothing" may have a second cause besides the stuck queue. See memory.md Open questions.
+- A cancelled stalled upload starts its file again from 0% (a new resumable session). For a very large video on a bad network this costs data, but it no longer blocks the queue.
+
+### Next steps
+- [ ] Hidayah: phone check; answer what "shows nothing" looks like.
+- [ ] Open the PR for `feat/upload-progress` when Hidayah says so.
+- [ ] Theme templates (D-087).
+
+### Commits
+- `0753705` feat(uploads): progress circle with percentage for every upload under way
+- `dfe5dc3` fix(queue): a stuck upload no longer blocks the queue; reload retries at once
+- docs commit with this entry
+
+---
+
 ## 2026-11-01 23:53 — Phase 1e follow-up: My Uploads previews, Snap shortcut
 
 - **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
