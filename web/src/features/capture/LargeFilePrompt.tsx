@@ -7,15 +7,19 @@ export function formatBytes(bytes: number): string {
 }
 
 /**
- * Asked once per selection that holds a file over 50 MB (D-063): one question
- * on its own screen. "Later" holds only the large files; small ones go now.
+ * Asked once per selection that holds a file over 50 MB (D-063), and for a
+ * camera video over 50 MB (D-084): one question on its own screen. "Later"
+ * holds only the large files; small ones go now.
  */
 export function LargeFilePrompt({
   largestBytes,
+  cameraVideo = false,
   onNow,
   onLater,
 }: {
   largestBytes: number;
+  /** Only a video just taken with Snap Gambar, not a gallery selection. */
+  cameraVideo?: boolean;
   onNow: () => void;
   onLater: () => void;
 }) {
@@ -32,7 +36,7 @@ export function LargeFilePrompt({
         </>
       }
     >
-      <p>{t('capture.largeBody', { size: formatBytes(largestBytes) })}</p>
+      <p>{t(cameraVideo ? 'capture.largeBodyVideo' : 'capture.largeBody', { size: formatBytes(largestBytes) })}</p>
     </Screen>
   );
 }

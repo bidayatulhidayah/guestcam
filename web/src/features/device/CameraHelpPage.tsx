@@ -11,11 +11,20 @@ function stepsKey(userAgent: string): 'ios' | 'samsung' | 'chrome' {
  * Camera did not open (pitfall C6): how to allow it in this browser, then try
  * again, or carry on without the camera. Reused for the microphone in Phase 2.
  */
-export function CameraHelpPage({ onRetry, onContinue }: { onRetry: () => void; onContinue: () => void }) {
+export function CameraHelpPage({
+  onRetry,
+  onContinue,
+  onBack,
+}: {
+  onRetry: () => void;
+  onContinue: () => void;
+  onBack: () => void;
+}) {
   const { t } = useTranslation();
   return (
     <Screen
       title={t('device.cameraHelpTitle')}
+      back={onBack}
       bottom={
         <>
           <Button variant="primary" icon={<Icon name="camera" />} onClick={onRetry}>

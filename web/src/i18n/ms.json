@@ -6,6 +6,7 @@
     "switchTo": "English"
   },
   "common": {
+    "back": "Kembali",
     "loading": "Sedang dimuatkan...",
     "retry": "Cuba lagi",
     "offline": "Tiada sambungan internet. Semak sambungan anda, kemudian cuba lagi.",
@@ -76,6 +77,7 @@
     "storageFull": "Ruang telefon penuh. Biarkan halaman ini terbuka sehingga semua dihantar.",
     "largeTitle": "Muat naik sekarang, atau nanti guna wifi?",
     "largeBody": "Pilihan anda ada fail besar ({{size}}). Wifi lebih laju dan jimat data.",
+    "largeBodyVideo": "Video ini besar ({{size}}). Wifi lebih laju dan jimat data.",
     "largeNow": "Muat naik sekarang",
     "largeLater": "Nanti, guna wifi",
     "repicked": "{{count}} fail disambung semula."
@@ -207,6 +209,13 @@
     "deleted": "Item dipadam.",
     "actionFailed": "Tidak berjaya. Semak sambungan anda, kemudian cuba lagi.",
     "serverError": "Item di pelayan tidak dapat dimuatkan sekarang. Item di telefon ini masih dipaparkan.",
-    "openButton": "Muat Naik Saya"
+    "openButton": "Muat Naik Saya",
+    "legendName": "Nama",
+    "icons": {
+      "private": "Peribadi. Tekan untuk jadikan Awam",
+      "public": "Awam. Tekan untuk jadikan Peribadi",
+      "nameShown": "Nama ditunjuk. Tekan untuk sembunyikan",
+      "nameHidden": "Tanpa nama. Tekan untuk tunjuk nama"
+    }
   }
 }

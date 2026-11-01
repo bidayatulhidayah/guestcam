@@ -55,7 +55,7 @@ export function CodeScreen({ publicId, eventSlug = null, initialError = null }: 
   }
 
   return (
-    <Screen title={t('entry.codeTitle')}>
+    <Screen title={t('entry.codeTitle')} back>
       <form onSubmit={submit} className="flex flex-1 flex-col gap-6" noValidate>
         <p>{t('entry.codeBody')}</p>
         <TextField

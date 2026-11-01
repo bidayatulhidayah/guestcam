@@ -60,33 +60,51 @@ async function prepareAll(
   return selection;
 }
 
-export interface PhotoResult {
-  /** Set when the photo was saved. */
+export interface CameraResult {
+  /** Set when the photo or video was saved. */
   mediaId: string | null;
   unsupported: boolean;
+  tooLarge: boolean;
   quotaFallback: boolean;
+  /** A video over 50 MB, held until the "now or later on wifi" answer. */
+  held: boolean;
 }
 
 /**
- * Camera photo: saved to IndexedDB the moment the camera returns it, then
- * EXIF is read and the photo is released to the queue (rule 4). With
- * `awaitChoice` it waits for the first privacy question (`choosePrivacy`).
+ * Snap Gambar: the phone's own camera returns a photo or a video (D-084). It
+ * is saved to IndexedDB the moment it arrives (rule 4), unchanged and with no
+ * length limit. A photo's EXIF is then read and it is released to the queue;
+ * a video over 50 MB waits as `held` for the wifi question. With
+ * `awaitChoice` it also waits for the first privacy question (`choosePrivacy`).
  */
-export async function takePhoto(file: File, context: CaptureContext, awaitChoice: boolean): Promise<PhotoResult> {
+export async function takeFromCamera(file: File, context: CaptureContext, awaitChoice: boolean): Promise<CameraResult> {
   const described = describeCapture(file, 'snapshot', context);
-  if (!described.ok) return { mediaId: null, unsupported: true, quotaFallback: false };
+  if (!described.ok) {
+    return {
+      mediaId: null,
+      unsupported: described.reason === 'unsupported',
+      tooLarge: described.reason === 'tooLarge',
+      quotaFallback: false,
+      held: false,
+    };
+  }
   void requestPersistentStorage();
   const queue = await getQueue();
-  const { item, quotaFallback } = await queue.add({ ...described.item, status: 'preparing', awaitingChoice: awaitChoice }, file);
-  // EXIF is read in the background; the privacy question can be answered meanwhile.
-  void readCaptureDetails(item, file)
-    .catch(() => ({}))
-    .then((details) => queue.finishPreparing(item.mediaId, details));
-  void savePreview(item, file).catch(() => undefined);
-  return { mediaId: item.mediaId, unsupported: false, quotaFallback };
+  const photo = described.item.type === 'image';
+  const held = !photo && file.size > LARGE_FILE_PROMPT_BYTES;
+  const status = held ? 'held' : photo ? 'preparing' : 'waiting';
+  const { item, quotaFallback } = await queue.add({ ...described.item, status, awaitingChoice: awaitChoice }, file);
+  if (photo) {
+    // EXIF is read in the background; the privacy question can be answered meanwhile.
+    void readCaptureDetails(item, file)
+      .catch(() => ({}))
+      .then((details) => queue.finishPreparing(item.mediaId, details));
+    void savePreview(item, file).catch(() => undefined);
+  }
+  return { mediaId: item.mediaId, unsupported: false, tooLarge: false, quotaFallback, held };
 }
 
-/** The first privacy question was answered (or skipped: Peribadi) for these camera photos. */
+/** The first privacy question was answered (or skipped: Peribadi) for these camera captures. */
 export async function choosePrivacy(mediaIds: string[], choice: PrivacyChoice): Promise<void> {
   if (mediaIds.length > 0) await (await getQueue()).choose(mediaIds, choice.visibility, choice.showName);
 }
@@ -122,8 +140,9 @@ export async function commit(selection: PreparedSelection, holdLargeFiles: boole
   return { quotaFallback };
 }
 
-export async function sendHeld(eventId: string) {
-  await (await getQueue()).release(eventId);
+/** "Hantar sekarang": every held item of the event, or only these. */
+export async function sendHeld(eventId: string, mediaIds?: string[]) {
+  await (await getQueue()).release(eventId, mediaIds);
 }
 
 export async function retryFailed(eventId: string) {

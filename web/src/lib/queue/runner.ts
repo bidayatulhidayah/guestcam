@@ -155,10 +155,11 @@ export class UploadQueue {
     });
   }
 
-  /** "Hantar sekarang": items held for wifi go into the queue. */
-  async release(eventId: string): Promise<void> {
+  /** "Hantar sekarang": items held for wifi go into the queue (all of the event's, or only these). */
+  async release(eventId: string, mediaIds?: string[]): Promise<void> {
     await this.db.items
       .where({ eventId, status: 'held' })
+      .filter((item) => mediaIds === undefined || mediaIds.includes(item.mediaId))
       .modify({ status: 'waiting', nextAttemptAt: this.now() });
     this.kick();
   }

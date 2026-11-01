@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
-import { Button, Icon, Screen } from '../../components/ui';
+import { Button, Icon, Screen, type IconName } from '../../components/ui';
 import { useQueueItems } from '../capture/useQueueSummary';
 import { useEvent } from '../entry/EventContext';
 import { LoadingScreen } from '../entry/StatusScreens';
 import type { PrivacyChoice } from '../privacy/privacyChoice';
-import { PrivacySwitch } from '../privacy/PrivacySwitch';
 import { mergeItems, type ServerItem, type UploadRow } from './mergeItems';
 
 const api = () => import('./uploadsApi');
@@ -38,15 +37,73 @@ function usePreview(row: UploadRow): string | null {
   return url;
 }
 
-interface RowProps {
+/** Statuses that need the guest (or "Cuba lagi"): an exclamation mark in the corner. */
+const PROBLEM: ReadonlySet<UploadRow['status']> = new Set(['failed', 'needsRepick', 'rejected']);
+
+/** Small corner mark: a dot with a check once sent, a ring while sending, an empty ring while waiting. */
+function StatusMark({ row, label }: { row: UploadRow; label: string }) {
+  const base = 'absolute top-2 right-2 flex size-7 items-center justify-center rounded-full';
+  if (row.status === 'sent') {
+    return (
+      <span role="img" aria-label={label} className={`${base} bg-accent text-on-accent`}>
+        <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={3} aria-hidden="true">
+          <path d="m5 12 5 5 9-10" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </span>
+    );
+  }
+  if (row.status === 'uploading') {
+    const circumference = 2 * Math.PI * 9;
+    return (
+      <span role="img" aria-label={label} className={`${base} bg-paper`}>
+        <svg viewBox="0 0 24 24" width={24} height={24} aria-hidden="true" className="-rotate-90">
+          <circle cx="12" cy="12" r="9" fill="none" className="stroke-line" strokeWidth={3} />
+          <circle
+            cx="12"
+            cy="12"
+            r="9"
+            fill="none"
+            className="stroke-accent"
+            strokeWidth={3}
+            strokeDasharray={circumference}
+            strokeDashoffset={circumference * (1 - (row.percent ?? 0) / 100)}
+          />
+        </svg>
+      </span>
+    );
+  }
+  if (PROBLEM.has(row.status)) {
+    return (
+      <span role="img" aria-label={label} className={`${base} bg-ink text-caption font-bold text-paper`}>
+        !
+      </span>
+    );
+  }
+  return <span role="img" aria-label={label} className={`${base} border-[3px] border-ink-2 bg-paper`} />;
+}
+
+/** 48px icon-only button: the design.md exception for My Uploads, so every one has an aria-label. */
+function ItemButton({ label, icon, onClick }: { label: string; icon: IconName; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+      className="flex size-12 items-center justify-center rounded-card text-ink active:bg-paper-2"
+    >
+      <Icon name={icon} size={24} />
+    </button>
+  );
+}
+
+interface ItemProps {
   row: UploadRow;
   onPrivacy: (choice: PrivacyChoice) => void;
   onDelete: () => void;
-  onRetry: () => void;
-  onSendNow: () => void;
 }
 
-function UploadItem({ row, onPrivacy, onDelete, onRetry, onSendNow }: RowProps) {
+function UploadItem({ row, onPrivacy, onDelete }: ItemProps) {
   const { t, i18n } = useTranslation();
   const preview = usePreview(row);
   const kind = row.type === 'image' ? t('uploads.photo') : row.type === 'video' ? t('uploads.video') : t('uploads.audio');
@@ -58,34 +115,66 @@ function UploadItem({ row, onPrivacy, onDelete, onRetry, onSendNow }: RowProps) 
         minute: '2-digit',
       })
     : '';
+  const status = t(`uploads.status.${row.status}`, { percent: row.percent ?? 0 });
+  const isPublic = row.visibility === 'public';
   return (
-    <li className="flex flex-col gap-3 border-b border-line py-4">
-      <div className="flex items-center gap-4">
+    <li className="flex flex-col gap-1">
+      {/* Printed-photo border (design.md); the words are for screen readers only. */}
+      <div className="relative aspect-square border border-line bg-paper p-1.5">
         {preview ? (
-          <img src={preview} alt="" className="size-20 shrink-0 rounded-card border border-line object-cover" />
+          <img src={preview} alt={`${kind}, ${when}`} className="size-full object-cover" />
         ) : (
           <span
-            aria-hidden="true"
-            className="flex size-20 shrink-0 items-center justify-center rounded-card border border-line bg-paper-2 text-ink-2"
+            role="img"
+            aria-label={`${kind}, ${when}`}
+            className="flex size-full items-center justify-center bg-paper-2 text-ink-2"
           >
-            <Icon name={row.type === 'video' ? 'video' : 'camera'} />
+            <Icon name={row.type === 'video' ? 'video' : 'camera'} size={32} />
           </span>
         )}
-        <span className="flex flex-col gap-1">
-          <span className="font-bold">
-            {kind}
-            {when ? <span className="font-normal text-ink-2"> · {when}</span> : null}
-          </span>
-          <span className="text-caption">{t(`uploads.status.${row.status}`, { percent: row.percent ?? 0 })}</span>
-        </span>
+        <StatusMark row={row} label={status} />
       </div>
-      <PrivacySwitch choice={{ visibility: row.visibility, showName: row.showName }} onChange={onPrivacy} />
-      {row.status === 'failed' ? <Button onClick={onRetry}>{t('common.retry')}</Button> : null}
-      {row.status === 'held' ? <Button onClick={onSendNow}>{t('queue.sendNow')}</Button> : null}
-      <Button icon={<Icon name="trash" />} onClick={onDelete}>
-        {t('uploads.delete')}
-      </Button>
+      <div className="flex items-center justify-between">
+        <ItemButton
+          icon={isPublic ? 'globe' : 'lock'}
+          label={t(isPublic ? 'uploads.icons.public' : 'uploads.icons.private')}
+          onClick={() => onPrivacy({ visibility: isPublic ? 'private' : 'public', showName: row.showName })}
+        />
+        {isPublic ? (
+          <ItemButton
+            icon={row.showName ? 'user' : 'userHidden'}
+            label={t(row.showName ? 'uploads.icons.nameShown' : 'uploads.icons.nameHidden')}
+            onClick={() => onPrivacy({ visibility: 'public', showName: !row.showName })}
+          />
+        ) : null}
+        <ItemButton icon="trash" label={t('uploads.delete')} onClick={onDelete} />
+      </div>
     </li>
+  );
+}
+
+/** One line above the grid: what the small icons mean. */
+function Legend() {
+  const { t } = useTranslation();
+  const entries: { icon: IconName | 'sent'; label: string }[] = [
+    { icon: 'lock', label: t('privacy.privateTitle') },
+    { icon: 'globe', label: t('privacy.publicTitle') },
+    { icon: 'user', label: t('uploads.legendName') },
+    { icon: 'sent', label: t('uploads.status.sent') },
+  ];
+  return (
+    <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-caption text-ink-2">
+      {entries.map((entry) => (
+        <span key={entry.label} className="inline-flex items-center gap-1">
+          {entry.icon === 'sent' ? (
+            <span aria-hidden="true" className="inline-block size-3 rounded-full bg-accent" />
+          ) : (
+            <Icon name={entry.icon} size={16} />
+          )}
+          {entry.label}
+        </span>
+      ))}
+    </p>
   );
 }
 
@@ -218,21 +307,29 @@ export function MyUploadsPage() {
           {t('uploads.serverError')}
         </p>
       ) : null}
+      {rows.some((row) => row.status === 'failed') ? (
+        <Button onClick={() => void actions().then((m) => m.retryFailed(event.eventId))}>{t('common.retry')}</Button>
+      ) : null}
+      {rows.some((row) => row.status === 'held') ? (
+        <Button onClick={() => void actions().then((m) => m.sendHeld(event.eventId))}>{t('queue.sendNow')}</Button>
+      ) : null}
       {rows.length === 0 ? (
         <p>{t('uploads.empty')}</p>
       ) : (
-        <ul className="flex flex-col border-t border-line">
-          {rows.map((row) => (
-            <UploadItem
-              key={row.mediaId}
-              row={row}
-              onPrivacy={(choice) => void changePrivacy(row, choice)}
-              onDelete={() => setConfirming(row)}
-              onRetry={() => void actions().then((m) => m.retryFailed(event.eventId))}
-              onSendNow={() => void actions().then((m) => m.sendHeld(event.eventId))}
-            />
-          ))}
-        </ul>
+        <>
+          <Legend />
+          {/* Two columns keep three 48px icons under each preview on a 360px phone. */}
+          <ul className="grid grid-cols-2 gap-x-4 gap-y-3 min-[480px]:grid-cols-3">
+            {rows.map((row) => (
+              <UploadItem
+                key={row.mediaId}
+                row={row}
+                onPrivacy={(choice) => void changePrivacy(row, choice)}
+                onDelete={() => setConfirming(row)}
+              />
+            ))}
+          </ul>
+        </>
       )}
     </Screen>
   );

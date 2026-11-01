@@ -180,8 +180,8 @@ service cloud.firestore {
         && data.folderId == null
         && data.ownerUid == request.auth.uid
         // Phase 1 capture functions and the media types each may create.
-        && ((data.source == 'snapshot' && data.type == 'image')
-          || (data.source == 'galleryUpload' && data.type in ['image', 'video']))
+        // Snap Gambar opens the phone's own camera in photo or video mode (D-084).
+        && (data.source in ['snapshot', 'galleryUpload'] && data.type in ['image', 'video'])
         && featureAvailable(event.spaceId, event, data.source)
         && request.time < event.uploadUntil
         && data.status == 'queued'

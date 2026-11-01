@@ -9,7 +9,7 @@ import { Screen } from '../../components/ui';
 export function AliasInactivePage() {
   const { t } = useTranslation();
   return (
-    <Screen title={t('entry.aliasInactiveTitle')}>
+    <Screen title={t('entry.aliasInactiveTitle')} back>
       <p>{t('entry.aliasInactiveBody')}</p>
       <Link
         to="/login"
