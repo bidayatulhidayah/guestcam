@@ -35,6 +35,26 @@ describe('uploading originals', () => {
     await assertSucceeds(uploadBytes(ref(storage(ids.guest), original(ids.guest)), photo, jpeg));
   });
 
+  it('a camera video uploads: MP4 from Android and QuickTime from iPhone (D-088)', async () => {
+    // The 4 GB cap: the doc's sizeBytes is capped by the Firestore rule (tested there),
+    // and the file must match it exactly; the emulator cannot take a 4 GB file.
+    // Own media ids: Storage clean-up between tests can lag in the emulator.
+    for (const [mediaId, contentType] of [
+      ['3e4f5a6b-7c8d-4e9f-8a0b-2c3d4e5f6a7b', 'video/mp4'],
+      ['4f5a6b7c-8d9e-4f0a-9b1c-3d4e5f6a7b8c', 'video/quicktime'],
+    ] as const) {
+      await seedMedia(env, ids.guest, mediaId, { type: 'video', contentType, width: null, height: null });
+      await assertSucceeds(uploadBytes(ref(storage(ids.guest), original(ids.guest, mediaId)), photo, { contentType }));
+    }
+  });
+
+  it('a camera video is refused when its type differs from the doc', async () => {
+    await seedMedia(env, ids.guest, MEDIA_ID, { type: 'video', contentType: 'video/mp4', width: null, height: null });
+    await assertFails(
+      uploadBytes(ref(storage(ids.guest), original(ids.guest)), photo, { contentType: 'video/quicktime' }),
+    );
+  });
+
   it('is refused without a media doc (pitfall U2)', async () => {
     await assertFails(uploadBytes(ref(storage(ids.guest), original(ids.guest)), photo, jpeg));
   });

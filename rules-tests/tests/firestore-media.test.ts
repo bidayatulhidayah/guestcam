@@ -83,6 +83,13 @@ describe('creating media docs', () => {
     );
   });
 
+  it('a snapshot video from an iPhone (QuickTime) may be exactly the 4 GB cap, not a byte more (D-088)', async () => {
+    const cameraVideo = (sizeBytes: number) =>
+      validMedia(ids.guest, MEDIA_ID, { type: 'video', contentType: 'video/quicktime', sizeBytes, width: null, height: null });
+    await assertFails(setDoc(mediaDoc(ids.guest), cameraVideo(4 * 1024 * 1024 * 1024 + 1)));
+    await assertSucceeds(setDoc(mediaDoc(ids.guest), cameraVideo(4 * 1024 * 1024 * 1024)));
+  });
+
   it('non-members and signed-out visitors cannot create', async () => {
     await assertFails(setDoc(mediaDoc(ids.stranger), validMedia(ids.stranger)));
     await assertFails(setDoc(mediaDoc(null), validMedia(ids.guest)));
