@@ -29,12 +29,14 @@ export interface CommitResult {
   quotaFallback: boolean;
 }
 
-/** My Uploads preview, made in the background; photos only (videos show an icon until Phase 3). */
+/**
+ * My Uploads preview (~400 px) for a photo or a video, made in the background
+ * once the capture is saved. Kept after sending, until the guest deletes the
+ * item; none on this phone means the neutral placeholder.
+ */
 async function savePreview(item: QueueItem, file: Blob): Promise<void> {
-  if (item.type !== 'image') return;
-  const { makeThumbnail } = await import('../../lib/media/thumbnail');
-  const thumb = await makeThumbnail(file);
-  if (thumb) await (await getQueue()).saveThumb(item.mediaId, thumb);
+  const { makePreview } = await import('../../lib/media/preview');
+  await (await getQueue()).savePreview(item.mediaId, await makePreview(file, item.type));
 }
 
 async function prepareAll(
@@ -99,8 +101,8 @@ export async function takeFromCamera(file: File, context: CaptureContext, awaitC
     void readCaptureDetails(item, file)
       .catch(() => ({}))
       .then((details) => queue.finishPreparing(item.mediaId, details));
-    void savePreview(item, file).catch(() => undefined);
   }
+  void savePreview(item, file).catch(() => undefined);
   return { mediaId: item.mediaId, unsupported: false, tooLarge: false, quotaFallback, held };
 }
 

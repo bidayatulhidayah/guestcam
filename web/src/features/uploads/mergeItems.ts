@@ -36,6 +36,8 @@ export interface UploadRow {
   local: boolean;
   /** A media doc exists (or may exist) on the server. */
   hasDoc: boolean;
+  /** This phone's preview (local items only): `ready`, `none`, or not made yet. */
+  preview?: QueueItem['preview'];
 }
 
 function localStatus(item: QueueItem): RowStatus {
@@ -100,6 +102,7 @@ export function mergeItems(local: QueueItem[], server: ServerItem[]): UploadRow[
       createdAtMs: item.createdAt,
       local: true,
       hasDoc: doc !== undefined || item.docCreated,
+      preview: item.preview,
     });
   }
   return [...rows.values()].sort((a, b) => b.createdAtMs - a.createdAtMs);

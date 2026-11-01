@@ -85,6 +85,8 @@ const paths: Record<IconName, ReactNode> = {
     </>
   ),
   arrowLeft: <path d="M19 12H5m6-6-6 6 6 6" />,
+  arrowRight: <path d="M5 12h14m-6-6 6 6-6 6" />,
+  play: <path d="M8 5.5v13l10.5-6.5Z" />,
 };
 
 export type IconName =
@@ -101,7 +103,9 @@ export type IconName =
   | 'userHidden'
   | 'trash'
   | 'globe'
-  | 'arrowLeft';
+  | 'arrowLeft'
+  | 'arrowRight'
+  | 'play';
 
 export function Icon({ name, size = 28 }: { name: IconName; size?: number }) {
   return (

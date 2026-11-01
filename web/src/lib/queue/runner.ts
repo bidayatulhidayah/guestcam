@@ -148,10 +148,16 @@ export class UploadQueue {
     return { docCreated };
   }
 
-  /** Keeps a small preview for My Uploads, unless the item was deleted meanwhile. */
-  async saveThumb(mediaId: string, blob: Blob): Promise<void> {
+  /**
+   * Keeps a small preview for My Uploads (or notes that none could be made),
+   * unless the item was deleted meanwhile. It stays after the item is sent;
+   * only `remove` deletes it.
+   */
+  async savePreview(mediaId: string, blob: Blob | null): Promise<void> {
     await this.db.transaction('rw', this.db.items, this.db.thumbs, async () => {
-      if (await this.db.items.get(mediaId)) await this.db.thumbs.put({ mediaId, blob });
+      if (!(await this.db.items.get(mediaId))) return;
+      if (blob) await this.db.thumbs.put({ mediaId, blob });
+      await this.db.items.update(mediaId, { preview: blob ? 'ready' : 'none' });
     });
   }
 

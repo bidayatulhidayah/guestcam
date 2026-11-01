@@ -318,6 +318,8 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded, onChoiceSav
           setSnapOpen(false);
           setCameraCancelled(false);
         }}
+        mineCount={itemCount}
+        onMine={() => navigate('mine')}
       >
         {captureNotices}
       </SnapScreen>

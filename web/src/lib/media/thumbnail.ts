@@ -38,7 +38,7 @@ function makeOne(file: Blob): Promise<Blob | null> {
   });
 }
 
-/** A ~320 px preview of a photo, made in a Web Worker; null if it cannot be made. */
+/** A ~400 px preview of a photo, made in a Web Worker; null if it cannot be made. */
 export function makeThumbnail(file: Blob): Promise<Blob | null> {
   const result = chain.then(() => makeOne(file));
   chain = result.catch(() => null);

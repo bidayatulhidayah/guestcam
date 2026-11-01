@@ -23,6 +23,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 - Snap Gambar can also record a video with the phone's own camera, at full quality and any length (up to 4 GB). The video is saved on the phone first; one over 50 MB asks whether to send now or later on wifi.
 - After choosing "Teruskan di sini" inside Instagram, Facebook and similar apps, a small "Buka dalam Chrome" or "Buka dalam Safari" link stays at the top of every screen.
 - The code, error and help screens have a small "Kembali" link.
+- The Snap Gambar screen has a small "Muat Naik Saya (n)" link under the Gambar and Video buttons, with the number of the guest's items.
 
 ### Changed
 
@@ -34,6 +35,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 ### Fixed
 
 - Snap Gambar can record videos on phones: it now opens a screen with two big buttons, "Gambar" and "Video", each opening the phone camera in that mode. Before, Android phones opened photo mode only and iPhones varied. The screen stays open after a capture, so the next photo or video is one tap away.
+- Muat Naik Saya shows a small preview for videos too (a frame near the start, with a play mark), and photo previews appear as soon as they are ready and stay after the item is sent. Items sent from another phone keep a plain placeholder for now.
 
 ## [0.1] - 2026-10-27
 

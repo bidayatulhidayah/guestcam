@@ -53,7 +53,7 @@ Measured contrast with the test accent: ink on paper 13.3:1, olive on paper 7.2:
 - Borders: 1px `--line` hairlines. No drop shadows. Elevation is shown by `--paper-2`, not shadow.
 - One quiet decorative element allowed: a thin double rule in `--line` under the couple's names, echoing an invitation card. Nothing else ornamental on working screens.
 - Photos get a slim paper-coloured border like a printed photo.
-- Small text links are allowed only in the top row and above a screen title: "Kembali" on code, error and help screens, and "Buka dalam Chrome/Safari" after a guest chose to stay in an in-app browser (D-086). Caption size, at least 44 px tall to tap.
+- Small text links are allowed only in the top row and above a screen title: "Kembali" on code, error and help screens, "Buka dalam Chrome/Safari" after a guest chose to stay in an in-app browser (D-086), and "Muat Naik Saya (n) →" under the buttons on the Snap Gambar screen (D-089). Caption size, at least 44 px tall to tap.
 
 ## Icons
 

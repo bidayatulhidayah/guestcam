@@ -75,6 +75,7 @@
     "snapHint": "Ambil gambar atau rakam video dengan kamera telefon.",
     "snapPhoto": "Gambar",
     "snapVideo": "Video",
+    "snapMine": "Muat Naik Saya ({{count}})",
     "tooLarge": "{{count}} fail terlalu besar (maksimum 4 GB).",
     "unsupported": "{{count}} fail bukan gambar atau video.",
     "storageFull": "Ruang telefon penuh. Biarkan halaman ini terbuka sehingga semua dihantar.",

@@ -12,12 +12,17 @@ export function SnapScreen({
   onPhoto,
   onVideo,
   onBack,
+  mineCount,
+  onMine,
   children,
 }: {
   eyebrow: string;
   onPhoto: () => void;
   onVideo: () => void;
   onBack: () => void;
+  /** The guest's items on this phone, for the small "Muat Naik Saya (n)" link. */
+  mineCount: number;
+  onMine: () => void;
   /** Notices from the last capture, shown under the hint. */
   children?: ReactNode;
 }) {
@@ -35,6 +40,17 @@ export function SnapScreen({
           <Button icon={<Icon name="video" />} onClick={onVideo}>
             {t('capture.snapVideo')}
           </Button>
+          {/* Same small style as "Kembali" (D-086, D-089). */}
+          {mineCount > 0 ? (
+            <button
+              type="button"
+              onClick={onMine}
+              className="-ml-2 inline-flex min-h-11 items-center gap-1 self-start px-2 text-caption text-ink-2 active:text-ink"
+            >
+              <span>{t('capture.snapMine', { count: mineCount })}</span>
+              <Icon name="arrowRight" size={18} />
+            </button>
+          ) : null}
         </>
       }
     >

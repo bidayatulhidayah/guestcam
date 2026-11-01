@@ -465,3 +465,43 @@ describe('upload queue', () => {
     expect((await db.items.get(one.mediaId))?.status).toBe('sent');
   });
 });
+
+describe('My Uploads previews', () => {
+  const preview = () => new Blob([new Uint8Array([9, 9])], { type: 'image/jpeg' });
+
+  it('a preview survives the upload and goes only when the guest deletes the item', async () => {
+    const queue = newQueue(fakeRemote().remote);
+    const photo = item();
+    await db.items.put(photo);
+    await db.blobs.put({ mediaId: photo.mediaId, blob: bytes() });
+    await queue.savePreview(photo.mediaId, preview());
+
+    await queue.drain();
+    expect((await db.items.get(photo.mediaId))?.status).toBe('sent');
+    // The original's bytes go once sent; the preview stays.
+    expect(await db.blobs.get(photo.mediaId)).toBeUndefined();
+    expect(await db.thumbs.get(photo.mediaId)).toBeDefined();
+    expect((await db.items.get(photo.mediaId))?.preview).toBe('ready');
+
+    await queue.remove(photo.mediaId);
+    expect(await db.thumbs.get(photo.mediaId)).toBeUndefined();
+  });
+
+  it('a video without a readable frame is marked for the placeholder, with nothing stored', async () => {
+    const queue = newQueue(fakeRemote().remote);
+    const video = item({ type: 'video', contentType: 'video/mp4', priority: 1, status: 'held' });
+    await queue.add(video, bytes());
+    await queue.savePreview(video.mediaId, null);
+    expect((await db.items.get(video.mediaId))?.preview).toBe('none');
+    expect(await db.thumbs.get(video.mediaId)).toBeUndefined();
+  });
+
+  it('a preview finished after the item was deleted is not kept', async () => {
+    const queue = newQueue(fakeRemote().remote);
+    const photo = item({ status: 'held' });
+    await queue.add(photo, bytes());
+    await queue.remove(photo.mediaId);
+    await queue.savePreview(photo.mediaId, preview());
+    expect(await db.thumbs.get(photo.mediaId)).toBeUndefined();
+  });
+});
