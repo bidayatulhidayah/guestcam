@@ -48,6 +48,61 @@ Rules:
 
 ---
 
+## 2026-11-01 22:47 — Phase 1d: theme directions D and E, mockups saved, PR opened
+
+- **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
+- **Version / branch:** v0.1 (+ unreleased) / `feat/phase-1d-polish`
+- **Phase:** Phase 1 (target v0.2), 1d polish
+- **Goal:** Hidayah's requests: add theme directions D (Blush shawl colours on C's arch layout) and E (sage and lotus-rose framed card) to the comparison page, with contrast checks; keep all mockups for a later template themes page; then open the 1d PR without the theme and without a video fix.
+
+### What changed and why
+- **Theme direction D "Gerbang Blush":** C's layout and spacing with only the shawl colours. The arch is a flat accent fill with thin mauve lines (no images). The couple's names and monogram are in #86665A. Mauve draws rules and outlines. One small periwinkle check sits in the welcome divider. Contrast check (WCAG 2) of every text pair, two fixes:
+  - Muted text fell to 4.19:1 on the darkest spot of C's paper texture. D uses lighter fibres (5.06:1).
+  - #86665A is 4.34:1, so it is only for large serif. C's 22 px arch initials became 26 px.
+- **Theme direction E "Kad Sage":** a grey-sage frame around a butter-cream panel with notched corners (CSS `clip-path`, 1 px hairline edge). Names are stacked in deep lotus rose, with a decorative vertical date strip (labelled for screen readers). A lotus bud in thin rose lines sits in the corner. Sage olive is the accent, and there is no texture. Every text pair in use passes. Muted text on the frame is 3.41:1, so no text sits on the frame.
+- **Mockups saved:** `docs/product/themes/` holds `directions.html` (the whole board, with the contrast tables computed from the same colours), `shoot.mjs` (PNG screenshots) and a README. The PNGs (about 7 MB) are not committed.
+- **Theme choice:** Hidayah chose D first. The proposal for recording it is in memory.md "Open questions": a `template` key in `Theme`, plus D-087, an ADR and a design.md update. It waits for approval, and nothing is built.
+- **Docs for the PR:**
+  - CHANGELOG has a "Known issues" entry: Snap Gambar video capture does not work on phones yet (Hidayah's phone test), fix in 1e.
+  - memory.md: status updated, and a D-084 note added.
+
+### Files touched
+| File | Change |
+| --- | --- |
+| `docs/product/themes/directions.html`, `shoot.mjs`, `README.md` | added: theme directions A–E, screenshot script, overview |
+| `CHANGELOG.md` | modified: Known issues (video capture on phones) |
+| `docs/ai/memory.md` | modified: status, D-084 note, open question on theme templates |
+| `docs/ai/worklog.md` | modified: this entry |
+
+### Commands run and results
+| Command | Result |
+| --- | --- |
+| Contrast checks (node, WCAG 2 relative luminance) | D: all text pairs pass after 2 fixes. E: all pairs in use pass. The frame pair fails and is never used |
+| `docs/product/themes/shoot.mjs` | 15 screens rendered from the saved page |
+| `npm run typecheck` | clean |
+| `npm run build` | web and functions built |
+| `npm test` | shared 46, web 40, emulators (rules + callables) 83 passed |
+
+### Decisions
+- None recorded as decided this session. The theme template proposal waits for Hidayah's approval (memory.md Open questions).
+
+### Problems, risks, open questions
+- **Snap Gambar video capture does not work on phones** (Hidayah's phone test). Not investigated or fixed in this PR, by Hidayah's instruction. Phase 1e.
+- After merge Hidayah runs `npm run deploy:backend`. The Firestore media rule lets a `snapshot` be a video (the storage rule already allowed videos).
+- The emulator smoke tests and a live preview check of the 1d screens were not run this session. Coverage is the automated tests plus Hidayah's phone test.
+
+### Next steps
+- [ ] Hidayah reviews and merges the 1d PR, then runs `npm run deploy:backend`.
+- [ ] 1e: fix Snap Gambar video capture on phones.
+- [ ] Theme: after approval of the proposal, build D as the `gerbangBlush` template.
+- [ ] Then "Jemput Kawan" (D-076); v0.2 only when asked.
+
+### Commits
+- `847d655` docs(design): keep the five theme direction mockups for a later template page
+- docs commit with this entry
+
+---
+
 ## 2026-11-01 04:10 — Phase 1d polish: in-app link, back links, Snap Gambar video, My Uploads grid; theme directions
 
 - **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
