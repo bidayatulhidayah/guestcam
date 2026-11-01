@@ -48,6 +48,67 @@ Rules:
 
 ---
 
+## 2026-11-01 23:22 — Phase 1e: Snap Gambar asks Gambar or Video
+
+- **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
+- **Version / branch:** v0.1 (+ unreleased) / `feat/phase-1e-video` (from `main` after PR #9 was squash-merged)
+- **Phase:** Phase 1 (target v0.2), 1e
+- **Goal:** fix the phone test bug "Snap Gambar can only take photos" on iPhone and Android. Confirm the storage rule for videos with tests. Deploy the backend (approved by Hidayah) and the preview channel. Record the approved theme template plan.
+
+### What changed and why
+- **Snap Gambar screen (D-088):** the tile now opens a screen with two big buttons: "Gambar" (primary, camera icon) and "Video" (outlined, video icon).
+  - Each button opens its own hidden input: `accept="image/*"` or `accept="video/*"`, both with `capture="environment"`. A single input with both types opened photo mode only on Android and varied on iOS.
+  - It is still two taps from the menu to the camera. The inputs are clicked inside the tap (pitfall C1).
+  - The screen stays open after a capture, so the next one is one tap away. "Disimpan di telefon" and "Kamera tidak terbuka?" show there. "Kamera tidak terbuka?" → "Cuba lagi" reopens the same mode. "Kembali" returns to the menu.
+  - The privacy and wifi questions work as before. Videos use the same queue: saved to IndexedDB first, priority after photos, held over 50 MB.
+- **Storage rule:** unchanged; it already allowed `(image|video)/.+` up to 4 GB with the size and type matching the queued doc. New tests:
+  - a camera MP4 (Android) and a QuickTime video (iPhone) upload, and a type mismatch is refused;
+  - Firestore accepts a snapshot video of exactly 4 GiB and refuses one byte more.
+
+  The emulator cannot take a 4 GB file, so the cap is tested through the doc that the file must match.
+- **Unit tests:** a camera video is kept on the phone with priority after photos; an iPhone `.MOV` with no MIME type is recognised; non-media is refused.
+- **Theme templates:** Hidayah approved the plan with changes. It is recorded as D-087, "approved, not built yet", to be built on `feat/theme-templates` after 1e is merged. The open question is marked resolved.
+- **Docs:** CHANGELOG "Known issues" becomes "Fixed". spec.md Snap Gambar row. memory.md status, D-084 note, D-087, D-088.
+
+### Files touched
+| File | Change |
+| --- | --- |
+| `web/src/features/capture/SnapScreen.tsx` | added: the Gambar / Video screen |
+| `web/src/features/menu/MenuPage.tsx` | modified: two camera inputs, Snap screen state, cancel and retry per mode |
+| `web/src/i18n/ms.json`, `en.json` | modified: `capture.snapHint`, `capture.snapPhoto`, `capture.snapVideo` |
+| `web/tests/capture.test.ts` | added: camera capture description tests |
+| `rules-tests/tests/storage-media.test.ts`, `firestore-media.test.ts` | modified: camera video uploads and the 4 GB cap |
+| `CHANGELOG.md`, `docs/product/spec.md`, `docs/ai/memory.md`, `docs/ai/worklog.md` | modified |
+
+### Commands run and results
+| Command | Result |
+| --- | --- |
+| `npm run typecheck` | clean |
+| `npm test` | shared 46, web 43 (+3), emulators 86 (+3) passed |
+| `npm run build` | built |
+| `npm run deploy:backend` (approved by Hidayah) | complete. Firestore and Storage rules released ("already up to date", so the 1d rule was already live); indexes deployed; functions unchanged, skipped |
+| `npm run deploy:preview` | `https://guestcam-2026--preview-s6g4gj5a.web.app`, expires 2026-11-08. The served event chunk has the two inputs |
+
+### Decisions
+- D-088 (Snap Gambar two buttons). D-087 recorded as approved, not built.
+
+### Problems, risks, open questions
+- A first `test:emulators` run failed: a new storage test reused a media id whose file an earlier test had left (emulator clean-up lag). Fixed with the test's own ids. The failed run left the Firestore emulator on port 8080. `npm test` (which frees the ports) then ran clean.
+- Not yet checked on real phones. Hidayah's checklist: iPhone Safari and Android Chrome, photo and short video, both reach "Dihantar".
+- Some Android camera apps may save videos with an unusual type. The `.mp4`/`.3gp` fallbacks cover an empty MIME type.
+
+### Next steps
+- [ ] Hidayah: phone check on the preview, then review and merge the 1e PR.
+- [ ] Theme templates (D-087) on `feat/theme-templates`.
+- [ ] Then "Jemput Kawan" (D-076); v0.2 only when asked.
+
+### Commits
+- `d88c542` fix(capture): Snap Gambar asks Gambar or Video, one camera input each
+- `b40d939` test(rules): camera videos (MP4, QuickTime) upload up to the 4 GB cap
+- docs commit with this entry
+
+---
+
 ## 2026-11-01 22:47 — Phase 1d: theme directions D and E, mockups saved, PR opened
 
 - **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
