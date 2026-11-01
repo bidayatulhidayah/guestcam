@@ -48,6 +48,78 @@ Rules:
 
 ---
 
+## 2026-11-01 23:53 — Phase 1e follow-up: My Uploads previews, Snap shortcut
+
+- **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
+- **Version / branch:** v0.1 (+ unreleased) / `fix/phase-1e-previews` (from `main` after PR #10)
+- **Phase:** Phase 1 (target v0.2), 1e follow-up
+- **Goal:** Hidayah's phone test of PR #10:
+  1. Previews were missing in Muat Naik Saya: report which and why, then fix.
+  2. A small "Muat Naik Saya (n) →" link on the Snap Gambar screen.
+
+### Which previews were missing, and why (from the code; not seen on the phones)
+- **Videos:** none at all, on iPhone and Android, before and after "Dihantar". 1c made previews for photos only.
+- **Photos: the preview was not deleted on upload.** The queue deletes only the original's bytes; the preview lives in a separate table and was kept. So that suspected cause did not apply. The gaps were:
+  - **Timing.** The preview is made in the background, but My Uploads only looked for it when the item's status changed. A preview that finished after the last change (typically a small photo already "Dihantar", or My Uploads open while it was being made) stayed hidden until the page was reopened.
+  - **Decoding in the worker failed:** HEIC on Android Chrome; no OffscreenCanvas before iOS 16.4.
+  - **Items not in this phone's queue** (another phone, cleared data) showed the placeholder, as expected until Phase 3.
+
+### What changed and why (D-089)
+- **Previews for photos and videos:**
+  - `lib/media/preview.ts` makes one ~400 px JPEG at a time: photos in the Web Worker, then once on the page with `img.decode()` if the worker cannot decode them; videos through `lib/media/videoFrame.ts`.
+  - The video frame is taken about 0.5 s in, through an object URL with a `<video>` element, so the file streams from disk and is never loaded into memory. A 10 s timeout and any error give null (the placeholder).
+  - Camera videos now get a preview too (before, only photos did).
+- **Stored separately, kept after sending:**
+  - `thumbs` (IndexedDB) under the mediaId, separate from `blobs`.
+  - `UploadQueue.savePreview(mediaId, blob | null)` writes the preview and sets `preview: 'ready' | 'none'` on the item in one transaction, and drops it if the item was deleted meanwhile.
+  - The send step deletes only the original's bytes; `remove` (delete) deletes the preview.
+- **My Uploads:**
+  - The lookup reruns when `preview` changes (driven by the queue's live list), so it appears at once.
+  - Videos show a small play mark on the preview. No preview, or an item from another phone, keeps the neutral placeholder.
+- **Snap shortcut:** a small "Muat Naik Saya (n) →" link under the Gambar and Video buttons, in the same style as "Kembali", shown once the guest has items. `capture.snapMine` is in ms/en, and there is an `arrowRight` icon.
+- **Branch:** PR #10 was squash-merged while this work was in progress, and the working copy was on `main`. The two new commits were made there locally (not pushed), then moved to `fix/phase-1e-previews`, and local `main` was reset to `origin/main`.
+
+### Files touched
+| File | Change |
+| --- | --- |
+| `web/src/lib/media/preview.ts`, `videoFrame.ts` | added: preview making, video frame grab |
+| `web/src/lib/media/thumbnail.ts`, `thumbnail.worker.ts`, `thumbnailTypes.ts` | modified: 400 px, shared size, comments |
+| `web/src/lib/queue/types.ts`, `runner.ts` | modified: `preview` on the item, `savePreview` |
+| `web/src/features/capture/captureActions.ts` | modified: preview for every capture and pick |
+| `web/src/features/uploads/MyUploadsPage.tsx`, `mergeItems.ts` | modified: reactive preview, play mark |
+| `web/src/features/capture/SnapScreen.tsx`, `features/menu/MenuPage.tsx`, `components/ui/Icon.tsx` | modified: shortcut link, `arrowRight` and `play` icons |
+| `web/src/i18n/ms.json`, `en.json` | modified: `capture.snapMine` |
+| `web/tests/queue.test.ts`, `web/tests/preview.test.ts` | modified/added: preview tests |
+| `CHANGELOG.md`, `docs/product/design.md`, `docs/ai/memory.md`, `docs/ai/worklog.md` | modified |
+
+### Commands run and results
+| Command | Result |
+| --- | --- |
+| `npm run typecheck` | clean |
+| `npm test` | shared 46, web 49 (+6), emulators 86 passed |
+| Real preview code in headless Chrome (Vite dev server under `timeout`, ffmpeg test media) | MP4 and QuickTime: 400x225 frame in about 200 ms; 12 MP JPEG: 400x300 in about 0.8 s; broken video: placeholder, no error |
+| `npm run build` | built. Entry chunks unchanged; `preview` is a lazy 0.9 KB gzip chunk; `ui` +0.06 KB gzip |
+| `npm run deploy:preview` | same channel, `https://guestcam-2026--preview-s6g4gj5a.web.app` (expires 2026-11-08) |
+
+### Decisions
+- D-089.
+
+### Problems, risks, open questions
+- iPhone Safari may give a black frame for some videos unless they have played. The phone check will show it; if it happens, play muted for a moment before grabbing.
+- HEIC on Android cannot be shown without a large decoder library: the placeholder stays (server thumbnails in Phase 3).
+- Old items made before this change still show their photo previews (the lookup also runs when `preview` is unset). Old videos keep the placeholder.
+
+### Next steps
+- [ ] Hidayah: phone check on the preview, then review and merge the follow-up PR.
+- [ ] Theme templates (D-087) on `feat/theme-templates`.
+
+### Commits
+- `e779a8b` fix(uploads): previews for photos and videos that stay after sending
+- `f1d6282` feat(capture): "Muat Naik Saya (n)" link on the Snap Gambar screen
+- docs commit with this entry
+
+---
+
 ## 2026-11-01 23:22 — Phase 1e: Snap Gambar asks Gambar or Video
 
 - **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
