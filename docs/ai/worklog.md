@@ -48,6 +48,59 @@ Rules:
 
 ---
 
+## 2026-11-02 00:18 — My Uploads: tap a video to play it; video previews on iPhone
+
+- **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
+- **Version / branch:** v0.1 (+ unreleased) / `fix/uploads-preview-play` (from `main` after PR #12)
+- **Phase:** Phase 1 (target v0.2), polish from the phone test
+- **Goal:** Hidayah: "I still can't see the preview; the button can't be used, it didn't play."
+
+### What changed and why (D-091)
+- **Play:** the play mark on video previews was decorative, so tapping it did nothing. The whole video tile is now a button ("Main video" + kind + time for screen readers). It opens `VideoPlayer`, a screen with a `<video controls playsInline>`, and "Kembali" goes back.
+  - Before sending, it plays the phone's copy (IndexedDB blob, or the picked File).
+  - After sending, it plays the guest's own original from Storage (`videoSource.ts`, `storage.getDownloadUrl`, now implemented in the adapter; owner-only read).
+  - It streams; nothing is downloaded whole. If the video cannot be played, a neutral message shows.
+- **Video previews on iPhone (likely cause, not seen on the phone):** Safari loads no frames for a video that is not playing, so the seek-and-draw grab ran into its 10 s timeout and left the placeholder. Now, if no frame arrives within 2.5 s or after the seek, the video plays muted (allowed without a tap) and the first shown frame is drawn. The normal path in Chrome is unchanged (rechecked in headless Chrome).
+- **Not known yet:** which phone and which items lacked previews. Asked Hidayah.
+
+### Files touched
+| File | Change |
+| --- | --- |
+| `web/src/lib/media/videoFrame.ts` | modified: muted-play fallback |
+| `web/src/lib/storage/firebaseStorage.ts`, `types.ts` | modified: `getDownloadUrl` |
+| `web/src/features/uploads/VideoPlayer.tsx`, `videoSource.ts` | added |
+| `web/src/features/uploads/MyUploadsPage.tsx` | modified: video tile is a button; player state |
+| `web/src/i18n/ms.json`, `en.json` | modified: `uploads.play`, `uploads.playFailed` |
+| `web/tests/videoSource.test.ts`, `web/tests/storage.test.ts` | added / updated (getDownloadUrl is no longer "not implemented") |
+| `CHANGELOG.md`, `docs/ai/memory.md`, `docs/ai/worklog.md` | modified |
+
+### Commands run and results
+| Command | Result |
+| --- | --- |
+| `npm run typecheck` | clean |
+| `npm test` | first run: 1 failure (the old storage test expected `getDownloadUrl` to be unimplemented), updated; then shared 46, web 55 (+3), emulators 86 passed |
+| Frame grab in headless Chrome | MP4/MOV 400x225, JPEG 400x300, broken file: placeholder |
+| `npm run build` | built; entry unchanged; `videoSource` is a lazy 0.33 KB gzip chunk |
+| `npm run deploy:preview` | same channel, expires 2026-11-09 |
+
+### Decisions
+- D-091.
+
+### Problems, risks, open questions
+- The iPhone fallback cannot be tested in headless Chrome; the phone test decides.
+- Playing a sent video streams the original from Storage, which costs data and egress, but only on the guest's own tap.
+
+### Next steps
+- [ ] Hidayah: phone check; say which phone, and which items still lack previews.
+- [ ] PR for `fix/uploads-preview-play` when Hidayah says so.
+
+### Commits
+- `ed1588a` fix(uploads): video previews on iPhone Safari
+- `0d2fa6c` feat(uploads): tap a video in My Uploads to play it
+- docs commit with this entry
+
+---
+
 ## 2026-11-02 00:06 — Upload progress circles; stuck uploads no longer block the queue
 
 - **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
