@@ -505,3 +505,74 @@ describe('My Uploads previews', () => {
     expect(await db.thumbs.get(photo.mediaId)).toBeUndefined();
   });
 });
+
+describe('stuck uploads', () => {
+  /** Timers the test fires by hand: step time limits and the upload watchdog. */
+  function manualTimers() {
+    const timers = new Map<number, { ms: number; callback: () => void }>();
+    let next = 0;
+    return {
+      setTimer: (callback: () => void, ms: number) => {
+        const id = next++;
+        timers.set(id, { ms, callback });
+        return () => void timers.delete(id);
+      },
+      /** Fires every pending timer of exactly this length. */
+      fire(ms: number) {
+        for (const [id, timer] of [...timers]) {
+          if (timer.ms !== ms) continue;
+          timers.delete(id);
+          timer.callback();
+        }
+      },
+    };
+  }
+
+  it('a network step that hangs is given up and retried, instead of blocking the queue', async () => {
+    const { STEP_TIMEOUT_MS } = await import('../src/lib/queue/runner');
+    const server = fakeRemote();
+    const release = server.holdDocs();
+    const timers = manualTimers();
+    const queue = newQueue(server.remote, { setTimer: timers.setTimer });
+    const one = item();
+    await queue.add(one, bytes());
+    await vi.waitFor(async () => expect((await db.items.get(one.mediaId))?.status).toBe('uploading'));
+
+    timers.fire(STEP_TIMEOUT_MS);
+    await vi.waitFor(async () =>
+      expect(await db.items.get(one.mediaId)).toMatchObject({ status: 'waiting', lastError: 'stalled', attempts: 1 }),
+    );
+    release();
+  });
+
+  it('an upload with no bytes moving is cancelled and retried', async () => {
+    const { STALL_MS } = await import('../src/lib/queue/runner');
+    const server = fakeRemote();
+    server.holdUploads();
+    const timers = manualTimers();
+    const queue = newQueue(server.remote, { setTimer: timers.setTimer });
+    const one = item();
+    await queue.add(one, bytes());
+    await vi.waitFor(async () => expect((await db.items.get(one.mediaId))?.status).toBe('uploading'));
+    // Wait until the upload itself has started (doc and meta are done).
+    await vi.waitFor(() => expect(server.calls.metaWrites).toBe(1));
+
+    timers.fire(STALL_MS);
+    await vi.waitFor(async () =>
+      expect(await db.items.get(one.mediaId)).toMatchObject({ status: 'waiting', lastError: 'stalled', attempts: 1 }),
+    );
+    expect(server.calls.uploads).toBe(0);
+  });
+
+  it('after a reload an item waiting out a retry delay is sent at once', async () => {
+    const server = fakeRemote();
+    const waiting = item({ attempts: 6, nextAttemptAt: clock + 5 * 60_000, lastError: 'network down' });
+    await db.items.put(waiting);
+    await db.blobs.put({ mediaId: waiting.mediaId, blob: bytes() });
+
+    const queue = newQueue(server.remote);
+    await queue.start();
+    await queue.drain();
+    expect((await db.items.get(waiting.mediaId))?.status).toBe('sent');
+  });
+});

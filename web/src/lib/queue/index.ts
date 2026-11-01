@@ -56,9 +56,10 @@ export function getQueue(): Promise<UploadQueue> {
     // An app update must not reload away a gallery pick before it is sent (pitfall U5),
     // nor anything at all while the database lives only in memory.
     setReloadGuard(() => instance.canReloadSafely() && !(memoryOnly && instance.hasUnsent()));
-    window.addEventListener('online', () => instance.kick());
+    // Back online, or back in the app: try at once rather than waiting out a retry delay.
+    window.addEventListener('online', () => void instance.retryNow());
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') instance.kick();
+      if (document.visibilityState === 'visible') void instance.retryNow();
     });
     await instance.start();
     return instance;
