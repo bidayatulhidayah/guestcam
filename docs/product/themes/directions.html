@@ -1,0 +1,408 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kad Jemputan Themes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Instrument+Serif&display=swap">
+<style>
+/* Layout: a board of three directions; each row is three real-size phone screens (390 px) on the design.md palette.
+   Single light theme on purpose: design.md ships light only for v1. */
+:root {
+  --paper: #F5EFE3;
+  --paper-2: #EBE3D2;
+  --ink: #2B2420;
+  --ink-2: #5E554C;
+  --line: #D8CDB8;
+  --accent: #4B5320;
+  --accent-tint: #E6E3D0;
+  --on-accent: #FFFDF8;
+  --board: #E2D9C6;
+  /* A–C: names and monogram use the accent; mauve and periwinkle exist only in D. */
+  --flourish: #4B5320;
+  --mauve: #D8CDB8;
+  --periwinkle: #D8CDB8;
+  --rose: #D8CDB8;
+  --frame: #E2D9C6;
+  /* E's panel: a small square notch cut into each corner, like a framed invitation card. */
+  --notch: polygon(14px 0, calc(100% - 14px) 0, calc(100% - 14px) 14px, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 14px calc(100% - 14px), 0 calc(100% - 14px), 0 14px, 14px 14px);
+  --fibres-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.02 .6' numOctaves='3' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .3 0 0 0 0 .25 0 0 0 0 .18 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+  --font-display: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+  --font-body: 'Atkinson Hyperlegible', 'Segoe UI', Roboto, sans-serif;
+  --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .17 0 0 0 0 .14 0 0 0 0 .12 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --fibres: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.02 .6' numOctaves='3' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .3 0 0 0 0 .25 0 0 0 0 .18 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--board);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 18px;
+  line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 64px;
+}
+.board-head { max-width: 1260px; margin: 0 auto 40px; display: grid; gap: 8px; }
+.board-head h1 { font-family: var(--font-display); font-weight: 400; font-size: 44px; line-height: 1.05; margin: 0; text-wrap: balance; }
+.board-head p { margin: 0; max-width: 65ch; color: var(--ink-2); }
+.direction { max-width: 1260px; margin: 0 auto 56px; display: grid; gap: 16px; }
+.direction-head { display: grid; gap: 4px; }
+.direction-head h2 { font-family: var(--font-display); font-weight: 400; font-size: 32px; margin: 0; }
+.direction-head h2 span { color: var(--ink-2); font-family: var(--font-body); font-size: 16px; margin-left: 8px; }
+.direction-head p { margin: 0; max-width: 70ch; color: var(--ink-2); font-size: 16px; }
+.phones { display: flex; flex-wrap: wrap; gap: 24px; }
+.shot { display: grid; gap: 8px; min-width: 0; }
+.shot figcaption { font-size: 15px; color: var(--ink-2); }
+
+/* ---------- Phone screen ---------- */
+.phone {
+  width: 390px; max-width: 100%; min-height: 844px;
+  background-color: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  padding: 16px 20px 32px;
+  gap: 16px;
+}
+.dir-a .phone { background-image: var(--noise); }
+.dir-b .phone { background-image: none; }
+.dir-c .phone { background-image: var(--fibres), var(--noise); }
+.topbar { display: flex; justify-content: space-between; align-items: center; min-height: 48px; }
+.lang { border: 1px solid var(--line); border-radius: 8px; padding: 10px 16px; font-weight: 700; font-size: 15px; }
+.back { display: inline-flex; align-items: center; gap: 4px; font-size: 15px; color: var(--ink-2); }
+.back svg { width: 18px; height: 18px; }
+
+/* Couple header */
+.couple { display: grid; gap: 8px; }
+.names { font-family: var(--font-display); color: var(--flourish); font-size: 44px; line-height: 1.05; margin: 0; font-weight: 400; text-wrap: balance; }
+.names.small { font-size: 34px; }
+.eyebrow { font-size: 15px; color: var(--ink-2); margin: 0; }
+.date { font-size: 15px; color: var(--ink-2); margin: 0; }
+.double-rule { height: 5px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); width: 100%; }
+.monogram { font-family: var(--font-display); color: var(--flourish); display: grid; place-items: center; }
+
+.dir-a .couple { text-align: center; justify-items: center; border: 3px double var(--line); padding: 24px 16px 20px; }
+.dir-a .double-rule { width: 64%; }
+.dir-a .monogram { width: 76px; height: 76px; border-radius: 50%; border: 3px double var(--accent); font-size: 30px; letter-spacing: .02em; }
+.dir-a .monogram.small { width: 52px; height: 52px; font-size: 21px; }
+
+.dir-b .couple { justify-items: start; }
+.dir-b .monogram { width: 52px; height: 52px; border: 1px solid var(--accent); font-size: 22px; line-height: 1; }
+.dir-b .monogram.small { width: 40px; height: 40px; font-size: 17px; }
+.dir-b .names { font-size: 48px; }
+.dir-b .names.small { font-size: 34px; }
+.dir-b .double-rule { margin-top: 4px; }
+
+.dir-c .couple { text-align: center; justify-items: center; }
+.dir-c .arch {
+  width: 232px; height: 270px; border-radius: 116px 116px 0 0; position: relative;
+  border: 1px solid var(--line); padding: 8px; background: var(--paper);
+}
+.dir-c .arch-inner { width: 100%; height: 100%; border-radius: 108px 108px 0 0; overflow: hidden; }
+.dir-c .arch-inner svg { width: 100%; height: 100%; display: block; }
+.dir-c .arch .monogram {
+  position: absolute; left: 50%; bottom: -30px; transform: translateX(-50%);
+  width: 64px; height: 64px; border-radius: 50%; background: var(--paper); border: 1px solid var(--accent); font-size: 25px;
+}
+.dir-c .arch + * { margin-top: 30px; }
+.dir-c .mini-arch { width: 56px; height: 66px; border-radius: 28px 28px 0 0; border: 1px solid var(--accent); display: grid; place-items: end center; padding-bottom: 10px; font-family: var(--font-display); color: var(--flourish); font-size: 22px; }
+.dir-c .double-rule { width: 64%; }
+
+/* D: C's layout in the Blush shawl colours. Mauve and periwinkle are line work only, never text. */
+.theme-d .phone {
+  --paper: #F3E9E6; --paper-2: #E7D8D8; --line: #D5C7C9;
+  --ink: #3A2A26; --ink-2: #6B5A55;
+  --accent: #7A5A56; --on-accent: #FFFFFF;
+  --flourish: #86665A; --mauve: #B59691; --periwinkle: #A5A3BA;
+  background-image: var(--fibres-light);
+}
+.theme-d .arch { border-color: var(--mauve); }
+.theme-d .mini-arch { border-color: var(--accent); outline: 1px solid var(--mauve); outline-offset: 3px; font-size: 26px; padding-bottom: 8px; }
+.theme-d .double-rule { border-color: var(--mauve); }
+.theme-d.dir-c .print { outline-color: var(--mauve); }
+.rule-motif { display: flex; align-items: center; gap: 8px; width: 64%; }
+.rule-motif .double-rule { flex: 1; width: auto; }
+.rule-motif svg { width: 16px; height: 16px; flex: none; }
+
+/* E: sage and lotus-rose invitation card. A grey-sage frame holds a butter-cream panel with notched corners;
+   no text sits on the frame. Rose is line work only; the darker rose is only for the couple's names. */
+.theme-e .phone {
+  --paper: #FBF6DE; --paper-2: #F3EDD3; --line: #D2C7A8; --frame: #CCC7BB;
+  --ink: #2E2B24; --ink-2: #6A6656;
+  --accent: #56624A; --on-accent: #FFFFFF;
+  --flourish: #87504E; --rose: #BF8B88;
+  background: var(--frame); border-color: var(--frame); padding: 12px; gap: 0;
+}
+.panel-line { flex: 1; display: flex; padding: 1px; background: var(--line); clip-path: var(--notch); }
+.panel { flex: 1; display: flex; flex-direction: column; gap: 16px; padding: 16px 18px 28px; background: var(--paper); clip-path: var(--notch); min-width: 0; }
+.sprig { width: 40px; height: 40px; display: block; }
+.dir-e .couple { position: relative; text-align: center; justify-items: center; padding: 4px 36px; }
+.dir-e .double-rule { width: 56%; }
+.names-stack { display: grid; justify-items: center; font-size: 54px; line-height: 1; gap: 2px; }
+.names-stack .amp { font-size: 34px; }
+.date-strip { position: absolute; left: 0; top: 0; bottom: 0; width: 28px; border-inline: 1px solid var(--line); display: grid; place-items: center; }
+.date-strip span { writing-mode: vertical-rl; transform: rotate(180deg); font-size: 15px; letter-spacing: .2em; color: var(--ink-2); white-space: nowrap; }
+.dir-e .tile { align-items: center; justify-content: center; text-align: center; background: var(--paper-2); }
+.dir-e .tile.wide { justify-content: center; }
+
+/* Body copy and controls */
+.lead { margin: 0; }
+.lead strong { font-weight: 700; }
+.muted { color: var(--ink-2); font-size: 15px; margin: 0; }
+.btn { min-height: 64px; border-radius: 8px; border: 1px solid var(--ink); display: flex; align-items: center; justify-content: center; gap: 12px; font-weight: 700; font-size: 20px; width: 100%; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn svg { width: 28px; height: 28px; }
+.stack { display: grid; gap: 16px; margin-top: auto; }
+
+.switch { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.switch .label { font-size: 15px; color: var(--ink-2); }
+.seg { display: flex; border: 1px solid var(--ink); border-radius: 8px; overflow: hidden; }
+.seg span { padding: 10px 16px; font-weight: 700; }
+.seg .on { background: var(--accent); color: var(--on-accent); }
+
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.tile { min-height: 116px; border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 10px; background: var(--paper); }
+.tile svg { width: 32px; height: 32px; }
+.tile b { font-size: 20px; line-height: 1.2; }
+.tile small { font-size: 15px; color: var(--ink-2); }
+.tile.off { color: var(--ink-2); }
+.tile.wide { grid-column: span 2; min-height: 84px; flex-direction: row; align-items: center; }
+.dir-a .tile, .dir-c .tile { align-items: center; justify-content: center; text-align: center; }
+.dir-a .tile.wide, .dir-c .tile.wide { justify-content: center; }
+.dir-b .tile { justify-content: space-between; }
+.dir-b .tile.wide { justify-content: flex-start; }
+.dir-c .tile { background: transparent; }
+
+/* My Uploads */
+.title { font-family: var(--font-display); font-size: 28px; line-height: 1.15; margin: 0; font-weight: 400; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 15px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 4px; }
+.legend svg { width: 16px; height: 16px; }
+.legend .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); display: inline-block; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
+.item { display: grid; gap: 2px; }
+.print { position: relative; aspect-ratio: 1; max-width: 100%; background: var(--paper); border: 1px solid var(--line); padding: 6px; }
+.print .pic { width: 100%; height: 100%; display: block; }
+.print .vid { width: 100%; height: 100%; display: grid; place-items: center; background: var(--paper-2); color: var(--ink-2); }
+.print .vid svg { width: 32px; height: 32px; }
+.dir-b .print { aspect-ratio: 5 / 6; padding: 6px 6px 22px; }
+.dir-c .print { padding: 7px; outline: 1px solid var(--line); outline-offset: -4px; }
+.mark { position: absolute; top: 12px; right: 12px; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; }
+.mark.sent { background: var(--accent); color: var(--on-accent); }
+.mark.sent svg { width: 16px; height: 16px; }
+.mark.wait { border: 3px solid var(--ink-2); background: var(--paper); }
+.mark.ring { background: var(--paper); }
+.mark.problem { background: var(--ink); color: var(--paper); font-weight: 700; font-size: 15px; }
+.icons { display: flex; justify-content: space-between; }
+.icons span { width: 48px; height: 48px; display: grid; place-items: center; }
+.icons svg { width: 24px; height: 24px; }
+
+/* Contrast table under D */
+.contrast { overflow-x: auto; max-width: 1260px; }
+.contrast table { border-collapse: collapse; font-size: 15px; min-width: 640px; }
+.contrast th, .contrast td { text-align: left; padding: 8px 12px 8px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+.contrast th { font-weight: 700; }
+.contrast .sw { display: inline-block; width: 14px; height: 14px; border: 1px solid var(--ink-2); vertical-align: -2px; margin-right: 2px; }
+.contrast .fix { color: var(--ink-2); }
+
+@media (max-width: 440px) {
+  .board-head h1 { font-size: 36px; }
+  .phone { padding-inline: 16px; }
+}
+</style>
+
+<header class="board-head">
+  <h1>Lima arah tema kad jemputan</h1>
+  <p>Each row shows one direction on the same three screens: the welcome after the code is checked, the menu and Muat Naik Saya. A, B and C keep the design.md colours: paper and ink with one olive accent. D uses C's layout in colours taken from the Blush shawl. E frames each screen like a sage and lotus-rose invitation card. D and E change the paper from design.md. All five use Instrument Serif for names and Atkinson Hyperlegible for everything a guest reads. The names, date and photos are examples.</p>
+</header>
+
+<main id="board"></main>
+
+<script>
+const ICON = {
+  camera: '<path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13.5" r="3.5"/>',
+  upload: '<rect x="3" y="4" width="18" height="16" rx="1"/><path d="m3 16 5-5 4 4 3-3 6 6"/><circle cx="16" cy="8.5" r="1.5"/>',
+  video: '<rect x="3" y="6" width="13" height="12" rx="1"/><path d="m16 10 5-3v10l-5-3"/>',
+  boomerang: '<path d="M7 15a4 4 0 1 1 0-6c2 0 3 1.5 5 3s3 3 5 3a4 4 0 1 0 0-6c-2 0-3 1.5-5 3s-3 3-5 3Z"/>',
+  phone: '<path d="M6 3h3l1.5 4.5-2 1.5a12 12 0 0 0 6.5 6.5l1.5-2L21 15v3a2 2 0 0 1-2 2A16 16 0 0 1 4 5a2 2 0 0 1 2-2Z"/>',
+  letter: '<rect x="3" y="5" width="18" height="14" rx="1"/><path d="m3 7 9 6 9-6"/>',
+  lock: '<rect x="5" y="11" width="14" height="10" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18Z"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  userHidden: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/><path d="m3 3 18 18"/>',
+  trash: '<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/>',
+  arrowLeft: '<path d="M19 12H5m6-6-6 6 6 6"/>',
+};
+const icon = (name) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[name]}</svg>`;
+const check = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>';
+const ring = (pct) => { const c = 2 * Math.PI * 9; return `<svg viewBox="0 0 24 24" width="24" height="24" style="transform:rotate(-90deg)" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="var(--line)" stroke-width="3"/><circle cx="12" cy="12" r="9" fill="none" stroke="var(--accent)" stroke-width="3" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - pct / 100)}"/></svg>`; };
+
+// Example "photos": flat scenes in muted tones (stand-ins for guests' pictures).
+const scene = (sky, ground, sun, shape) => `<svg class="pic" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="100" height="100" fill="${sky}"/><circle cx="${shape === 'left' ? 30 : 70}" cy="34" r="13" fill="${sun}"/><rect y="62" width="100" height="38" fill="${ground}"/><rect x="${shape === 'left' ? 52 : 18}" y="40" width="22" height="34" fill="${ground}" opacity=".75"/></svg>`;
+const COVER = scene('#CFC7AE', '#7D8459', '#EFE6CF', 'right');
+
+// D's arch: a flat accent fill with a thin inner arch and a shawl-border stripe pair, no photo.
+const ARCH_D = '<svg viewBox="0 0 214 252" preserveAspectRatio="none" aria-hidden="true"><rect width="214" height="252" style="fill:var(--accent)"/><g fill="none" stroke-width="1" style="stroke:var(--mauve)"><path d="M14 252V107a93 93 0 0 1 186 0v145"/><path d="M14 196h186M14 202h186"/></g></svg>';
+// D's divider: a small periwinkle check (a diamond split into four) between two mauve double rules.
+const CHECK_D = '<svg viewBox="0 0 16 16" aria-hidden="true"><g fill="none" stroke-width="1" style="stroke:var(--periwinkle)"><path d="M8 1 15 8 8 15 1 8Z"/><path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/></g></svg>';
+
+const couple = {
+  initials: 'A·H', names: 'Aina &amp; Hakim', event: 'Majlis Pertunangan', date: 'Sabtu, 14 November 2026',
+};
+
+// E's corner sprig: a lotus bud and leaf in thin rose lines (no artwork copied from the card).
+const SPRIG_E = '<svg class="sprig" viewBox="0 0 40 40" aria-hidden="true"><g fill="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--rose)"><path d="M8 38c3-7 6-13 12-20"/><path d="M20 18c-3-6 0-12 4-14 2 5 1 10-4 14Z"/><path d="M20 18c-6-3-8-8-7-11 4 2 6 5 7 11Z"/><path d="M20 18c5-2 9-5 11-9-4 0-8 3-11 9Z"/><path d="M11 32c-7-2-9-7-8-10 5 1 8 5 8 10Z"/><path d="M11 32 5 24"/></g></svg>';
+// E wraps each screen in the frame and the notched panel.
+const phone = (dir, html) => dir === 'e'
+  ? `<div class="phone"><div class="panel-line"><div class="panel">${html}</div></div></div>`
+  : `<div class="phone">${html}</div>`;
+
+function header(dir, size, theme) {
+  const small = size === 'small';
+  if (dir === 'e' && !small) {
+    return `<section class="couple">
+      <div class="date-strip" role="img" aria-label="${couple.date}"><span aria-hidden="true">14 · 11 · 2026</span></div>
+      <p class="eyebrow">${couple.event}</p>
+      <h2 class="names names-stack"><span>Aina</span><span class="amp">&amp;</span><span>Hakim</span></h2>
+      <div class="double-rule"></div>
+      <p class="date">${couple.date}</p>
+    </section>`;
+  }
+  if (dir === 'e') {
+    return `<section class="couple"><h2 class="names small">${couple.names}</h2><div class="double-rule"></div></section>`;
+  }
+  if (dir === 'c' && !small) {
+    return `<section class="couple">
+      <div class="arch"><div class="arch-inner">${theme === 'd' ? ARCH_D : COVER}</div><div class="monogram">${couple.initials}</div></div>
+      <p class="eyebrow">${couple.event}</p>
+      <h2 class="names">${couple.names}</h2>
+      ${theme === 'd' ? `<div class="rule-motif"><span class="double-rule"></span>${CHECK_D}<span class="double-rule"></span></div>` : '<div class="double-rule"></div>'}
+      <p class="date">${couple.date}</p>
+    </section>`;
+  }
+  if (dir === 'c') {
+    return `<section class="couple"><div class="mini-arch">${couple.initials}</div><h2 class="names small">${couple.names}</h2><div class="double-rule"></div></section>`;
+  }
+  const mono = dir === 'b' ? 'AH' : couple.initials;
+  return `<section class="couple">
+    <div class="monogram${small ? ' small' : ''}">${mono}</div>
+    ${small ? '' : `<p class="eyebrow">${couple.event}</p>`}
+    <h2 class="names${small ? ' small' : ''}">${couple.names}</h2>
+    <div class="double-rule"></div>
+    ${small ? '' : `<p class="date">${couple.date}</p>`}
+  </section>`;
+}
+
+const topbar = (back, dir) => `<div class="topbar">${back ? `<span class="back">${icon('arrowLeft')}Kembali</span>` : dir === 'e' ? SPRIG_E : '<span></span>'}<span class="lang">EN</span></div>`;
+
+function welcome(dir, theme) {
+  return phone(dir, `${topbar(false, dir)}${header(dir, 'large', theme)}
+    <p class="lead"><strong>Selamat datang, Siti.</strong> Ambil swafoto supaya pengantin kenal anda.</p>
+    <div class="stack"><span class="btn primary">${icon('camera')}Ambil swafoto</span><span class="btn">Langkau</span></div>`);
+}
+
+function menu(dir) {
+  const tiles = [
+    ['camera', 'Snap Gambar'], ['upload', 'Muat Naik'], ['video', 'Ucapan Video', 'Akan datang'],
+    ['boomerang', 'Boomerang', 'Akan datang'], ['phone', 'Telefon Pengantin', 'Akan datang'], ['letter', 'Tulis Ucapan', 'Akan datang'],
+  ];
+  return phone(dir, `${topbar(false, dir)}${header(dir, 'small')}
+    <p class="lead"><strong>Hai, Siti</strong></p>
+    <div class="switch"><span class="label">Dihantar sebagai</span><span class="seg"><span>Peribadi</span><span class="on">Awam</span></span></div>
+    <nav class="tiles">
+      ${tiles.map(([i, label, note]) => `<div class="tile${note ? ' off' : ''}">${icon(i)}<b>${label}</b>${note ? `<small>${note}</small>` : ''}</div>`).join('')}
+      <div class="tile wide">${icon('lock')}<b>Galeri</b><small>Berkunci</small></div>
+    </nav>
+    <span class="btn">${icon('upload')}Muat Naik Saya</span>`);
+}
+
+function uploads(dir) {
+  const items = [
+    { pic: scene('#D9CBB0', '#8E7A5A', '#F3E9D2', 'left'), mark: 'sent', pub: true, name: true },
+    { pic: scene('#C9CDB5', '#5F6B45', '#EEE9D6', 'right'), mark: 'sent', pub: false },
+    { pic: scene('#D6C4BC', '#8A5E55', '#F4E6DD', 'right'), mark: 'ring', pct: 60, pub: true, name: false },
+    { video: true, mark: 'wait', pub: false },
+    { pic: scene('#CBD0C9', '#6E7A73', '#EEF0EA', 'left'), mark: 'problem', pub: false },
+    { pic: scene('#E0D3B8', '#9B8456', '#F7EEDB', 'right'), mark: 'sent', pub: true, name: true },
+  ];
+  const markHtml = (it) => it.mark === 'sent' ? `<span class="mark sent">${check}</span>`
+    : it.mark === 'ring' ? `<span class="mark ring">${ring(it.pct)}</span>`
+    : it.mark === 'problem' ? '<span class="mark problem">!</span>' : '<span class="mark wait"></span>';
+  return phone(dir, `${topbar(true, dir)}
+    <div class="couple" style="gap:4px;${dir === 'b' ? '' : 'text-align:center;justify-items:center;border:0;padding:0'}">
+      <p class="eyebrow">${couple.names}</p><h2 class="title">Muat Naik Saya</h2>
+    </div>
+    <div class="legend"><span>${icon('lock')}Peribadi</span><span>${icon('globe')}Awam</span><span>${icon('user')}Nama</span><span><i class="dot"></i>Dihantar</span></div>
+    <ul class="grid" style="list-style:none;margin:0;padding:0">
+      ${items.map((it) => `<li class="item"><div class="print">${it.video ? `<span class="vid">${icon('video')}</span>` : it.pic}${markHtml(it)}</div>
+        <div class="icons"><span>${icon(it.pub ? 'globe' : 'lock')}</span>${it.pub ? `<span>${icon(it.name ? 'user' : 'userHidden')}</span>` : ''}<span>${icon('trash')}</span></div></li>`).join('')}
+    </ul>
+    <div class="stack"><span class="btn">Kembali ke menu</span></div>`);
+}
+
+const DIRECTIONS = [
+  { id: 'a', name: 'Kad Klasik', tag: 'centred, framed',
+    text: 'The header is the card itself: a thin double frame, the monogram in a double ring, names centred over a short double rule. Tiles and the legend are centred. Prints have an even paper border. Light paper grain.' },
+  { id: 'b', name: 'Moden Tenang', tag: 'left-aligned, quiet',
+    text: 'No frame. A small square stamp monogram and large names aligned left, with a full-width double rule. Tiles put the icon top-left and the word at the bottom. Prints have a deeper bottom margin, like a photo print. Plain paper with no grain.' },
+  { id: 'c', name: 'Gerbang', tag: 'arch cover',
+    text: 'The cover photo sits in an arch, a common shape on Malaysian invitation cards, with the monogram on its sill. Inner screens keep a small arch around the initials. Prints have a hairline inner rule. Paper with faint fibres.' },
+  { id: 'd', layout: 'c', name: 'Gerbang Blush', tag: 'C’s layout, Blush shawl colours',
+    text: 'The same arch layout and spacing as C, coloured only from the Blush shawl: blush paper, a dusty rose-brown accent for buttons, the arch and active states, and the couple’s names and monogram in a warmer brown. The arch is a flat accent fill with thin mauve lines instead of a photo. Mauve draws the arch outline, double rules and print rules; one small periwinkle check sits in the welcome divider. Lighter paper fibres than C.' },
+  { id: 'e', name: 'Kad Sage', tag: 'framed card, sage and lotus rose',
+    text: 'Each screen sits in a grey-sage frame around a butter-cream panel with small notched corners, like a framed invitation. The welcome stacks the names in large serif, in a deep lotus rose, with the date also running up a narrow strip on the left (decorative, read out once by its label). A small lotus bud in thin rose lines sits in the top corner. Sage olive is the one accent. Tiles sit on a slightly deeper cream. No paper texture.' },
+];
+
+// Contrast check for D, computed here from the same colours the phones use (WCAG 2 relative luminance).
+const lin = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
+const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+const lum = (h) => { const [r, g, b] = rgb(h).map(lin); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+const E_PAIRS = [
+  ['Body text, buttons, title (on the cream panel)', '#2E2B24', '#FBF6DE', 4.5, ''],
+  ['Tile words on the deeper cream', '#2E2B24', '#F3EDD3', 4.5, ''],
+  ['Muted text: event, date, date strip, legend, Kembali', '#6A6656', '#FBF6DE', 4.5, ''],
+  ['Muted tile notes (“Akan datang”, “Berkunci”) on the deeper cream', '#6A6656', '#F3EDD3', 4.5, ''],
+  ['Couple names (54 / 34 px serif) in deep lotus rose', '#87504E', '#FBF6DE', 3, 'Also passes 4.5:1, but kept to large serif as asked.'],
+  ['White on sage: Ambil swafoto (20 px bold), Awam switch (18 px bold)', '#FFFFFF', '#56624A', 4.5, ''],
+  ['“!” status mark (cream on ink)', '#FBF6DE', '#2E2B24', 4.5, ''],
+  ['Sage on cream: ring, dot (non-text)', '#56624A', '#FBF6DE', 3, ''],
+  ['Muted text on the grey-sage frame', '#6A6656', '#CCC7BB', 4.5, 'Fixed by layout: fails at 3.41:1, so no text ever sits on the frame. Everything is inside the cream panel.'],
+];
+const D_PAIRS = [
+  ['Body text, buttons, tiles, title', '#3A2A26', '#F3E9E6', 4.5, ''],
+  ['Muted text: event, date, legend, notes, Kembali', '#6B5A55', '#F3E9E6', 4.5, 'Fixed: with C’s full paper texture this fell to 4.19:1 at the darkest spot, so D uses lighter fibres (5.06:1 there).'],
+  ['Couple names (44 / 34 px), monogram (25 px), mini-arch initials (26 px), large serif', '#86665A', '#F3E9E6', 3, 'Fixed: below 4.5:1, so only allowed on large serif; C’s 22 px mini-arch initials became 26 px in D. Never used for small text.'],
+  ['White on accent: Ambil swafoto (20 px bold), Awam switch (18 px bold)', '#FFFFFF', '#7A5A56', 4.5, ''],
+  ['“!” status mark (paper on ink)', '#F3E9E6', '#3A2A26', 4.5, ''],
+  ['Muted icon on raised (video tile)', '#6B5A55', '#E7D8D8', 3, 'Icon, non-text 3:1; text on raised would also pass (4.73:1 muted, 9.88:1 ink).'],
+  ['Accent on paper: ring, dot, arch edge (non-text)', '#7A5A56', '#F3E9E6', 3, ''],
+];
+const sw = (h) => `<i class="sw" style="background:${h}"></i>`;
+// A pair marked "by layout" fails on purpose: it shows a combination the theme never uses.
+const contrastTable = (pairs, lineNote) => `<div class="contrast"><table>
+  <thead><tr><th>Text / mark</th><th>Colours</th><th>Ratio</th><th>Needs</th><th>Result</th></tr></thead>
+  <tbody>${pairs.map(([use, fg, bg, need, note]) => { const r = ratio(fg, bg); const avoided = note.startsWith('Fixed by layout'); return `<tr><td>${use}${note ? `<br><span class="fix">${note}</span>` : ''}</td><td>${sw(fg)} ${fg} on ${sw(bg)} ${bg}</td><td><b>${r.toFixed(2)}:1</b></td><td>${need}:1</td><td>${r >= need ? 'Pass' : avoided ? 'Fail, never used' : 'Fail'}</td></tr>`; }).join('')}
+  <tr><td>${lineNote[0]}</td><td colspan="4">${lineNote[1]}</td></tr>
+  </tbody></table></div>`;
+const CONTRAST = {
+  d: contrastTable(D_PAIRS, ['Soft mauve #B59691 and periwinkle #A5A3BA', 'Line work only (arch outline, rules, print rules, the check), never text, so no text ratio applies.']),
+  e: contrastTable(E_PAIRS, ['Lotus rose #BF8B88, hairline #D2C7A8, frame #CCC7BB', 'Line work and surfaces only (the sprig, rules, panel edge, frame), never text, so no text ratio applies.']),
+};
+
+document.getElementById('board').innerHTML = DIRECTIONS.map((d) => { const l = d.layout ?? d.id; return `
+  <section class="direction dir-${l} theme-${d.id}" id="${d.id}">
+    <div class="direction-head"><h2>${d.id.toUpperCase()}. ${d.name}<span>${d.tag}</span></h2><p>${d.text}</p></div>
+    <div class="phones">
+      <figure class="shot" style="margin:0">${welcome(l, d.id)}<figcaption>Selamat datang (after the code is checked)</figcaption></figure>
+      <figure class="shot" style="margin:0">${menu(l)}<figcaption>Menu</figcaption></figure>
+      <figure class="shot" style="margin:0">${uploads(l)}<figcaption>Muat Naik Saya</figcaption></figure>
+    </div>
+    ${CONTRAST[d.id] ? `<h3 style="margin:8px 0 0;font-size:18px">Contrast check (WCAG 2): every text pair in use passes</h3>${CONTRAST[d.id]}` : ''}
+  </section>`; }).join('');
+</script>
