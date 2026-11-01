@@ -2,11 +2,10 @@
 /**
  * Makes a small preview of a photo off the main thread (performance budget),
  * for My Uploads until server thumbnails arrive (Phase 3). Browsers that
- * cannot decode the photo here (e.g. HEIC on Android) answer null.
+ * cannot decode the photo here answer null (HEIC on Android; no OffscreenCanvas
+ * before iOS 16.4), and `preview.ts` tries once more on the page.
  */
-import type { ThumbnailRequest, ThumbnailResponse } from './thumbnailTypes';
-
-const MAX_SIDE = 320;
+import { PREVIEW_MAX_SIDE as MAX_SIDE, type ThumbnailRequest, type ThumbnailResponse } from './thumbnailTypes';
 
 self.onmessage = async (event: MessageEvent<ThumbnailRequest>) => {
   const { id, file } = event.data;

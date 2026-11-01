@@ -66,6 +66,12 @@ export interface QueueItem {
    * until they answer. After a reload it is sent as Peribadi (the safe default).
    */
   awaitingChoice?: boolean;
+  /**
+   * My Uploads preview: `ready` once saved in `thumbs`, `none` when this
+   * phone could not make one (neutral placeholder). Missing = not made yet.
+   * Set on the item so the list updates the moment the preview exists.
+   */
+  preview?: 'ready' | 'none';
 }
 
 /** The server side of an upload, so the runner can be tested without Firebase. */

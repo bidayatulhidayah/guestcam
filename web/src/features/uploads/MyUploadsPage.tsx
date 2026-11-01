@@ -12,11 +12,15 @@ const api = () => import('./uploadsApi');
 const queueModule = () => import('../../lib/queue');
 const actions = () => import('../capture/captureActions');
 
-/** The small preview kept on this phone (photos only); null shows the icon instead. */
+/**
+ * The small preview kept on this phone (photo, or a video's first frame); null
+ * shows the neutral placeholder. Items from another phone have none until
+ * server thumbnails arrive (Phase 3).
+ */
 function usePreview(row: UploadRow): string | null {
   const [url, setUrl] = useState<string | null>(null);
   useEffect(() => {
-    if (!row.local || row.type !== 'image') return;
+    if (!row.local || row.preview === 'none') return;
     let active = true;
     let objectUrl: string | undefined;
     queueModule()
@@ -32,8 +36,8 @@ function usePreview(row: UploadRow): string | null {
       active = false;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-    // The preview is made in the background: look again when the status moves on.
-  }, [row.mediaId, row.local, row.type, row.status]);
+    // The preview is made in the background: saving it sets `preview` on the item.
+  }, [row.mediaId, row.local, row.preview]);
   return url;
 }
 
@@ -122,7 +126,17 @@ function UploadItem({ row, onPrivacy, onDelete }: ItemProps) {
       {/* Printed-photo border (design.md); the words are for screen readers only. */}
       <div className="relative aspect-square border border-line bg-paper p-1.5">
         {preview ? (
-          <img src={preview} alt={`${kind}, ${when}`} className="size-full object-cover" />
+          <>
+            <img src={preview} alt={`${kind}, ${when}`} className="size-full object-cover" />
+            {row.type === 'video' ? (
+              <span
+                aria-hidden="true"
+                className="absolute inset-0 m-auto flex size-10 items-center justify-center rounded-full border border-line bg-paper text-ink"
+              >
+                <Icon name="play" size={20} />
+              </span>
+            ) : null}
+          </>
         ) : (
           <span
             role="img"

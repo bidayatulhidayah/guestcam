@@ -1,3 +1,6 @@
+/** Longest side of a My Uploads preview, in pixels. */
+export const PREVIEW_MAX_SIDE = 400;
+
 export interface ThumbnailRequest {
   id: number;
   file: Blob;
