@@ -116,7 +116,7 @@ The menu has eight functions (the seven below plus Folder Kongsi). Uploads are u
 
 | Menu (BM / EN) | What it does | Capture method | Length |
 | --- | --- | --- | --- |
-| Snap Gambar / Snapshot | Take a photo | Phone's native camera via browser file capture: full resolution + EXIF | n/a |
+| Snap Gambar / Snapshot | Take a photo or record a video | Phone's native camera via browser file capture: full resolution + EXIF; a screen with "Gambar" and "Video" buttons, one camera input each (D-084, D-088) | n/a |
 | Muat Naik dari Galeri / Upload from Gallery | Share photos and videos already on the phone, including normal video clips of the event | File picker, multiple files | No limit |
 | Ucapan Video / Video Wish | Video message to the couple | In-app recorder | Silence rule + 15 min cap |
 | Boomerang | 1 to 2 second loop | In-app recorder with 3-2-1 countdown; loop made in the background | 1 to 2 s |

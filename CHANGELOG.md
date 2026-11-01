@@ -31,9 +31,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 - The QR link shows the name screen right away (about 2.5 s on a slow 4G phone, was about 4.5 s) while the code is checked in the background; the couple's names appear from the next screen.
 - Muat Naik Saya is a compact grid of previews: small icons switch Peribadi / Awam, show or hide the name, or delete (still with a confirmation), and a corner mark shows whether each item is sent.
 
-### Known issues
+### Fixed
 
-- Recording a video with Snap Gambar does not work on phones yet (found in the phone test); photos work. To be fixed in the next update (Phase 1e).
+- Snap Gambar can record videos on phones: it now opens a screen with two big buttons, "Gambar" and "Video", each opening the phone camera in that mode. Before, Android phones opened photo mode only and iPhones varied. The screen stays open after a capture, so the next photo or video is one tap away.
 
 ## [0.1] - 2026-10-27
 

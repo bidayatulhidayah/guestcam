@@ -7,6 +7,7 @@ import { allowUpdateOnReturn, holdUpdates } from '../../lib/device/serviceWorker
 import type { PreparedSelection } from '../capture/captureActions';
 import { LargeFilePrompt } from '../capture/LargeFilePrompt';
 import { QueueIndicator } from '../capture/QueueIndicator';
+import { SnapScreen } from '../capture/SnapScreen';
 import { useQueueSummary } from '../capture/useQueueSummary';
 import { CameraHelpPage } from '../device/CameraHelpPage';
 import { useEvent } from '../entry/EventContext';
@@ -61,8 +62,12 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded, onChoiceSav
   const event = useEvent();
   const summary = useQueueSummary(event.eventId);
   const navigate = useNavigate();
-  const cameraInput = useRef<HTMLInputElement>(null);
+  const photoInput = useRef<HTMLInputElement>(null);
+  const videoInput = useRef<HTMLInputElement>(null);
   const galleryInput = useRef<HTMLInputElement>(null);
+  // The camera mode last opened, so "Cuba lagi" on the help screen reopens the same one.
+  const lastCamera = useRef(photoInput);
+  const [snapOpen, setSnapOpen] = useState(false);
   const [showLockNotice, setShowLockNotice] = useState(false);
   const [notices, setNotices] = useState<string[]>([]);
   const [wifiQuestion, setWifiQuestion] = useState<WifiQuestion | null>(null);
@@ -100,14 +105,15 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded, onChoiceSav
     return () => holdUpdates(false);
   }, [saving, wifiQuestion, privacyQuestion]);
 
-  // The camera closed without a photo: maybe the guest changed their mind,
+  // The camera closed without a capture: maybe the guest changed their mind,
   // maybe the browser blocks it. Offer help without getting in the way (C6).
   useEffect(() => {
-    const input = cameraInput.current;
-    if (!input) return;
+    const inputs = [photoInput.current, videoInput.current];
     const cancelled = () => setCameraCancelled(true);
-    input.addEventListener('cancel', cancelled);
-    return () => input.removeEventListener('cancel', cancelled);
+    for (const input of inputs) input?.addEventListener('cancel', cancelled);
+    return () => {
+      for (const input of inputs) input?.removeEventListener('cancel', cancelled);
+    };
   }, []);
 
   useEffect(() => {
@@ -214,12 +220,21 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded, onChoiceSav
   }
 
   // Always mounted, so "Cuba lagi" on a help screen can open the camera from its own tap.
+  // One input per camera mode (D-088): a combined accept opens photo mode only on Android.
   const pickers = (
     <>
       <input
-        ref={cameraInput}
+        ref={photoInput}
         type="file"
-        accept="image/*,video/*"
+        accept="image/*"
+        capture="environment"
+        hidden
+        onChange={(e) => void handleFiles(e, 'snapshot')}
+      />
+      <input
+        ref={videoInput}
+        type="file"
+        accept="video/*"
         capture="environment"
         hidden
         onChange={(e) => void handleFiles(e, 'snapshot')}
@@ -241,9 +256,28 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded, onChoiceSav
   const hasGallery = event.features.includes('publicGallery');
   // The pickers open from the tap itself (iOS needs a user gesture, pitfall C1).
   const open: Partial<Record<CaptureFeatureKey, () => void>> = {
-    snapshot: () => cameraInput.current?.click(),
+    snapshot: () => {
+      setNotices([]);
+      setSnapOpen(true);
+    },
     galleryUpload: () => galleryInput.current?.click(),
   };
+  const openCamera = (input: typeof photoInput) => {
+    lastCamera.current = input;
+    setCameraCancelled(false);
+    input.current?.click();
+  };
+
+  const captureNotices = (
+    <>
+      {notices.map((notice) => (
+        <p key={notice} role="status" className="text-caption">
+          {notice}
+        </p>
+      ))}
+      {cameraCancelled ? <Button onClick={() => setCameraHelp(true)}>{t('device.cameraNotOpened')}</Button> : null}
+    </>
+  );
 
   let content: ReactNode;
   if (cameraHelp) {
@@ -252,11 +286,12 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded, onChoiceSav
         onBack={() => setCameraHelp(false)}
         onRetry={() => {
           setCameraHelp(false);
-          cameraInput.current?.click();
+          lastCamera.current.current?.click();
         }}
         onContinue={() => {
           setCameraHelp(false);
           setCameraCancelled(false);
+          setSnapOpen(false);
           setNotices([t('device.useGalleryHint', { upload: t('menu.galleryUpload') })]);
         }}
       />
@@ -271,6 +306,21 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded, onChoiceSav
         onNow={() => answerWifi(wifiQuestion, false)}
         onLater={() => answerWifi(wifiQuestion, true)}
       />
+    );
+  } else if (snapOpen) {
+    // Stays open after a capture, so the next photo or video is one tap away.
+    content = (
+      <SnapScreen
+        eyebrow={event.displayNames}
+        onPhoto={() => openCamera(photoInput)}
+        onVideo={() => openCamera(videoInput)}
+        onBack={() => {
+          setSnapOpen(false);
+          setCameraCancelled(false);
+        }}
+      >
+        {captureNotices}
+      </SnapScreen>
     );
   } else {
     content = (
@@ -290,12 +340,7 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded, onChoiceSav
             <Button onClick={() => setStorageAcknowledged(true)}>{t('device.continueWithoutStorage')}</Button>
           </section>
         ) : null}
-        {notices.map((notice) => (
-          <p key={notice} role="status" className="text-caption">
-            {notice}
-          </p>
-        ))}
-        {cameraCancelled ? <Button onClick={() => setCameraHelp(true)}>{t('device.cameraNotOpened')}</Button> : null}
+        {captureNotices}
         {privacyChoice ? <PrivacySwitch choice={privacyChoice} onChange={changeChoice} /> : null}
 
         <nav aria-label={event.displayNames} className="grid grid-cols-2 gap-4">
