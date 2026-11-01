@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '../../components/ui';
+import { Button, ProgressRing } from '../../components/ui';
 import type { QueueSummary } from './useQueueSummary';
 
 export interface QueueIndicatorProps {
@@ -25,8 +25,9 @@ function useOnline(): boolean {
 }
 
 /**
- * Upload queue status on the menu: words plus one accent progress bar
- * (design.md: status uses words and icons, not extra colours).
+ * Upload queue status on the menu and the Snap screen: words plus one accent
+ * progress circle with the percentage of the file being sent (design.md:
+ * status uses words and icons, not extra colours).
  */
 export function QueueIndicator({ summary, onSendNow, onRepick, onRetry }: QueueIndicatorProps) {
   const { t } = useTranslation();
@@ -45,29 +46,23 @@ export function QueueIndicator({ summary, onSendNow, onRepick, onRetry }: QueueI
   return (
     <section aria-live="polite" className="flex flex-col gap-3 rounded-card border border-line bg-paper-2 p-4">
       {pending > 0 ? (
-        <>
-          <p className="font-bold">{t('queue.waiting', { count: pending })}</p>
-          {summary.uploading ? (
-            <>
-              <p className="text-caption">
-                {summary.uploading.resumed
-                  ? t('queue.resuming')
-                  : t('queue.sending', { percent: summary.uploading.percent })}
-              </p>
-              <div
-                role="progressbar"
-                aria-label={t('queue.progressLabel')}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={summary.uploading.percent}
-                className="h-2 w-full overflow-hidden rounded-card bg-paper"
-              >
-                <div className="h-full bg-accent" style={{ width: `${summary.uploading.percent}%` }} />
-              </div>
-            </>
-          ) : null}
-          <p className="text-caption text-ink-2">{online ? t('queue.keepOpen') : t('queue.offline')}</p>
-        </>
+        <div className="flex items-center gap-4">
+          {/* Between files (or offline) the circle waits without a number. */}
+          <ProgressRing
+            percent={summary.uploading?.percent}
+            label={
+              summary.uploading
+                ? t('queue.sending', { percent: summary.uploading.percent })
+                : t('queue.progressLabel')
+            }
+            still={!online}
+          />
+          <div className="flex min-w-0 flex-col gap-1">
+            <p className="font-bold">{t('queue.waiting', { count: pending })}</p>
+            {summary.uploading?.resumed ? <p className="text-caption">{t('queue.resuming')}</p> : null}
+            <p className="text-caption text-ink-2">{online ? t('queue.keepOpen') : t('queue.offline')}</p>
+          </div>
+        </div>
       ) : null}
 
       {summary.held > 0 ? (

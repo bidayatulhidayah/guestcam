@@ -99,7 +99,8 @@
     "failed": "{{count}} gagal dihantar",
     "retry": "Cuba lagi",
     "allSent": "{{count}} dah dihantar",
-    "progressLabel": "Kemajuan menghantar"
+    "progressLabel": "Kemajuan menghantar",
+    "percent": "{{percent}}%"
   },
   "gallery": {
     "title": "Galeri",
