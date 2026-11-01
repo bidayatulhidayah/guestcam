@@ -1,4 +1,4 @@
-import { getMetadata, ref, uploadBytesResumable } from 'firebase/storage';
+import { getDownloadURL, getMetadata, ref, uploadBytesResumable } from 'firebase/storage';
 import { getFirebaseStorage } from '../firebase/storage';
 import type { StorageAdapter, UploadOptions } from './types';
 
@@ -34,12 +34,17 @@ async function fileExists(path: string): Promise<boolean> {
   }
 }
 
-/** Firebase Storage implementation (rule 9). Display, thumbnail and download URLs arrive in Phase 3. */
+/** Readable only by its owner and the space owners (storage.rules); the browser streams it. */
+function getDownloadUrl(path: string): Promise<string> {
+  return getDownloadURL(ref(getFirebaseStorage(), path));
+}
+
+/** Firebase Storage implementation (rule 9). Display and thumbnail URLs arrive in Phase 3. */
 export const firebaseStorageAdapter: StorageAdapter = {
   uploadFile,
   fileExists,
   getDisplayUrl: () => notImplemented('getDisplayUrl'),
   getThumbUrl: () => notImplemented('getThumbUrl'),
-  getDownloadUrl: () => notImplemented('getDownloadUrl'),
+  getDownloadUrl,
   deleteFile: () => notImplemented('deleteFile'),
 };
