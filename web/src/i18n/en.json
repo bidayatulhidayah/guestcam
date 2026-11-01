@@ -75,6 +75,7 @@
     "snapHint": "Take a photo or record a video with your phone camera.",
     "snapPhoto": "Photo",
     "snapVideo": "Video",
+    "snapMine": "My Uploads ({{count}})",
     "tooLarge": "{{count}} file(s) too large (4 GB maximum).",
     "unsupported": "{{count}} file(s) are not photos or videos.",
     "storageFull": "Your phone storage is full. Keep this page open until everything is sent.",
