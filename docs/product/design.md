@@ -82,13 +82,12 @@ Like a phone's photo gallery: clean, the photos carry the page.
   - No dimming and no spinner per tile.
 - **Day headings,** 14 px bold: "Hari ini", "Semalam", then "2 Nov 2026", by when the item was taken (EXIF, the camera, or else the upload), on the phone's calendar.
 - **Speed:** a tile reads its preview only once it nears the screen, and off-screen days skip layout and paint (`content-visibility`).
-- **Item view (tap a tile):**
-  - "← Kembali", and the photo (up to 60% of the screen height) or a video that plays.
-  - One status line ("Dihantar", "Gagal dihantar" in danger red) with the date and time.
-  - Peribadi / Awam as a two-part control (the chosen part is a tint with an accent outline, so the accent stays for the one main action).
-  - "Tunjuk nama saya" as a switch, only when Awam.
-  - "Cuba lagi" (failed) or "Hantar sekarang" (held) as the one primary button, and Padam outlined in danger red. All 48 px with words.
-  - The photo or video shown is this phone's copy, or the guest's own original from the server (an explicit tap, D-091).
+- **Item view (tap a tile), full screen like a phone's gallery viewer (D-094):**
+  - The one dark screen in the app: `--ink` (warm near-black, never pure black) behind the photo, with paper-coloured text.
+  - The photo or video at its own shape and full quality: this phone's copy, or the guest's own original from the server (an explicit tap, D-091). It is fitted to the space between the top bar and the controls, never cropped. The small preview shows only until the full file arrives. Pinch-zoom works as on any page.
+  - Top: "← Kembali" and the date and time (13 px, `--line` on ink).
+  - Below: one status line, Peribadi / Awam as a two-part control (the chosen part filled in paper), "Tunjuk nama saya" as a switch (only when Awam), and "Cuba lagi" (failed) or "Hantar sekarang" (held) as the one accent button next to Padam (outlined in `--line`). All 48 px with words.
+  - Text pairs on ink are in the automated contrast test.
 - **Padam** asks on its own screen in the app (small preview, the warning, filled danger "Padam", "Batal"), never in a browser dialog.
 - Taps only: no swiping between items, no long-press to select.
 - Custom-draw the five that define the app: shutter, phone (Telefon Pengantin), letter (Tulis Ucapan), boomerang loop, folder with lock (Folder Kongsi).

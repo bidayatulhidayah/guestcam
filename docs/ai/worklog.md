@@ -48,6 +48,50 @@ Rules:
 
 ---
 
+## 2026-11-02 23:18 — My Uploads item view full screen, like a gallery viewer (D-094)
+
+- **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
+- **Version / branch:** v0.1 (+ unreleased) / `feat/uploads-fullscreen-viewer` (from `main` after PR #15)
+- **Phase:** Phase 1 (target v0.2), polish
+- **Goal:** Hidayah: "change to like Google Photos and normal gallery preview; use the original size and full." Read as the item view: full screen, the photo at its own shape and full quality. The grid stays square, as gallery grids are.
+
+### What changed and why (D-094)
+- **`UploadViewer`** is a fixed full-screen layer (`role=dialog`) on `--ink`, with paper-coloured text.
+  - The photo or video fills the space between a slim top bar ("← Kembali" and the date) and the controls, `object-fit: contain`, never cropped.
+  - The full file (own copy or own original, D-091) replaces the preview as soon as it arrives. If it cannot load, the preview stays.
+  - Page scroll is locked while the viewer is open.
+- **Controls on the dark panel:** status line, Peribadi/Awam (chosen part filled in paper), "Tunjuk nama saya" switch (off state outlined in `--line`, on state paper), "Cuba lagi"/"Hantar sekarang" as the one accent button, and Padam with a new `onDark` button (outlined in `--line`). The danger red is not used on ink (too dark there); the Padam confirmation screen keeps the filled danger button.
+- **Contrast test:** added paper on ink and line on ink.
+
+### Files touched
+| File | Change |
+| --- | --- |
+| `web/src/features/uploads/UploadViewer.tsx` | modified: full-screen viewer |
+| `web/src/components/ui/Button.tsx` | modified: `onDark` variant |
+| `web/tests/contrast.test.ts` | modified: dark viewer pairs |
+| `docs/product/design.md`, `docs/ai/memory.md`, `CHANGELOG.md`, `docs/ai/worklog.md` | modified |
+
+### Commands run and results
+| Command | Result |
+| --- | --- |
+| `npm run typecheck` | clean |
+| `npm test` | shared 46, web 75 (+2 contrast pairs), emulators 86 passed |
+| `npm run build` | built; first-load JS 143.0 KB gzip (unchanged); My Uploads lazy chunk 4.7 KB |
+| Emulator walk-through (headless Chrome) | Awam and failed item views rendered full screen |
+| `npm run deploy:preview` | same channel |
+
+### Decisions
+- D-094.
+
+### Next steps
+- [ ] Hidayah: phone check (a real portrait and landscape photo, a video); PR when she says so.
+- [ ] Theme templates (D-087).
+
+### Commits
+- code and docs commits of this branch
+
+---
+
 ## 2026-11-02 23:07 — Muat Naik Saya like a phone's photo gallery (D-093)
 
 - **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
