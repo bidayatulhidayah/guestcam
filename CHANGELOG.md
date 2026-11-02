@@ -24,6 +24,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 - After choosing "Teruskan di sini" inside Instagram, Facebook and similar apps, a small "Buka dalam Chrome" or "Buka dalam Safari" link stays at the top of every screen.
 - The code, error and help screens have a small "Kembali" link.
 - Every upload under way shows a progress circle: in Muat Naik Saya the file being sent shows its percentage over its preview and the files waiting their turn show a turning circle; the menu and the Snap Gambar screen show the circle with the percentage and how many are left.
+- Tap a video in Muat Naik Saya to play it: the copy on the phone before it is sent, the guest's own uploaded video after.
 - The Snap Gambar screen has a small "Muat Naik Saya (n)" link under the Gambar and Video buttons, with the number of the guest's items.
 
 ### Changed
@@ -37,6 +38,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 
 - Snap Gambar can record videos on phones: it now opens a screen with two big buttons, "Gambar" and "Video", each opening the phone camera in that mode. Before, Android phones opened photo mode only and iPhones varied. The screen stays open after a capture, so the next photo or video is one tap away.
 - An upload that got stuck on a bad connection no longer stops everything behind it: a step that hangs is given up after 45 seconds, and an upload with nothing moving for a minute is restarted. Reloading the page, coming back to the app, or the phone coming back online now tries again at once.
+- Video previews in Muat Naik Saya now also appear on iPhones (Safari showed only the placeholder).
 - Muat Naik Saya shows a small preview for videos too (a frame near the start, with a play mark), and photo previews appear as soon as they are ready and stay after the item is sent. Items sent from another phone keep a plain placeholder for now.
 
 ## [0.1] - 2026-10-27

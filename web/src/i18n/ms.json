@@ -197,6 +197,8 @@
     "photo": "Gambar",
     "video": "Video",
     "audio": "Rakaman suara",
+    "play": "Main video",
+    "playFailed": "Video ini tidak boleh dimainkan di telefon ini.",
     "status": {
       "waiting": "Menunggu dihantar",
       "uploading": "Sedang dihantar {{percent}}%",

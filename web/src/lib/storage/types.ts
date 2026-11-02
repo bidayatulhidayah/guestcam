@@ -29,7 +29,7 @@ export interface StorageAdapter {
   getDisplayUrl(path: string): Promise<string>;
   /** ~400 px WebP thumbnail for the gallery grid. */
   getThumbUrl(path: string): Promise<string>;
-  /** Original file, only on explicit download (rule 6). */
+  /** Original file, only on an explicit tap: download, or the guest playing their own video (rule 6, D-091). */
   getDownloadUrl(path: string): Promise<string>;
   deleteFile(path: string): Promise<void>;
 }

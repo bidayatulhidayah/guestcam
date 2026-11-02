@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { Button, Icon, ProgressRing, Screen, type IconName } from '../../components/ui';
@@ -7,6 +7,7 @@ import { useEvent } from '../entry/EventContext';
 import { LoadingScreen } from '../entry/StatusScreens';
 import type { PrivacyChoice } from '../privacy/privacyChoice';
 import { mergeItems, type ServerItem, type UploadRow } from './mergeItems';
+import { VideoPlayer } from './VideoPlayer';
 
 const api = () => import('./uploadsApi');
 const queueModule = () => import('../../lib/queue');
@@ -88,9 +89,11 @@ interface ItemProps {
   row: UploadRow;
   onPrivacy: (choice: PrivacyChoice) => void;
   onDelete: () => void;
+  /** Videos only: tap the preview to play it. */
+  onPlay: () => void;
 }
 
-function UploadItem({ row, onPrivacy, onDelete }: ItemProps) {
+function UploadItem({ row, onPrivacy, onDelete, onPlay }: ItemProps) {
   const { t, i18n } = useTranslation();
   const preview = usePreview(row);
   const kind = row.type === 'image' ? t('uploads.photo') : row.type === 'video' ? t('uploads.video') : t('uploads.audio');
@@ -106,19 +109,12 @@ function UploadItem({ row, onPrivacy, onDelete }: ItemProps) {
   const isPublic = row.visibility === 'public';
   return (
     <li className="flex flex-col gap-1">
-      {/* Printed-photo border (design.md); the words are for screen readers only. */}
-      <div className="relative aspect-square border border-line bg-paper p-1.5">
+      {/* Printed-photo border (design.md); the words are for screen readers only. A video is a button that plays it. */}
+      <Frame video={row.type === 'video'} label={`${t('uploads.play')}: ${kind}, ${when}`} onPlay={onPlay}>
         {preview ? (
           <>
             <img src={preview} alt={`${kind}, ${when}`} className="size-full object-cover" />
-            {row.type === 'video' && !ON_THE_WAY.has(row.status) ? (
-              <span
-                aria-hidden="true"
-                className="absolute inset-0 m-auto flex size-10 items-center justify-center rounded-full border border-line bg-paper text-ink"
-              >
-                <Icon name="play" size={20} />
-              </span>
-            ) : null}
+
           </>
         ) : (
           <span
@@ -129,6 +125,14 @@ function UploadItem({ row, onPrivacy, onDelete }: ItemProps) {
             <Icon name={row.type === 'video' ? 'video' : 'camera'} size={32} />
           </span>
         )}
+        {row.type === 'video' && !ON_THE_WAY.has(row.status) ? (
+          <span
+            aria-hidden="true"
+            className="absolute inset-0 m-auto flex size-12 items-center justify-center rounded-full border border-line bg-paper text-ink"
+          >
+            <Icon name="play" size={24} />
+          </span>
+        ) : null}
         {ON_THE_WAY.has(row.status) ? (
           // The file being sent shows its percentage; the rest wait their turn (one at a time, rule 4).
           <span className="absolute inset-0 m-auto size-16">
@@ -137,7 +141,7 @@ function UploadItem({ row, onPrivacy, onDelete }: ItemProps) {
         ) : (
           <StatusMark row={row} label={status} />
         )}
-      </div>
+      </Frame>
       <div className="flex items-center justify-between">
         <ItemButton
           icon={isPublic ? 'globe' : 'lock'}
@@ -154,6 +158,27 @@ function UploadItem({ row, onPrivacy, onDelete }: ItemProps) {
         <ItemButton icon="trash" label={t('uploads.delete')} onClick={onDelete} />
       </div>
     </li>
+  );
+}
+
+/** The printed-photo frame of an item; for a video, the whole frame is the play button. */
+function Frame({
+  video,
+  label,
+  onPlay,
+  children,
+}: {
+  video: boolean;
+  label: string;
+  onPlay: () => void;
+  children: ReactNode;
+}) {
+  const className = 'relative block aspect-square w-full border border-line bg-paper p-1.5';
+  if (!video) return <div className={className}>{children}</div>;
+  return (
+    <button type="button" aria-label={label} onClick={onPlay} className={`${className} text-left active:bg-paper-2`}>
+      {children}
+    </button>
   );
 }
 
@@ -196,6 +221,7 @@ export function MyUploadsPage() {
   const [serverError, setServerError] = useState(false);
   const [overrides, setOverrides] = useState<Record<string, PrivacyChoice>>({});
   const [confirming, setConfirming] = useState<UploadRow | null>(null);
+  const [playing, setPlaying] = useState<UploadRow | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const menuPath = `/s/${event.publicId}/${event.eventSlug}`;
 
@@ -292,6 +318,17 @@ export function MyUploadsPage() {
     );
   }
 
+  if (playing) {
+    return (
+      <VideoPlayer
+        eventId={event.eventId}
+        mediaId={playing.mediaId}
+        eyebrow={event.displayNames}
+        onClose={() => setPlaying(null)}
+      />
+    );
+  }
+
   if (items === null || server === null) return <LoadingScreen />;
 
   return (
@@ -330,6 +367,7 @@ export function MyUploadsPage() {
                 row={row}
                 onPrivacy={(choice) => void changePrivacy(row, choice)}
                 onDelete={() => setConfirming(row)}
+                onPlay={() => setPlaying(row)}
               />
             ))}
           </ul>

@@ -197,6 +197,8 @@
     "photo": "Photo",
     "video": "Video",
     "audio": "Voice recording",
+    "play": "Play video",
+    "playFailed": "This video can't be played on this phone.",
     "status": {
       "waiting": "Waiting to send",
       "uploading": "Sending {{percent}}%",
