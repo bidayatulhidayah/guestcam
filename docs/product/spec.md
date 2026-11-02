@@ -10,7 +10,7 @@ A mobile web app where guests scan a QR code, take photos, boomerangs and video 
 
 - Clean and simple enough for guests of every age to use the basic functions without help.
 - Bahasa Melayu by default, English one tap away (small EN button in the corner).
-- Big buttons with icon plus a short word; large, high-contrast text.
+- Clean, standard-size buttons with icon plus a short word; high-contrast text in standard app sizes, with a one-tap "Aa" Besar text size and pinch-zoom always allowed (D-092).
 - Two taps maximum from the menu to capture anything; everything is a tap, no gestures to learn.
 - One question per screen; clear feedback after every action (Berjaya dihantar / Sedang dihantar).
 - Original quality and full metadata are kept for every file.
@@ -454,7 +454,7 @@ wedding-cam/
 
 - One-paragraph summary of the app and link to docs/spec.md
 - Stack and versions; region asia-southeast1
-- Rules: TypeScript strict; BM default with every string in ms.json and en.json; simplicity rules (big buttons, icon + word, two taps, no gestures); originals never modified; location never sent to guests
+- Rules: TypeScript strict; BM default with every string in ms.json and en.json; simplicity rules (clean standard sizes with "Aa" Besar, icon + word, two taps, no gestures); originals never modified; location never sent to guests
 - Commands: dev server, emulators, tests, deploy
 - Working style: plan first, one feature per session, run in emulators before deploy
 

@@ -27,39 +27,44 @@ Measured contrast with the test accent: ink on paper 13.3:1, olive on paper 7.2:
 - One accent per screen. If two things compete for the accent, one of them is wrong.
 - The accent is for the ONE main action on a screen (e.g. the shutter, "Hantar"). Other buttons are outlined in ink.
 - Admin accent picker: derive `--accent-press` and `--accent-tint` automatically, and refuse any accent below 4.5:1 against `--paper` or with `--on-accent` (show "Warna terlalu cerah, pilih yang lebih gelap").
-- Status uses words and icons, not extra colours: "Dah hantar" with a check, "Sedang dihantar" with a progress bar in accent.
+- Status uses words and icons, not extra colours: "Dah hantar" with a check, "Sedang dihantar" with a progress circle in accent (D-090).
+- Every text pair passes 4.5:1 (3:1 only for large text); `web/tests/contrast.test.ts` checks the tokens automatically.
 - Light theme only for v1. Weddings are bright, guests are mid-event, and one theme is easier to get right.
 
 ## Typography
 
-| Role | Font | Size (mobile) |
-| --- | --- | --- |
-| Couple names, event title | Instrument Serif (or the card's own display font, per event) | 36-44px |
-| Screen titles | Instrument Serif | 28px |
-| Body, labels | Atkinson Hyperlegible | 18px minimum |
-| Buttons | Atkinson Hyperlegible, bold | 20-22px |
-| Captions, timestamps | Atkinson Hyperlegible | 15px minimum |
+Standard app sizes, clean and minimal like Google Photos (D-092, supersedes the 18 px minimum). Sizes are in rem (16 px root) so the phone's own text-size setting applies; "Aa" Besar scales the root to 125%.
 
-- Atkinson Hyperlegible was designed for low vision: right for makcik and pakcik.
+| Role | Font | Size (mobile, at Biasa) |
+| --- | --- | --- |
+| Couple names, event title | Instrument Serif (or the card's own display font, per event) | 32px (`2rem`) |
+| Screen titles | Instrument Serif | 24px (`1.5rem`) |
+| Body | Atkinson Hyperlegible | 16px (`1rem`) |
+| Buttons | Atkinson Hyperlegible, bold | 16px (`1rem`) |
+| Secondary text, labels, captions, timestamps, date headings | Atkinson Hyperlegible | 13-14px (`0.8125-0.875rem`) |
+
+- Atkinson Hyperlegible was designed for low vision: right for makcik and pakcik at standard sizes.
+- **Text size "Aa" (D-092):** a small button in the top row (next to EN), so it is one tap away on the name screen, the menu and every other screen. Biasa (100%) / Besar (125% root font size); saved on the device (localStorage, read and written inside try/catch; Biasa if storage is blocked).
+- Never block pinch-zoom: the viewport meta has no `maximum-scale` and no `user-scalable=no`.
 - Only the couple's names and screen titles use the serif. Everything a guest must read or tap uses Atkinson.
 - Sentence case everywhere. No ALL CAPS buttons.
 - Self-host both fonts (no external font requests at the venue).
 
 ## Layout and shape
 
-- Single column, 20px side margins, generous vertical space (8px grid: 8, 16, 24, 32, 48).
-- Buttons: full width, minimum 64px tall, corners 8px. Not pills.
-- Menu: a 2-column grid of large tiles (up to seven), each icon + one word. Galeri as a full-width tile at the bottom. Tiles for functions the host switched off disappear and the grid reflows (an odd last tile spans the full width).
+- Single column, 16px side margins, tight vertical rhythm (4px grid: 4, 8, 12, 16, 24, 32).
+- Buttons: full width, 48px tall, corners 8px. Not pills. Every tap target at least 44-48px.
+- Menu: a 2-column grid of tiles (up to seven), each icon + one word. Galeri as a full-width tile at the bottom. Tiles for functions the host switched off disappear and the grid reflows (an odd last tile spans the full width).
 - Borders: 1px `--line` hairlines. No drop shadows. Elevation is shown by `--paper-2`, not shadow.
 - One quiet decorative element allowed: a thin double rule in `--line` under the couple's names, echoing an invitation card. Nothing else ornamental on working screens.
 - Photos get a slim paper-coloured border like a printed photo.
-- Small text links are allowed only in the top row and above a screen title: "Kembali" on code, error and help screens, "Buka dalam Chrome/Safari" after a guest chose to stay in an in-app browser (D-086), and "Muat Naik Saya (n) →" under the buttons on the Snap Gambar screen (D-089). Caption size, at least 44 px tall to tap.
+- Small text links are allowed only in the top row and above a screen title: "Kembali" on code, error and help screens, "Buka dalam Chrome/Safari" after a guest chose to stay in an in-app browser (D-086), and "Muat Naik Saya (n) →" under the buttons on the Snap Gambar screen (D-089). Caption size (13-14 px), at least 44 px tall to tap.
 
 ## Icons
 
-- One outline icon set, 2px stroke, 28-32px in tiles (e.g. Phosphor or Lucide, restyled consistently).
-- Every icon has a word next to it. No icon-only buttons except the camera flip and the My Uploads item icons.
-- **Exception, My Uploads (D-085):** under each preview, icon-only 48 px buttons (lock/globe = Peribadi/Awam, person = show name, bin = delete) and a corner status mark. A one-line legend with words sits above the grid, and every icon has an aria-label. Delete still asks on its own screen.
+- One outline icon set, 2px stroke, 24px in tiles and buttons (e.g. Phosphor or Lucide, restyled consistently).
+- Main actions have a word next to the icon. No icon-only buttons except the camera flip and the My Uploads item icons.
+- **Exception, My Uploads (D-085, sizes per D-092):** small icon-only buttons on each item (lock/globe = Peribadi/Awam, person = show name, bin = delete), each a tap target of at least 44-48 px, and a corner status mark. A one-line legend with words (13-14 px) sits above the grid, and every icon has an aria-label. Delete still asks on its own screen. The layout is being redesigned Google Photos-style (D-092 follow-up).
 - Custom-draw the five that define the app: shutter, phone (Telefon Pengantin), letter (Tulis Ucapan), boomerang loop, folder with lock (Folder Kongsi).
 
 ## Motion, sound, touch
@@ -88,6 +93,8 @@ Motion explains, it does not decorate.
 - Generic copy: "Capture every moment", "Seamlessly", "Unlock memories"
 - Stock illustrations of people
 - More than one accent colour on a screen
+- Oversized "senior mode" UI: 64px buttons, 18px+ body text, huge tiles (D-092: standard sizes, with "Aa" Besar for larger text)
+- Font sizes in px, or a viewport that blocks pinch-zoom (`maximum-scale`, `user-scalable=no`)
 
 ## Per-event theme (from admin)
 
