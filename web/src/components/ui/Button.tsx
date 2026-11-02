@@ -32,7 +32,7 @@ export function Button({
     <button
       type={type}
       className={[
-        'inline-flex min-h-16 items-center justify-center gap-3 rounded-card border px-5',
+        'inline-flex min-h-12 items-center justify-center gap-2 rounded-card border px-4',
         'text-button font-bold',
         'transition-colors duration-150 disabled:opacity-50',
         block ? 'w-full' : '',
@@ -42,7 +42,7 @@ export function Button({
       {...rest}
     >
       {icon ? (
-        <span aria-hidden="true" className="inline-flex size-7 shrink-0 items-center justify-center">
+        <span aria-hidden="true" className="inline-flex size-6 shrink-0 items-center justify-center">
           {icon}
         </span>
       ) : null}

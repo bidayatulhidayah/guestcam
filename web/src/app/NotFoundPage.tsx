@@ -8,7 +8,7 @@ export function NotFoundPage() {
     <PlaceholderPage pageKey="notFound" back>
       <Link
         to="/"
-        className="flex min-h-16 items-center justify-center rounded-card border border-ink text-button font-bold"
+        className="flex min-h-12 items-center justify-center rounded-card border border-ink text-button font-bold"
       >
         {t('pages.notFound.back')}
       </Link>

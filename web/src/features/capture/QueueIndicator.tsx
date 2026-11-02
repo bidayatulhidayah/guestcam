@@ -46,7 +46,7 @@ export function QueueIndicator({ summary, onSendNow, onRepick, onRetry }: QueueI
   return (
     <section aria-live="polite" className="flex flex-col gap-3 rounded-card border border-line bg-paper-2 p-4">
       {pending > 0 ? (
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {/* Between files (or offline) the circle waits without a number. */}
           <ProgressRing
             percent={summary.uploading?.percent}

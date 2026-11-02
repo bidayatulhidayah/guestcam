@@ -351,7 +351,7 @@ export function MenuPage({ displayName, galleryUnlocked, onUploaded, onChoiceSav
         {captureNotices}
         {privacyChoice ? <PrivacySwitch choice={privacyChoice} onChange={changeChoice} /> : null}
 
-        <nav aria-label={event.displayNames} className="grid grid-cols-2 gap-4">
+        <nav aria-label={event.displayNames} className="grid grid-cols-2 gap-3">
           {tiles.map((tile, index) => {
             const ready = READY.has(tile.feature);
             return (

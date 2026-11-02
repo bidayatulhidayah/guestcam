@@ -60,7 +60,7 @@ One **space** per couple holds several separate **events** (own theme, code, gue
 - Old domains keep serving with no automatic redirect (only `/` redirects), so printed QR codes keep working.
 
 ## Non-negotiable rules
-1. **Simple for all ages:** big buttons with icon + short word, large high-contrast text, max two taps from menu to capture, taps only (no long-press/swipe gestures), one question per screen.
+1. **Simple for all ages, clean first (D-092):** standard app sizes (body 16 px, labels 13-14 px, 48 px buttons), all font sizes in rem, a one-tap "Aa" text size (Biasa / Besar), pinch-zoom never blocked; tap targets at least 44-48 px, contrast at least 4.5:1 (3:1 for large text), icon + short word on main actions, max two taps from menu to capture, taps only (no long-press/swipe gestures), one question per screen.
 2. **Every user-facing string goes in both `ms.json` and `en.json`.** Never hard-code text.
 3. **Originals are never modified.** Decoration (stamp, frame, filter) is a recipe; functions render a separate decorated copy.
 4. **Nothing captured is ever lost:** save to IndexedDB first, then upload through the queue (one file at a time, photos/wishes before videos, resumable).
@@ -81,8 +81,9 @@ One **space** per couple holds several separate **events** (own theme, code, gue
 ## Design
 Follow `docs/product/design.md` for every screen. In short:
 - Quiet paper base (`--paper` #F5EFE3, `--ink` #2B2420) + ONE accent per event from admin (test: deep olive #4B5320). Only the accent is themed.
-- Fonts: Atkinson Hyperlegible (body, 18px min) + Instrument Serif (couple names, titles only). Self-hosted.
-- Full-width 64px buttons, 8px corners, 1px hairlines, no shadows, no gradients, no emoji icons, no glassmorphism.
+- Clean and minimal like Google Photos (D-092): body 16 px, secondary text and labels 13-14 px, headings on a tight type scale, tighter spacing. All font sizes in rem so the phone's text-size setting applies; never block pinch-zoom (no `maximum-scale` / `user-scalable=no`). "Aa" switches Biasa / Besar (Besar scales the root font size), saved on the device, one tap from the name screen and the menu.
+- Fonts: Atkinson Hyperlegible (body) + Instrument Serif (couple names, titles only). Self-hosted.
+- Full-width 48px buttons, tap targets at least 44-48px, 8px corners, 1px hairlines, no shadows, no gradients, no emoji icons, no glassmorphism.
 - Colours as CSS variables mapped into Tailwind; never hard-code hex values in components.
 - Check the "Banned" list in design.md before shipping any screen.
 

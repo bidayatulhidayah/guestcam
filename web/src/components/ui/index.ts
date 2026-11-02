@@ -5,4 +5,5 @@ export { LanguageToggle } from './LanguageToggle';
 export { ProgressRing, type ProgressRingProps } from './ProgressRing';
 export { Screen, type ScreenProps } from './Screen';
 export { TextField, type TextFieldProps } from './TextField';
+export { TextSizeToggle } from './TextSizeToggle';
 export { Tile, type TileProps } from './Tile';

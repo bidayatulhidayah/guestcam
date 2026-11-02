@@ -19,13 +19,13 @@ function ChoiceCard({ icon, title, body, highlighted = false, onClick }: ChoiceC
       type="button"
       onClick={onClick}
       className={[
-        'flex min-h-32 w-full items-center gap-4 rounded-card border p-5 text-left',
+        'flex min-h-24 w-full items-center gap-3 rounded-card border p-4 text-left',
         'transition-colors duration-150 active:bg-accent-tint',
         highlighted ? 'border-2 border-accent bg-paper-2' : 'border-line bg-paper-2',
       ].join(' ')}
     >
       <span aria-hidden="true" className="inline-flex size-10 shrink-0 items-center justify-center text-accent">
-        <Icon name={icon} size={32} />
+        <Icon name={icon} size={28} />
       </span>
       <span className="flex flex-col gap-1">
         <span className="text-button font-bold">{title}</span>

@@ -23,17 +23,22 @@
   --font-body: var(--family-body);
   --font-display: var(--family-display);
 
-  /* Type scale (mobile): captions 15, body 18, buttons 20, titles 28, couple names 40. */
-  --text-caption: 0.9375rem;
+  /*
+   * Type scale (D-092), in rem so the phone's text-size setting and "Aa" Besar
+   * apply: labels 13, captions 14, body 16, buttons 16, titles 24, couple names 32.
+   */
+  --text-label: 0.8125rem;
+  --text-label--line-height: 1.35;
+  --text-caption: 0.875rem;
   --text-caption--line-height: 1.4;
-  --text-body: 1.125rem;
+  --text-body: 1rem;
   --text-body--line-height: 1.5;
-  --text-button: 1.25rem;
-  --text-button--line-height: 1.2;
-  --text-title: 1.75rem;
-  --text-title--line-height: 1.15;
-  --text-names: 2.5rem;
-  --text-names--line-height: 1.05;
+  --text-button: 1rem;
+  --text-button--line-height: 1.25;
+  --text-title: 1.5rem;
+  --text-title--line-height: 1.2;
+  --text-names: 2rem;
+  --text-names--line-height: 1.1;
 
   --radius-*: initial;
   --radius-card: 8px;
@@ -47,13 +52,18 @@
     background-color: var(--paper);
   }
 
+  /* "Aa" Besar (D-092): every size is in rem, so the whole app scales together. */
+  html[data-text-size='large'] {
+    font-size: 125%;
+  }
+
   body {
     margin: 0;
     min-height: 100dvh;
     background-color: var(--paper);
     color: var(--ink);
     font-family: var(--family-body);
-    font-size: 1.125rem;
+    font-size: 1rem;
     line-height: 1.5;
     -webkit-tap-highlight-color: transparent;
   }

@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 
 export interface TileProps {
-  /** Outline icon, 28-32px. */
+  /** Outline icon, 24px. */
   icon: ReactNode;
   /** One short word. */
   label: string;
@@ -18,17 +18,17 @@ export interface TileProps {
 }
 
 const base =
-  'flex min-h-32 flex-col items-center justify-center gap-2 rounded-card border p-4 text-center text-body font-bold';
+  'flex min-h-24 flex-col items-center justify-center gap-1.5 rounded-card border p-3 text-center text-body font-bold';
 const enabled =
   'border-line bg-paper-2 text-ink transition-colors duration-150 active:border-accent active:bg-accent-tint';
 const muted = 'border-line bg-paper text-ink-2';
 
-/** Large menu tile: icon + one word (design.md, Layout and shape). */
+/** Menu tile: icon + one word (design.md, Layout and shape). */
 export function Tile({ icon, label, to, onClick, wide = false, disabled = false, note }: TileProps) {
   const className = [base, disabled ? muted : enabled, wide ? 'col-span-2' : ''].join(' ');
   const content = (
     <>
-      <span aria-hidden="true" className="inline-flex size-8 items-center justify-center">
+      <span aria-hidden="true" className="inline-flex size-7 items-center justify-center">
         {icon}
       </span>
       <span>{label}</span>

@@ -13,7 +13,7 @@ export function AliasInactivePage() {
       <p>{t('entry.aliasInactiveBody')}</p>
       <Link
         to="/login"
-        className="mt-auto flex min-h-16 items-center justify-center rounded-card border border-ink text-button font-bold"
+        className="mt-auto flex min-h-12 items-center justify-center rounded-card border border-ink text-button font-bold"
       >
         {t('pages.login.title')}
       </Link>

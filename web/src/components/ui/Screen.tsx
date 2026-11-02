@@ -13,19 +13,19 @@ export interface ScreenProps {
   bottom?: ReactNode;
 }
 
-/** Single-column page: 20px side margins, 8px spacing grid (design.md). */
+/** Single-column page: 16px side margins, tight 4px spacing grid (design.md, D-092). */
 export function Screen({ title, eyebrow, back, children, bottom }: ScreenProps) {
   return (
-    <div className="mx-auto flex w-full max-w-lg flex-1 flex-col px-5 pt-4 pb-8">
+    <div className="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pt-3 pb-6">
       {back !== undefined ? <BackLink onBack={back === true ? undefined : back} /> : null}
       {title !== undefined || eyebrow !== undefined ? (
-        <header className="mb-6">
+        <header className="mb-4">
           {eyebrow !== undefined ? <p className="text-caption text-ink-2">{eyebrow}</p> : null}
           {title !== undefined ? <h1 className="font-display text-title font-normal text-ink">{title}</h1> : null}
         </header>
       ) : null}
-      <main className="flex flex-1 flex-col gap-4">{children}</main>
-      {bottom !== undefined ? <div className="mt-8 flex flex-col gap-4">{bottom}</div> : null}
+      <main className="flex flex-1 flex-col gap-3">{children}</main>
+      {bottom !== undefined ? <div className="mt-6 flex flex-col gap-3">{bottom}</div> : null}
     </div>
   );
 }

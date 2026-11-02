@@ -5,7 +5,7 @@ export interface ProgressRingProps {
   percent?: number | null | undefined;
   /** What the circle means, for screen readers. */
   label: string;
-  /** Outer size in px; 56 fits the 15px number. */
+  /** Outer size in px at Biasa (drawn in rem, D-092); 56 fits the number. */
   size?: number;
   /** Stop the turning arc, e.g. while offline. */
   still?: boolean;
@@ -30,12 +30,12 @@ export function ProgressRing({ percent, label, size = 56, still = false }: Progr
       aria-valuemax={100}
       {...(known ? { 'aria-valuenow': value } : {})}
       className="relative inline-flex shrink-0 items-center justify-center rounded-full bg-paper"
-      style={{ width: size, height: size }}
+      style={{ width: `${size / 16}rem`, height: `${size / 16}rem` }}
     >
       <svg
         viewBox="0 0 48 48"
-        width={size}
-        height={size}
+        width="100%"
+        height="100%"
         aria-hidden="true"
         className={`absolute inset-0 -rotate-90 ${!known && !still ? 'animate-[spin_1.6s_linear_infinite]' : ''}`}
       >

@@ -8,7 +8,7 @@ export function Footer() {
   const [reportOpen, setReportOpen] = useState(false);
 
   return (
-    <footer className="mx-auto w-full max-w-lg border-t border-line px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-caption text-ink-2">
+    <footer className="mx-auto w-full max-w-lg border-t border-line px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] text-caption text-ink-2">
       <button
         type="button"
         onClick={() => setReportOpen((open) => !open)}
