@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
-type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'dangerOutline';
+type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'dangerOutline' | 'onDark';
 
 const variantClasses: Record<ButtonVariant, string> = {
   // The ONE main action on a screen.
@@ -11,6 +11,8 @@ const variantClasses: Record<ButtonVariant, string> = {
   danger: 'bg-danger text-on-accent border-danger',
   // Delete offered next to other choices; the filled danger button confirms it on its own screen.
   dangerOutline: 'bg-transparent text-danger border-danger active:bg-paper-2',
+  // Secondary actions on the dark full-screen viewer (D-094).
+  onDark: 'bg-transparent text-paper border-line active:bg-ink-2',
 };
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

@@ -49,9 +49,11 @@ export interface UploadViewerProps {
 }
 
 /**
- * My Uploads item view (D-093): the photo (up to 60% of the screen) or a
- * video that plays, one status line, and the item's settings as 48 px
- * controls with words. Taps only: no swiping between items.
+ * My Uploads item view, full screen like a phone's gallery viewer (D-094):
+ * the photo or video at its own shape and full quality (this phone's copy or
+ * the guest's own original; the small preview only until it arrives),
+ * fitted to the screen on dark ink, a slim "Kembali" bar on top and the
+ * item's settings below as 48 px controls with words. Taps only: no swiping.
  */
 export function UploadViewer({ row, eventId, when, onBack, onPrivacy, onRetry, onSendNow, onDelete }: UploadViewerProps) {
   const { t } = useTranslation();
@@ -59,7 +61,16 @@ export function UploadViewer({ row, eventId, when, onBack, onPrivacy, onRetry, o
   const [original, failed] = useOriginal(eventId, row.mediaId);
   const controls = viewerControls(row);
   const kind = row.type === 'video' ? t('uploads.video') : t('uploads.photo');
-  const problem = row.status === 'failed' || row.status === 'rejected' || row.status === 'notArrived';
+
+  // The page behind must not scroll while the viewer covers it.
+  useEffect(() => {
+    const before = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = before;
+    };
+  }, []);
+
   const action = controls.retry ? (
     <Button variant="primary" icon={<Icon name="retry" />} onClick={onRetry}>
       {t('common.retry')}
@@ -71,104 +82,113 @@ export function UploadViewer({ row, eventId, when, onBack, onPrivacy, onRetry, o
   ) : null;
 
   return (
-    <Screen
-      back={onBack}
-      bottom={
-        <div className={action ? 'grid grid-cols-2 gap-3' : 'flex flex-col'}>
-          {action}
-          <Button variant="dangerOutline" icon={<Icon name="trash" />} onClick={onDelete}>
-            {t('uploads.delete')}
-          </Button>
-        </div>
-      }
-    >
-      <div className="-mx-4 flex h-[60dvh] items-center justify-center overflow-hidden bg-paper-2">
+    <div role="dialog" aria-modal="true" aria-label={`${kind}, ${when}`} className="fixed inset-0 z-50 flex flex-col bg-ink text-paper">
+      <div className="flex items-center justify-between gap-3 px-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex min-h-11 items-center gap-1 px-2 text-caption text-paper active:text-line"
+        >
+          <Icon name="arrowLeft" size={20} />
+          {t('common.back')}
+        </button>
+        <span className="truncate px-2 text-label text-line">{when}</span>
+      </div>
+
+      {/* Fitted to the screen at its own shape, never cropped; pinch-zoom works as on any page. */}
+      <div className="flex min-h-0 flex-1 items-center justify-center">
         {row.type === 'video' && original.status === 'ready' ? (
           <video
             src={original.url}
             {...(preview ? { poster: preview } : {})}
             controls
             playsInline
-            className="max-h-full w-full bg-ink"
+            className="size-full object-contain"
             onError={failed}
           />
         ) : original.status === 'ready' || preview ? (
           <img
             src={original.status === 'ready' ? original.url : (preview ?? '')}
             alt={`${kind}, ${when}`}
-            className="max-h-full w-full object-contain"
-            // The server copy may not load (offline): the preview stays.
+            className="size-full object-contain"
+            // The full file may not load (offline, or a format this phone cannot show): the preview stays.
             onError={failed}
           />
         ) : (
-          <span role="img" aria-label={`${kind}, ${when}`} className="text-ink-2">
-            <Icon name={row.type === 'video' ? 'video' : 'camera'} size={40} />
+          <span role="img" aria-label={`${kind}, ${when}`} className="text-line">
+            <Icon name={row.type === 'video' ? 'video' : 'camera'} size={48} />
           </span>
         )}
       </div>
-      {row.type === 'video' && original.status === 'failed' ? (
-        <p role="status" className="text-caption text-ink-2">
-          {t('uploads.playFailed')}
-        </p>
-      ) : null}
 
-      <p className="flex items-baseline justify-between gap-3 text-caption">
-        <b className={problem ? 'text-danger' : 'text-ink'}>{t(`uploads.status.${row.status}`, { percent: row.percent ?? 0 })}</b>
-        <span className="text-right text-ink-2">{when}</span>
-      </p>
+      <div className="flex flex-col gap-3 px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        {row.type === 'video' && original.status === 'failed' ? (
+          <p role="status" className="text-caption text-line">
+            {t('uploads.playFailed')}
+          </p>
+        ) : null}
+        <p className="text-caption font-bold text-paper">{t(`uploads.status.${row.status}`, { percent: row.percent ?? 0 })}</p>
 
-      {/* The chosen option is a tint, so the accent stays for the one main action (design.md). */}
-      <div role="group" aria-label={t('privacy.title')} className="grid grid-cols-2 overflow-hidden rounded-card border border-ink">
-        {(['private', 'public'] as const).map((visibility) => {
-          const chosen = row.visibility === visibility;
-          return (
-            <button
-              key={visibility}
-              type="button"
-              aria-pressed={chosen}
-              onClick={() => onPrivacy({ visibility, showName: visibility === 'public' && row.showName })}
+        {/* The chosen part is filled in paper, so the accent stays for the one main action (design.md). */}
+        <div role="group" aria-label={t('privacy.title')} className="grid grid-cols-2 overflow-hidden rounded-card border border-line">
+          {(['private', 'public'] as const).map((visibility) => {
+            const chosen = row.visibility === visibility;
+            return (
+              <button
+                key={visibility}
+                type="button"
+                aria-pressed={chosen}
+                onClick={() => onPrivacy({ visibility, showName: visibility === 'public' && row.showName })}
+                className={[
+                  'inline-flex min-h-12 items-center justify-center gap-2 font-bold',
+                  chosen ? 'bg-paper text-ink' : 'text-paper active:bg-ink-2',
+                ].join(' ')}
+              >
+                <Icon name={visibility === 'public' ? 'globe' : 'lock'} size={20} />
+                {t(visibility === 'public' ? 'privacy.publicTitle' : 'privacy.privateTitle')}
+              </button>
+            );
+          })}
+        </div>
+
+        {controls.showName ? (
+          <button
+            type="button"
+            role="switch"
+            aria-checked={row.showName}
+            onClick={() => onPrivacy({ visibility: 'public', showName: !row.showName })}
+            className="flex min-h-12 items-center justify-between gap-3 text-left"
+          >
+            <span className="inline-flex items-center gap-2">
+              <Icon name="user" size={20} />
+              {t('uploads.showName')}
+            </span>
+            {/* Outlined in the light hairline when off, so the control keeps 3:1 on the dark panel. */}
+            <span
+              aria-hidden="true"
               className={[
-                'inline-flex min-h-12 items-center justify-center gap-2 font-bold text-ink',
-                chosen ? 'bg-accent-tint shadow-[inset_0_0_0_2px_var(--accent)]' : 'active:bg-paper-2',
+                'relative inline-block h-6 w-11 shrink-0 rounded-full border-2 transition-colors duration-150',
+                row.showName ? 'border-paper bg-paper' : 'border-line bg-ink',
               ].join(' ')}
             >
-              <Icon name={visibility === 'public' ? 'globe' : 'lock'} size={20} />
-              {t(visibility === 'public' ? 'privacy.publicTitle' : 'privacy.privateTitle')}
-            </button>
-          );
-        })}
-      </div>
+              <span
+                className={[
+                  'absolute top-0 size-5 rounded-full transition-[left] duration-150',
+                  row.showName ? 'left-5 bg-ink' : 'left-0 bg-line',
+                ].join(' ')}
+              />
+            </span>
+          </button>
+        ) : null}
 
-      {controls.showName ? (
-        <button
-          type="button"
-          role="switch"
-          aria-checked={row.showName}
-          onClick={() => onPrivacy({ visibility: 'public', showName: !row.showName })}
-          className="flex min-h-12 items-center justify-between gap-3 text-left"
-        >
-          <span className="inline-flex items-center gap-2">
-            <Icon name="user" size={20} />
-            {t('uploads.showName')}
-          </span>
-          {/* Outlined in ink-2 when off, so the control keeps 3:1 against the paper. */}
-          <span
-            aria-hidden="true"
-            className={[
-              'relative inline-block h-6 w-11 shrink-0 rounded-full border-2 transition-colors duration-150',
-              row.showName ? 'border-ink bg-ink' : 'border-ink-2 bg-paper',
-            ].join(' ')}
-          >
-            <span
-              className={[
-                'absolute top-0 size-5 rounded-full transition-[left] duration-150',
-                row.showName ? 'left-5 bg-paper' : 'left-0 bg-ink-2',
-              ].join(' ')}
-            />
-          </span>
-        </button>
-      ) : null}
-    </Screen>
+        <div className={action ? 'grid grid-cols-2 gap-3' : 'flex flex-col'}>
+          {action}
+          <Button variant="onDark" icon={<Icon name="trash" />} onClick={onDelete}>
+            {t('uploads.delete')}
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
 

@@ -42,6 +42,8 @@ describe('colour contrast of the design tokens (D-092: 4.5:1 for all text at sta
     ['text on danger buttons', t['on-accent']!, t.danger!],
     ['error text on paper', t.danger!, t.paper!],
     ['text on a selected card (accent tint)', t.ink!, tint],
+    ['text on the dark full-screen viewer (D-094)', t.paper!, t.ink!],
+    ['date and hints on the dark viewer', t.line!, t.ink!],
   ];
   it.each(pairs)('%s passes 4.5:1', (_name, fg, bg) => {
     expect(contrast(fg, bg)).toBeGreaterThanOrEqual(4.5);
