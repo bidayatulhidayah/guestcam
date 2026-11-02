@@ -72,6 +72,8 @@ export interface QueueItem {
    * Set on the item so the list updates the moment the preview exists.
    */
   preview?: 'ready' | 'none';
+  /** Video length read on this phone with the preview frame (My Uploads only; never sent). */
+  durationMs?: number | null;
 }
 
 /** The server side of an upload, so the runner can be tested without Firebase. */

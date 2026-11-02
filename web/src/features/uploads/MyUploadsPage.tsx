@@ -1,229 +1,92 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
-import { Button, Icon, ProgressRing, Screen, type IconName } from '../../components/ui';
-import { useQueueItems } from '../capture/useQueueSummary';
+import { useHideTopBarControls } from '../../components/TopBar';
+import { Icon, ProgressRing, Screen } from '../../components/ui';
+import { summarize, useQueueItems } from '../capture/useQueueSummary';
 import { useEvent } from '../entry/EventContext';
 import { LoadingScreen } from '../entry/StatusScreens';
 import type { PrivacyChoice } from '../privacy/privacyChoice';
+import { formatDay, formatDuration, groupByDay, markFor, type DayLabel } from './grid';
 import { mergeItems, type ServerItem, type UploadRow } from './mergeItems';
-import { VideoPlayer } from './VideoPlayer';
+import { DeleteConfirm, UploadViewer } from './UploadViewer';
+import { useNearViewport, usePreview } from './usePreview';
 
 const api = () => import('./uploadsApi');
 const queueModule = () => import('../../lib/queue');
 const actions = () => import('../capture/captureActions');
 
+/** Small paper disc for a tile mark (status, not a button). */
+const disc = 'absolute flex size-6 items-center justify-center rounded-full';
+
 /**
- * The small preview kept on this phone (photo, or a video's first frame); null
- * shows the neutral placeholder. Items from another phone have none until
- * server thumbnails arrive (Phase 3).
+ * One square tile: the preview edge to edge, and a mark only when something
+ * needs attention (D-093). Sent items carry none; a globe marks Awam items.
  */
-function usePreview(row: UploadRow): string | null {
-  const [url, setUrl] = useState<string | null>(null);
-  useEffect(() => {
-    if (!row.local || row.preview === 'none') return;
-    let active = true;
-    let objectUrl: string | undefined;
-    queueModule()
-      .then((m) => m.getQueueDb())
-      .then((db) => db.thumbs.get(row.mediaId))
-      .then((thumb) => {
-        if (!active || !thumb) return;
-        objectUrl = URL.createObjectURL(thumb.blob);
-        setUrl(objectUrl);
-      })
-      .catch(() => undefined);
-    return () => {
-      active = false;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    };
-    // The preview is made in the background: saving it sets `preview` on the item.
-  }, [row.mediaId, row.local, row.preview]);
-  return url;
-}
-
-/** Statuses that need the guest (or "Cuba lagi"): an exclamation mark in the corner. */
-const PROBLEM: ReadonlySet<UploadRow['status']> = new Set(['failed', 'needsRepick', 'rejected']);
-
-/** Items on their way: a progress circle over the preview instead of a corner mark. */
-const ON_THE_WAY: ReadonlySet<UploadRow['status']> = new Set(['waiting', 'uploading']);
-
-/** Small corner mark: a dot with a check once sent, "!" when the guest must act, an empty ring otherwise (wifi, not arrived). */
-function StatusMark({ row, label }: { row: UploadRow; label: string }) {
-  const base = 'absolute top-2 right-2 flex size-7 items-center justify-center rounded-full';
-  if (row.status === 'sent') {
-    return (
-      <span role="img" aria-label={label} className={`${base} bg-accent text-on-accent`}>
-        <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={3} aria-hidden="true">
-          <path d="m5 12 5 5 9-10" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </span>
-    );
-  }
-  if (PROBLEM.has(row.status)) {
-    return (
-      <span role="img" aria-label={label} className={`${base} bg-ink text-caption font-bold text-paper`}>
-        !
-      </span>
-    );
-  }
-  return <span role="img" aria-label={label} className={`${base} border-[3px] border-ink-2 bg-paper`} />;
-}
-
-/** 48px icon-only button: the design.md exception for My Uploads, so every one has an aria-label. */
-function ItemButton({ label, icon, onClick }: { label: string; icon: IconName; onClick: () => void }) {
+function Tile({ row, label, onOpen }: { row: UploadRow; label: string; onOpen: () => void }) {
+  const ref = useRef<HTMLButtonElement>(null);
+  const preview = usePreview(row, useNearViewport(ref));
+  const mark = markFor(row.status);
   return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      onClick={onClick}
-      className="flex size-12 items-center justify-center rounded-card text-ink active:bg-paper-2"
-    >
-      <Icon name={icon} size={24} />
-    </button>
-  );
-}
-
-interface ItemProps {
-  row: UploadRow;
-  onPrivacy: (choice: PrivacyChoice) => void;
-  onDelete: () => void;
-  /** Videos only: tap the preview to play it. */
-  onPlay: () => void;
-}
-
-function UploadItem({ row, onPrivacy, onDelete, onPlay }: ItemProps) {
-  const { t, i18n } = useTranslation();
-  const preview = usePreview(row);
-  const kind = row.type === 'image' ? t('uploads.photo') : row.type === 'video' ? t('uploads.video') : t('uploads.audio');
-  const when = row.createdAtMs
-    ? new Date(row.createdAtMs).toLocaleString(i18n.language === 'en' ? 'en-MY' : 'ms-MY', {
-        day: 'numeric',
-        month: 'short',
-        hour: 'numeric',
-        minute: '2-digit',
-      })
-    : '';
-  const status = t(`uploads.status.${row.status}`, { percent: row.percent ?? 0 });
-  const isPublic = row.visibility === 'public';
-  return (
-    <li className="flex flex-col gap-1">
-      {/* Printed-photo border (design.md); the words are for screen readers only. A video is a button that plays it. */}
-      <Frame video={row.type === 'video'} label={`${t('uploads.play')}: ${kind}, ${when}`} onPlay={onPlay}>
+    <li className="relative aspect-square bg-paper-2">
+      <button ref={ref} type="button" aria-label={label} onClick={onOpen} className="block size-full active:opacity-80">
         {preview ? (
-          <>
-            <img src={preview} alt={`${kind}, ${when}`} className="size-full object-cover" />
-
-          </>
+          <img src={preview} alt="" className="size-full object-cover" />
         ) : (
-          <span
-            role="img"
-            aria-label={`${kind}, ${when}`}
-            className="flex size-full items-center justify-center bg-paper-2 text-ink-2"
-          >
-            <Icon name={row.type === 'video' ? 'video' : 'camera'} size={28} />
+          <span className="flex size-full items-center justify-center text-ink-2">
+            <Icon name={row.type === 'video' ? 'video' : 'camera'} size={24} />
           </span>
         )}
-        {row.type === 'video' && !ON_THE_WAY.has(row.status) ? (
-          <span
-            aria-hidden="true"
-            className="absolute inset-0 m-auto flex size-12 items-center justify-center rounded-full border border-line bg-paper text-ink"
-          >
-            <Icon name="play" size={24} />
+        {mark === 'sending' ? (
+          // The tile's label already says "Sedang dihantar n%".
+          <span aria-hidden="true" className="absolute top-1 right-1">
+            <ProgressRing percent={row.percent ?? 0} label="" size={40} />
           </span>
         ) : null}
-        {ON_THE_WAY.has(row.status) ? (
-          // The file being sent shows its percentage; the rest wait their turn (one at a time, rule 4).
-          <span className="absolute inset-0 m-auto size-16">
-            <ProgressRing percent={row.status === 'uploading' ? (row.percent ?? 0) : null} label={status} size={64} />
+        {mark === 'waiting' ? (
+          <span className={`${disc} top-1.5 right-1.5 bg-paper text-ink`}>
+            <Icon name="clock" size={16} />
           </span>
-        ) : (
-          <StatusMark row={row} label={status} />
-        )}
-      </Frame>
-      <div className="flex items-center justify-between">
-        <ItemButton
-          icon={isPublic ? 'globe' : 'lock'}
-          label={t(isPublic ? 'uploads.icons.public' : 'uploads.icons.private')}
-          onClick={() => onPrivacy({ visibility: isPublic ? 'private' : 'public', showName: row.showName })}
-        />
-        {isPublic ? (
-          <ItemButton
-            icon={row.showName ? 'user' : 'userHidden'}
-            label={t(row.showName ? 'uploads.icons.nameShown' : 'uploads.icons.nameHidden')}
-            onClick={() => onPrivacy({ visibility: 'public', showName: !row.showName })}
-          />
         ) : null}
-        <ItemButton icon="trash" label={t('uploads.delete')} onClick={onDelete} />
-      </div>
+        {mark === 'failed' ? (
+          <span className={`${disc} top-1.5 right-1.5 bg-ink text-label font-bold text-paper`}>!</span>
+        ) : null}
+        {row.type === 'video' ? (
+          <span className="absolute bottom-1.5 left-1.5 inline-flex items-center gap-0.5 rounded-full bg-paper py-0.5 pr-2 pl-1 text-label font-bold text-ink tabular-nums">
+            <Icon name="play" size={14} />
+            {row.durationMs ? formatDuration(row.durationMs) : null}
+          </span>
+        ) : null}
+        {row.visibility === 'public' ? (
+          <span className={`${disc} right-1.5 bottom-1.5 bg-paper text-ink`}>
+            <Icon name="globe" size={16} />
+          </span>
+        ) : null}
+      </button>
     </li>
-  );
-}
-
-/** The printed-photo frame of an item; for a video, the whole frame is the play button. */
-function Frame({
-  video,
-  label,
-  onPlay,
-  children,
-}: {
-  video: boolean;
-  label: string;
-  onPlay: () => void;
-  children: ReactNode;
-}) {
-  const className = 'relative block aspect-square w-full border border-line bg-paper p-1.5';
-  if (!video) return <div className={className}>{children}</div>;
-  return (
-    <button type="button" aria-label={label} onClick={onPlay} className={`${className} text-left active:bg-paper-2`}>
-      {children}
-    </button>
-  );
-}
-
-/** One line above the grid: what the small icons mean. */
-function Legend() {
-  const { t } = useTranslation();
-  const entries: { icon: IconName | 'sent'; label: string }[] = [
-    { icon: 'lock', label: t('privacy.privateTitle') },
-    { icon: 'globe', label: t('privacy.publicTitle') },
-    { icon: 'user', label: t('uploads.legendName') },
-    { icon: 'sent', label: t('uploads.status.sent') },
-  ];
-  return (
-    <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-caption text-ink-2">
-      {entries.map((entry) => (
-        <span key={entry.label} className="inline-flex items-center gap-1">
-          {entry.icon === 'sent' ? (
-            <span aria-hidden="true" className="inline-block size-3 rounded-full bg-accent" />
-          ) : (
-            <Icon name={entry.icon} size={16} />
-          )}
-          {entry.label}
-        </span>
-      ))}
-    </p>
   );
 }
 
 /**
  * `.../:eventSlug/mine`: everything this guest sent to the event, from this
- * phone's queue and the server, merged by mediaId. Switch Peribadi / Awam or
- * delete any item. Tied to this phone and browser (pitfall I2).
+ * phone's queue and the server, merged by mediaId, as a photo grid by day
+ * (D-093). Tap an item to see it and change it. Tied to this phone and
+ * browser (pitfall I2).
  */
 export function MyUploadsPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const event = useEvent();
   const navigate = useNavigate();
+  useHideTopBarControls();
   const { items } = useQueueItems(event.eventId);
   const [server, setServer] = useState<ServerItem[] | null>(null);
   const [serverError, setServerError] = useState(false);
   const [overrides, setOverrides] = useState<Record<string, PrivacyChoice>>({});
-  const [confirming, setConfirming] = useState<UploadRow | null>(null);
-  const [playing, setPlaying] = useState<UploadRow | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const menuPath = `/s/${event.publicId}/${event.eventSlug}`;
+  const language = i18n.language;
 
   const refresh = useCallback(() => {
     api()
@@ -262,6 +125,29 @@ export function MyUploadsPage() {
       ),
     [items, server, overrides],
   );
+  const days = useMemo(() => groupByDay(rows), [rows]);
+  const summary = useMemo(() => summarize(items ?? []), [items]);
+  // The item view follows the live row, so its status line moves on while it is open.
+  const open = openId ? (rows.find((row) => row.mediaId === openId) ?? null) : null;
+
+  const dayLabel = (label: DayLabel) =>
+    label.kind === 'today' ? t('uploads.today') : label.kind === 'yesterday' ? t('uploads.yesterday') : formatDay(label.ms, language);
+  const when = (row: UploadRow) =>
+    new Intl.DateTimeFormat(language === 'en' ? 'en-GB' : 'ms-MY', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'short',
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(row.sortAtMs);
+  const kind = (row: UploadRow) => (row.type === 'video' ? t('uploads.video') : t('uploads.photo'));
+  const tileLabel = (row: UploadRow) =>
+    [
+      kind(row),
+      when(row),
+      t(`uploads.status.${row.status}`, { percent: row.percent ?? 0 }),
+      t(row.visibility === 'public' ? 'privacy.publicTitle' : 'privacy.privateTitle'),
+    ].join(', ');
 
   async function attempt(action: () => Promise<void>) {
     setMessage(null);
@@ -292,87 +178,95 @@ export function MyUploadsPage() {
       setMessage(t('uploads.deleted'));
     });
 
-  if (confirming) {
+  if (open && confirming) {
     return (
-      <Screen
-        title={t('uploads.deleteTitle')}
-        bottom={
-          <>
-            <Button
-              variant="danger"
-              icon={<Icon name="trash" />}
-              onClick={() => {
-                const row = confirming;
-                setConfirming(null);
-                void remove(row);
-              }}
-            >
-              {t('uploads.delete')}
-            </Button>
-            <Button onClick={() => setConfirming(null)}>{t('uploads.cancel')}</Button>
-          </>
-        }
-      >
-        <p>{t('uploads.deleteBody')}</p>
-      </Screen>
+      <DeleteConfirm
+        row={open}
+        onCancel={() => setConfirming(false)}
+        onConfirm={() => {
+          setConfirming(false);
+          setOpenId(null);
+          void remove(open);
+        }}
+      />
     );
   }
 
-  if (playing) {
+  if (open) {
     return (
-      <VideoPlayer
+      <UploadViewer
+        row={open}
         eventId={event.eventId}
-        mediaId={playing.mediaId}
-        eyebrow={event.displayNames}
-        onClose={() => setPlaying(null)}
+        when={when(open)}
+        onBack={() => setOpenId(null)}
+        onPrivacy={(choice) => void changePrivacy(open, choice)}
+        onRetry={() => void actions().then((m) => m.retryFailed(event.eventId, [open.mediaId]))}
+        onSendNow={() => void actions().then((m) => m.sendHeld(event.eventId, [open.mediaId]))}
+        onDelete={() => setConfirming(true)}
       />
     );
   }
 
   if (items === null || server === null) return <LoadingScreen />;
 
+  const pending = summary.waiting + (summary.uploading ? 1 : 0);
   return (
-    <Screen
-      eyebrow={event.displayNames}
-      title={t('uploads.title')}
-      bottom={<Button onClick={() => navigate(menuPath)}>{t('uploads.back')}</Button>}
-    >
-      <p className="text-caption text-ink-2">{t('uploads.note')}</p>
+    <Screen back={() => navigate(menuPath)} title={t('uploads.title')}>
+      {/* One slim line, only while something is on its way (D-093). */}
+      {pending > 0 || summary.held > 0 ? (
+        <p role="status" className="-mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-label text-ink-2">
+          {pending > 0 ? (
+            <>
+              <ProgressRing percent={summary.uploading?.percent} label={t('queue.progressLabel')} size={18} number={false} />
+              {summary.uploading ? (
+                <b className="text-ink">{t('uploads.status.uploading', { percent: summary.uploading.percent })}</b>
+              ) : null}
+              {summary.waiting > 0 ? <span>{t('uploads.waitingLine', { count: summary.waiting })}</span> : null}
+            </>
+          ) : null}
+          {summary.held > 0 ? (
+            <>
+              <span>{t('queue.held', { count: summary.held })}</span>
+              <button
+                type="button"
+                onClick={() => void actions().then((m) => m.sendHeld(event.eventId))}
+                className="-my-3 inline-flex min-h-11 items-center px-1 font-bold text-ink underline underline-offset-2"
+              >
+                {t('queue.sendNow')}
+              </button>
+            </>
+          ) : null}
+        </p>
+      ) : null}
       {message ? (
-        <p role="status" className="rounded-card bg-paper-2 p-4">
+        <p role="status" className="text-caption text-ink">
           {message}
         </p>
       ) : null}
       {serverError ? (
-        <p role="status" className="rounded-card bg-paper-2 p-4">
+        <p role="status" className="text-caption text-ink-2">
           {t('uploads.serverError')}
         </p>
       ) : null}
-      {rows.some((row) => row.status === 'failed') ? (
-        <Button onClick={() => void actions().then((m) => m.retryFailed(event.eventId))}>{t('common.retry')}</Button>
-      ) : null}
-      {rows.some((row) => row.status === 'held') ? (
-        <Button onClick={() => void actions().then((m) => m.sendHeld(event.eventId))}>{t('queue.sendNow')}</Button>
-      ) : null}
+
       {rows.length === 0 ? (
         <p>{t('uploads.empty')}</p>
       ) : (
-        <>
-          <Legend />
-          {/* Two columns keep three 48px icons under each preview on a 360px phone. */}
-          <ul className="grid grid-cols-2 gap-x-4 gap-y-3 min-[480px]:grid-cols-3">
-            {rows.map((row) => (
-              <UploadItem
-                key={row.mediaId}
-                row={row}
-                onPrivacy={(choice) => void changePrivacy(row, choice)}
-                onDelete={() => setConfirming(row)}
-                onPlay={() => setPlaying(row)}
-              />
-            ))}
-          </ul>
-        </>
+        <div className="-mx-4 flex flex-col">
+          {days.map((day) => (
+            // Off-screen days skip layout and paint until scrolled near (long lists stay fast).
+            <section key={day.key} className="[contain-intrinsic-size:auto_24rem] [content-visibility:auto]">
+              <h2 className="px-4 pt-3 pb-2 text-caption font-bold text-ink">{dayLabel(day.label)}</h2>
+              <ul className="grid grid-cols-3 gap-0.5">
+                {day.rows.map((row) => (
+                  <Tile key={row.mediaId} row={row} label={tileLabel(row)} onOpen={() => setOpenId(row.mediaId)} />
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
       )}
+      <p className="text-label text-ink-2">{t('uploads.note')}</p>
     </Screen>
   );
 }

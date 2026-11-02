@@ -1,6 +1,6 @@
 import { makeThumbnail } from './thumbnail';
 import { PREVIEW_MAX_SIDE } from './thumbnailTypes';
-import { drawSmall, grabVideoFrame } from './videoFrame';
+import { drawSmall, grabVideoFrame, type VideoFrame } from './videoFrame';
 
 /**
  * Fallback when the worker cannot decode a photo (no OffscreenCanvas before
@@ -24,7 +24,14 @@ async function photoOnPage(file: Blob): Promise<Blob | null> {
 export interface PreviewMakers {
   photo: (file: Blob) => Promise<Blob | null>;
   photoOnPage: (file: Blob) => Promise<Blob | null>;
-  video: (file: Blob) => Promise<Blob | null>;
+  video: (file: Blob) => Promise<VideoFrame>;
+}
+
+export interface Preview {
+  /** Null means the neutral placeholder. */
+  blob: Blob | null;
+  /** Videos: their length, when it could be read. */
+  durationMs: number | null;
 }
 
 const BROWSER: PreviewMakers = { photo: makeThumbnail, photoOnPage, video: (file) => grabVideoFrame(file) };
@@ -35,15 +42,15 @@ let chain: Promise<unknown> = Promise.resolve();
 /**
  * A ~400 px JPEG preview for My Uploads: a photo in the Web Worker (then on
  * the page if the worker cannot decode it), or one frame near the start of a
- * video. Null means the neutral placeholder; it never throws.
+ * video with its length. A null blob means the neutral placeholder; it never throws.
  */
-export function makePreview(file: Blob, type: 'image' | 'video', makers: PreviewMakers = BROWSER): Promise<Blob | null> {
-  const run = async () => {
+export function makePreview(file: Blob, type: 'image' | 'video', makers: PreviewMakers = BROWSER): Promise<Preview> {
+  const run = async (): Promise<Preview> => {
     try {
       if (type === 'video') return await makers.video(file);
-      return (await makers.photo(file)) ?? (await makers.photoOnPage(file));
+      return { blob: (await makers.photo(file)) ?? (await makers.photoOnPage(file)), durationMs: null };
     } catch {
-      return null;
+      return { blob: null, durationMs: null };
     }
   };
   const result = chain.then(run);

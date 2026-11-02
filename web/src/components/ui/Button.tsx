@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
-type ButtonVariant = 'primary' | 'secondary' | 'danger';
+type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'dangerOutline';
 
 const variantClasses: Record<ButtonVariant, string> = {
   // The ONE main action on a screen.
@@ -9,6 +9,8 @@ const variantClasses: Record<ButtonVariant, string> = {
   secondary: 'bg-transparent text-ink border-ink active:bg-paper-2',
   // End call, delete only.
   danger: 'bg-danger text-on-accent border-danger',
+  // Delete offered next to other choices; the filled danger button confirms it on its own screen.
+  dangerOutline: 'bg-transparent text-danger border-danger active:bg-paper-2',
 };
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

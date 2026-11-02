@@ -36,7 +36,17 @@ function local(mediaId: string, overrides: Partial<QueueItem> = {}): QueueItem {
 }
 
 function server(mediaId: string, overrides: Partial<ServerItem> = {}): ServerItem {
-  return { mediaId, type: 'image', status: 'uploaded', visibility: 'private', showName: false, createdAtMs: 1000, ...overrides };
+  return {
+    mediaId,
+    type: 'image',
+    status: 'uploaded',
+    visibility: 'private',
+    showName: false,
+    createdAtMs: 1000,
+    sortAtMs: null,
+    durationMs: null,
+    ...overrides,
+  };
 }
 
 describe('My Uploads: phone and server merged by mediaId', () => {
@@ -76,6 +86,16 @@ describe('My Uploads: phone and server merged by mediaId', () => {
     const rows = mergeItems([], [server('q', { status: 'queued' }), server('f', { status: 'failed' }), server('r', { status: 'ready' })]);
     expect(Object.fromEntries(rows.map((r) => [r.mediaId, r.status]))).toEqual({ q: 'notArrived', f: 'rejected', r: 'sent' });
     expect(rows.every((r) => !r.local && r.hasDoc)).toBe(true);
+  });
+
+  it('sorted by when it was taken, not when it was added; the video length comes along', () => {
+    const rows = mergeItems(
+      [local('addedLast', { createdAt: 9, capturedAtMs: 1 }), local('video', { type: 'video', createdAt: 2, durationMs: 12_000 })],
+      [server('takenLate', { createdAtMs: 1, sortAtMs: 5, durationMs: 30_000, type: 'video' })],
+    );
+    expect(rows.map((r) => r.mediaId)).toEqual(['takenLate', 'video', 'addedLast']);
+    expect(rows.find((r) => r.mediaId === 'video')?.durationMs).toBe(12_000);
+    expect(rows.find((r) => r.mediaId === 'takenLate')?.durationMs).toBe(30_000);
   });
 
   it('newest first', () => {
