@@ -107,12 +107,12 @@ export type IconName =
   | 'arrowRight'
   | 'play';
 
-export function Icon({ name, size = 28 }: { name: IconName; size?: number }) {
+/** `size` is in px at Biasa; drawn in rem so icons grow with "Aa" Besar and the phone's text size (D-092). */
+export function Icon({ name, size = 24 }: { name: IconName; size?: number }) {
   return (
     <svg
       viewBox="0 0 24 24"
-      width={size}
-      height={size}
+      style={{ width: `${size / 16}rem`, height: `${size / 16}rem` }}
       fill="none"
       stroke="currentColor"
       strokeWidth={2}

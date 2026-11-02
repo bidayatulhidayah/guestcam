@@ -47,7 +47,7 @@ export function MyEventsPage() {
             const sent = counts[keyOf(event)] ?? 0;
             return (
               <li key={keyOf(event)} className="flex flex-col border-b border-line">
-                <Link to={base} className="flex min-h-16 flex-col justify-center py-3 active:bg-paper-2">
+                <Link to={base} className="flex min-h-12 flex-col justify-center py-3 active:bg-paper-2">
                   <span className="font-display text-title text-accent">{event.displayNames}</span>
                   <span className="text-ink-2">{i18n.language === 'en' ? event.title.en : event.title.ms}</span>
                 </Link>

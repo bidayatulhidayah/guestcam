@@ -28,7 +28,7 @@ export function DevIndexPage() {
       <ul className="flex flex-col border-t border-line">
         {links.map(({ path, label }) => (
           <li key={path} className="border-b border-line">
-            <Link to={path} className="flex min-h-16 flex-col justify-center py-2 active:bg-paper-2">
+            <Link to={path} className="flex min-h-12 flex-col justify-center py-2 active:bg-paper-2">
               <span className="font-bold text-accent">{label}</span>
               <span className="text-caption break-all text-ink-2">{buildPublicUrl(path)}</span>
             </Link>

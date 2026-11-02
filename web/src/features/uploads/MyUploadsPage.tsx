@@ -122,7 +122,7 @@ function UploadItem({ row, onPrivacy, onDelete, onPlay }: ItemProps) {
             aria-label={`${kind}, ${when}`}
             className="flex size-full items-center justify-center bg-paper-2 text-ink-2"
           >
-            <Icon name={row.type === 'video' ? 'video' : 'camera'} size={32} />
+            <Icon name={row.type === 'video' ? 'video' : 'camera'} size={28} />
           </span>
         )}
         {row.type === 'video' && !ON_THE_WAY.has(row.status) ? (

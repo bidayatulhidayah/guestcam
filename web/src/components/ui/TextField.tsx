@@ -8,7 +8,7 @@ export interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElemen
   error?: string | null;
 }
 
-/** Large single-line input on raised paper (design.md: 18px+ text, 64px tall). */
+/** Single-line input on raised paper (design.md: 16px text, 48px tall, D-092). */
 export function TextField({ label, hint, error, className = '', ...rest }: TextFieldProps) {
   const id = useId();
   const noteId = `${id}-note`;
@@ -23,7 +23,7 @@ export function TextField({ label, hint, error, className = '', ...rest }: TextF
         aria-invalid={error ? true : undefined}
         aria-describedby={note ? noteId : undefined}
         className={[
-          'min-h-16 w-full rounded-card border bg-paper-2 px-4 text-button text-ink',
+          'min-h-12 w-full rounded-card border bg-paper-2 px-3 text-body text-ink',
           error ? 'border-danger' : 'border-line',
           className,
         ].join(' ')}

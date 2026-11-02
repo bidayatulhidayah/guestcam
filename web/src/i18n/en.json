@@ -1,5 +1,10 @@
 {
   "appName": "guestcam",
+  "textSize": {
+    "normal": "Normal",
+    "large": "Large",
+    "switchLabel": "Text size: {{current}}. Tap for {{next}}."
+  },
   "language": {
     "current": "EN",
     "switchLabel": "Switch to Malay",
