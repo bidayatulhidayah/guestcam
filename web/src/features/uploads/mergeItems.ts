@@ -9,6 +9,10 @@ export interface ServerItem {
   visibility: Visibility;
   showName: boolean;
   createdAtMs: number | null;
+  /** When it was taken (EXIF, the camera, or else the upload): groups My Uploads by day. */
+  sortAtMs: number | null;
+  /** Video length, once the server knows it. */
+  durationMs: number | null;
 }
 
 export type RowStatus =
@@ -32,6 +36,10 @@ export interface UploadRow {
   visibility: Visibility;
   showName: boolean;
   createdAtMs: number;
+  /** When it was taken, for the day headings (D-093); falls back to when it was added. */
+  sortAtMs: number;
+  /** Video length when known (this phone's frame grab, or the server). */
+  durationMs: number | null;
   /** In the queue on this phone. */
   local: boolean;
   /** A media doc exists (or may exist) on the server. */
@@ -69,7 +77,7 @@ function serverStatus(status: MediaStatus): RowStatus {
  * `mediaId` so nothing shows twice. The phone knows best how an upload is
  * going and that its file arrived (the server may not have processed it
  * yet); the server adds only a refusal, and the privacy once its doc exists.
- * Newest first.
+ * Newest taken first.
  */
 export function mergeItems(local: QueueItem[], server: ServerItem[]): UploadRow[] {
   const rows = new Map<string, UploadRow>();
@@ -82,6 +90,8 @@ export function mergeItems(local: QueueItem[], server: ServerItem[]): UploadRow[
       visibility: doc.visibility,
       showName: doc.showName,
       createdAtMs: doc.createdAtMs ?? 0,
+      sortAtMs: doc.sortAtMs ?? doc.createdAtMs ?? 0,
+      durationMs: doc.durationMs,
       local: false,
       hasDoc: true,
     });
@@ -100,10 +110,12 @@ export function mergeItems(local: QueueItem[], server: ServerItem[]): UploadRow[
       visibility: doc ? doc.visibility : item.visibility,
       showName: doc ? doc.showName : item.showName,
       createdAtMs: item.createdAt,
+      sortAtMs: item.capturedAtMs ?? doc?.sortAtMs ?? item.createdAt,
+      durationMs: item.durationMs ?? doc?.durationMs ?? null,
       local: true,
       hasDoc: doc !== undefined || item.docCreated,
       preview: item.preview,
     });
   }
-  return [...rows.values()].sort((a, b) => b.createdAtMs - a.createdAtMs);
+  return [...rows.values()].sort((a, b) => b.sortAtMs - a.sortAtMs || b.createdAtMs - a.createdAtMs);
 }

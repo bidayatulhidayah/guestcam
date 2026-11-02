@@ -190,11 +190,11 @@ export class UploadQueue {
    * unless the item was deleted meanwhile. It stays after the item is sent;
    * only `remove` deletes it.
    */
-  async savePreview(mediaId: string, blob: Blob | null): Promise<void> {
+  async savePreview(mediaId: string, blob: Blob | null, durationMs: number | null = null): Promise<void> {
     await this.db.transaction('rw', this.db.items, this.db.thumbs, async () => {
       if (!(await this.db.items.get(mediaId))) return;
       if (blob) await this.db.thumbs.put({ mediaId, blob });
-      await this.db.items.update(mediaId, { preview: blob ? 'ready' : 'none' });
+      await this.db.items.update(mediaId, { preview: blob ? 'ready' : 'none', ...(durationMs ? { durationMs } : {}) });
     });
   }
 
@@ -208,9 +208,11 @@ export class UploadQueue {
   }
 
   /** "Cuba lagi" for items that stopped at `failed`. */
-  async retryFailed(eventId: string): Promise<void> {
+  /** "Cuba lagi": every failed item of the event, or only these (My Uploads item view). */
+  async retryFailed(eventId: string, mediaIds?: string[]): Promise<void> {
     await this.db.items
       .where({ eventId, status: 'failed' })
+      .filter((item) => mediaIds === undefined || mediaIds.includes(item.mediaId))
       .modify({ status: 'waiting', attempts: 0, nextAttemptAt: this.now(), lastError: null });
     this.kick();
   }

@@ -34,7 +34,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 - The event link opens faster on slow phones and networks: on a slow 4G connection the name screen appears about 1.4 seconds sooner, and less code loads before the first screen.
 - App updates reach guests who keep the menu open: a new version is applied when they come back to the app, never while a photo is being saved or a gallery upload still needs the picked file.
 - The QR link shows the name screen right away (about 2.5 s on a slow 4G phone, was about 4.5 s) while the code is checked in the background; the couple's names appear from the next screen.
-- Muat Naik Saya is a compact grid of previews: small icons switch Peribadi / Awam, show or hide the name, or delete (still with a confirmation), and a corner mark shows whether each item is sent.
+- Muat Naik Saya looks like a phone's photo gallery: photos edge to edge in three columns, grouped under "Hari ini", "Semalam" and dates, with small marks only when something needs attention (waiting, sending, failed) and a globe on Awam items; videos show their length. Tap any item to see it large (videos play) and change Peribadi / Awam, show your name, try again or delete (with a confirmation screen). The upload status is one slim line.
 
 ### Fixed
 

@@ -48,6 +48,76 @@ Rules:
 
 ---
 
+## 2026-11-02 23:07 — Muat Naik Saya like a phone's photo gallery (D-093)
+
+- **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
+- **Version / branch:** v0.1 (+ unreleased) / `feat/uploads-grid` (from `main` after PR #14)
+- **Phase:** Phase 1 (target v0.2), polish
+- **Goal:** Hidayah's brief: redesign Muat Naik Saya like Google Photos. Update the mockup and wait for her OK (given), then build it with tests, the budget check, the preview, docs and the PR.
+
+### What changed and why (D-093, supersedes D-085)
+- **Mockup:** the private artifact https://claude.ai/artifact/QHmfYx2QsSZ9tc7fn4Cgf6, second version: grid, sent Awam view, failed Peribadi video view, Padam confirmation.
+  - My one change: the chosen Peribadi/Awam part is a tint with an accent outline, not solid olive, so a failed item's view keeps one accent ("Cuba lagi").
+  - Hidayah said OK.
+- **Grid** (`MyUploadsPage.tsx`): square tiles, 3 columns, 2 px gaps, edge to edge, no frames or text. The tile is one button.
+  - Marks come from `markFor` (`grid.ts`): clock = waiting or held; the 40 px % ring only on the item sending; "!" = failed, refused, not arrived or re-pick; none on sent items.
+  - Globe only on Awam. Videos get a play mark and their length.
+- **Day groups:** `groupByDay` gives "Hari ini", "Semalam", then `formatDay` ("2 Nov 2026"; Malay months via `ms-MY`, e.g. "24 Okt 2026"), by the phone's calendar day of `sortAtMs`.
+  - Rows now carry `sortAtMs` (local: capture time, else the doc's `sortAt`, else when added; server: `sortAt`, else `createdAt`) and `durationMs`. `mergeItems` sorts by `sortAtMs`.
+- **Video length:** `grabVideoFrame` also returns the length from the video's metadata (read before the element is reset; a bug in my first edit). `makePreview` returns `{ blob, durationMs }`, and `UploadQueue.savePreview` stores `durationMs` on the item (local only, never sent).
+- **Slim upload line:** a small ring without a number (`ProgressRing number={false}`), "Sedang dihantar n%", "n menunggu", and "n menunggu wifi · Hantar sekarang". Hidden when nothing is pending.
+- **Top:** only "← Kembali" and the title. A new `TopBarControls` context and the `useHideTopBarControls` hook hide the top row's "Aa"/language buttons on this page. The in-app browser link slot stays.
+- **Lazy:** each tile reads its preview from IndexedDB only once it nears the screen (`useNearViewport`, IntersectionObserver, one screen ahead). Off-screen day sections use `content-visibility: auto`. This is not full virtualisation, but long lists no longer read every preview or lay out every tile at once.
+- **Item view** (`UploadViewer.tsx`, replaces `VideoPlayer.tsx`):
+  - "← Kembali", and the photo or video in a box 60% of the screen tall. It shows this phone's copy, or the guest's own original (`originalSource.ts`, the renamed `videoSource.ts`; photos too now). The preview shows meanwhile.
+  - One status line (failed in danger red) with the date and time.
+  - Peribadi/Awam as a two-part control with `aria-pressed`. "Tunjuk nama saya" as a `role=switch`, only when Awam; its off state is outlined in ink-2 for 3:1 (seen in a screenshot: the pale track was too faint).
+  - "Cuba lagi" (`retryFailed(eventId, [mediaId])`, now per item) or "Hantar sekarang" (`sendHeld` for this item) as the one primary button. Padam uses a new `dangerOutline` button.
+  - `DeleteConfirm`: an in-app screen with a small preview.
+- **Strings:** added `uploads.today`, `yesterday`, `showName`, `waitingLine`. Removed `uploads.back`, `play`, `legendName` and `icons.*` (no longer used). New icons `clock` and `retry`.
+
+### Files touched
+| File | Change |
+| --- | --- |
+| `web/src/features/uploads/MyUploadsPage.tsx` | rewritten: grid, day groups, slim line, item and confirm states |
+| `web/src/features/uploads/UploadViewer.tsx`, `grid.ts`, `usePreview.ts` | added |
+| `web/src/features/uploads/originalSource.ts` (was `videoSource.ts`), `VideoPlayer.tsx` (removed) | renamed / removed |
+| `web/src/features/uploads/mergeItems.ts`, `uploadsApi.ts` | modified: `sortAtMs`, `durationMs` |
+| `web/src/lib/media/videoFrame.ts`, `preview.ts`; `lib/queue/runner.ts`, `types.ts`; `features/capture/captureActions.ts` | modified: video length; per-item retry |
+| `web/src/components/TopBar.tsx`, `app/RootLayout.tsx` | modified: hide top-row buttons per screen |
+| `web/src/components/ui/Icon.tsx`, `Button.tsx`, `ProgressRing.tsx` | modified: clock/retry icons, `dangerOutline`, ring without number |
+| `web/src/i18n/ms.json`, `en.json` | modified |
+| `web/tests/uploadsGrid.test.ts` | added: marks, day groups, dates, lengths, viewer controls |
+| `web/tests/mergeItems.test.ts`, `preview.test.ts`, `originalSource.test.ts` (renamed) | modified |
+| `docs/product/design.md`, `docs/ai/memory.md`, `CHANGELOG.md`, `docs/ai/worklog.md` | modified |
+
+### Commands run and results
+| Command | Result |
+| --- | --- |
+| `npm run typecheck` | clean |
+| `npm test` | shared 46, web 73 (+8), emulators 86 passed |
+| `npm run build` | built |
+| First-load JS (gzip of every script `index.html` loads, including preloads) | 143.0 KB (budget 150). Muat Naik Saya is a lazy 4.6 KB chunk |
+| Emulator walk-through (headless Chrome; example items written into the queue database) | grid, Awam view, confirmation, failed view rendered; switch contrast fixed |
+| `npm run deploy:preview` | same channel |
+
+### Decisions
+- D-093.
+
+### Problems, risks, open questions
+- First-load JS is 143 KB of the 150 KB budget. The next guest-facing feature should check it, or move more out of the entry chunk.
+- The photo in the item view loads the guest's own original from the server once sent (data use on an explicit tap). The preview shows while it loads.
+- Not seen on a real phone yet.
+
+### Next steps
+- [ ] Hidayah: phone check, review and merge the PR.
+- [ ] Theme templates (D-087).
+
+### Commits
+- code and docs commits of this branch (listed in the PR)
+
+---
+
 ## 2026-11-02 22:29 — Clean standard UI sizes and "Aa" text size (D-092); My Uploads grid mockup
 
 - **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows

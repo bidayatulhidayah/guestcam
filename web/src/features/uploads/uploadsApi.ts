@@ -32,6 +32,8 @@ export async function listMyServerItems(eventId: string): Promise<ServerItem[]> 
       visibility: data.visibility,
       showName: data.showName,
       createdAtMs: (data.createdAt as Timestamp | null)?.toMillis() ?? null,
+      sortAtMs: (data.sortAt as Timestamp | null)?.toMillis() ?? null,
+      durationMs: data.durationMs,
     };
   });
 }

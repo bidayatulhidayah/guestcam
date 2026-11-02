@@ -36,7 +36,8 @@ export interface CommitResult {
  */
 async function savePreview(item: QueueItem, file: Blob): Promise<void> {
   const { makePreview } = await import('../../lib/media/preview');
-  await (await getQueue()).savePreview(item.mediaId, await makePreview(file, item.type));
+  const preview = await makePreview(file, item.type);
+  await (await getQueue()).savePreview(item.mediaId, preview.blob, preview.durationMs);
 }
 
 async function prepareAll(
@@ -147,8 +148,8 @@ export async function sendHeld(eventId: string, mediaIds?: string[]) {
   await (await getQueue()).release(eventId, mediaIds);
 }
 
-export async function retryFailed(eventId: string) {
-  await (await getQueue()).retryFailed(eventId);
+export async function retryFailed(eventId: string, mediaIds?: string[]) {
+  await (await getQueue()).retryFailed(eventId, mediaIds);
 }
 
 /** Calls back after each item reaches the server. */

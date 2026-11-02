@@ -3,8 +3,8 @@ import type { ReactNode } from 'react';
 /**
  * One outline icon set: 24px grid, 2px stroke, round joins, current colour
  * (design.md, Icons). Drawn here so there is no icon library in the bundle.
- * Every icon is shown next to a word, except the My Uploads item icons
- * (design.md exception; each has an aria-label and the legend).
+ * Main actions show a word next to the icon; the small marks on My Uploads
+ * tiles are status, not buttons (design.md, D-093).
  */
 const paths: Record<IconName, ReactNode> = {
   camera: (
@@ -87,6 +87,18 @@ const paths: Record<IconName, ReactNode> = {
   arrowLeft: <path d="M19 12H5m6-6-6 6 6 6" />,
   arrowRight: <path d="M5 12h14m-6-6 6 6-6 6" />,
   play: <path d="M8 5.5v13l10.5-6.5Z" />,
+  clock: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </>
+  ),
+  retry: (
+    <>
+      <path d="M20 11a8 8 0 1 0-2.3 5.7" />
+      <path d="M20 5v6h-6" />
+    </>
+  ),
 };
 
 export type IconName =
@@ -105,7 +117,9 @@ export type IconName =
   | 'globe'
   | 'arrowLeft'
   | 'arrowRight'
-  | 'play';
+  | 'play'
+  | 'clock'
+  | 'retry';
 
 /** `size` is in px at Biasa; drawn in rem so icons grow with "Aa" Besar and the phone's text size (D-092). */
 export function Icon({ name, size = 24 }: { name: IconName; size?: number }) {

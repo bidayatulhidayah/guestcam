@@ -57,14 +57,40 @@ Standard app sizes, clean and minimal like Google Photos (D-092, supersedes the 
 - Menu: a 2-column grid of tiles (up to seven), each icon + one word. Galeri as a full-width tile at the bottom. Tiles for functions the host switched off disappear and the grid reflows (an odd last tile spans the full width).
 - Borders: 1px `--line` hairlines. No drop shadows. Elevation is shown by `--paper-2`, not shadow.
 - One quiet decorative element allowed: a thin double rule in `--line` under the couple's names, echoing an invitation card. Nothing else ornamental on working screens.
-- Photos get a slim paper-coloured border like a printed photo.
+- Photos get a slim paper-coloured border like a printed photo, except in the Muat Naik Saya grid (edge to edge, D-093).
 - Small text links are allowed only in the top row and above a screen title: "Kembali" on code, error and help screens, "Buka dalam Chrome/Safari" after a guest chose to stay in an in-app browser (D-086), and "Muat Naik Saya (n) →" under the buttons on the Snap Gambar screen (D-089). Caption size (13-14 px), at least 44 px tall to tap.
 
 ## Icons
 
 - One outline icon set, 2px stroke, 24px in tiles and buttons (e.g. Phosphor or Lucide, restyled consistently).
-- Main actions have a word next to the icon. No icon-only buttons except the camera flip and the My Uploads item icons.
-- **Exception, My Uploads (D-085, sizes per D-092):** small icon-only buttons on each item (lock/globe = Peribadi/Awam, person = show name, bin = delete), each a tap target of at least 44-48 px, and a corner status mark. A one-line legend with words (13-14 px) sits above the grid, and every icon has an aria-label. Delete still asks on its own screen. The layout is being redesigned Google Photos-style (D-092 follow-up).
+- Main actions have a word next to the icon. No icon-only buttons except the camera flip.
+- The small marks on Muat Naik Saya tiles are status, not buttons (below).
+
+## Muat Naik Saya (D-093, replaces the D-085 icon-only exception)
+
+Like a phone's photo gallery: clean, the photos carry the page.
+
+- **Top:** only "← Kembali" and the title. The top row's "Aa" and language buttons are hidden on this page (the in-app browser link stays).
+- **Upload line:** one slim line with no box, 13 px, only while something is waiting, sending or held for wifi. It shows a small ring, "Sedang dihantar n%", "n menunggu", and "n menunggu wifi · Hantar sekarang".
+- **Grid:** square tiles, 3 columns, 2 px gaps, edge to edge, `object-fit: cover`; no frames, cards, borders or text on tiles. The tile is one button that opens the item.
+- **Marks, only when something needs attention:**
+  - Clock: waiting, or held for wifi.
+  - Percentage ring: only the one item sending.
+  - "!": failed, refused, not arrived, or needs re-picking.
+  - Sent items carry no mark. A small globe marks Awam items only (Peribadi is the default and carries no lock).
+  - Videos show a small play mark and their length.
+  - No dimming and no spinner per tile.
+- **Day headings,** 14 px bold: "Hari ini", "Semalam", then "2 Nov 2026", by when the item was taken (EXIF, the camera, or else the upload), on the phone's calendar.
+- **Speed:** a tile reads its preview only once it nears the screen, and off-screen days skip layout and paint (`content-visibility`).
+- **Item view (tap a tile):**
+  - "← Kembali", and the photo (up to 60% of the screen height) or a video that plays.
+  - One status line ("Dihantar", "Gagal dihantar" in danger red) with the date and time.
+  - Peribadi / Awam as a two-part control (the chosen part is a tint with an accent outline, so the accent stays for the one main action).
+  - "Tunjuk nama saya" as a switch, only when Awam.
+  - "Cuba lagi" (failed) or "Hantar sekarang" (held) as the one primary button, and Padam outlined in danger red. All 48 px with words.
+  - The photo or video shown is this phone's copy, or the guest's own original from the server (an explicit tap, D-091).
+- **Padam** asks on its own screen in the app (small preview, the warning, filled danger "Padam", "Batal"), never in a browser dialog.
+- Taps only: no swiping between items, no long-press to select.
 - Custom-draw the five that define the app: shutter, phone (Telefon Pengantin), letter (Tulis Ucapan), boomerang loop, folder with lock (Folder Kongsi).
 
 ## Motion, sound, touch

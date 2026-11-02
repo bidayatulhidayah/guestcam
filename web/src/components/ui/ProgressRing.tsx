@@ -9,6 +9,8 @@ export interface ProgressRingProps {
   size?: number;
   /** Stop the turning arc, e.g. while offline. */
   still?: boolean;
+  /** Show the percentage in the middle; off for a small ring beside words that already say it. */
+  number?: boolean;
 }
 
 /**
@@ -16,7 +18,7 @@ export interface ProgressRingProps {
  * (design.md: status in accent, words for screen readers). The turning arc
  * stops when the phone asks for reduced motion (index.css).
  */
-export function ProgressRing({ percent, label, size = 56, still = false }: ProgressRingProps) {
+export function ProgressRing({ percent, label, size = 56, still = false, number = true }: ProgressRingProps) {
   const { t } = useTranslation();
   const known = typeof percent === 'number';
   // At most 99 while sending: an item is done only when the server confirms it (then the "Dihantar" mark shows).
@@ -53,7 +55,7 @@ export function ProgressRing({ percent, label, size = 56, still = false }: Progr
           strokeDashoffset={circumference * (known ? 1 - value / 100 : 0.75)}
         />
       </svg>
-      {known ? (
+      {known && number ? (
         <span aria-hidden="true" className="relative text-caption font-bold text-ink">
           {t('queue.percent', { percent: value })}
         </span>

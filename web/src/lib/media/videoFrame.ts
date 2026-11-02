@@ -22,15 +22,22 @@ const HAS_FRAME = 2;
 /** iPhone Safari loads no frames for a video that is not playing: after this, play it muted. */
 const NUDGE_MS = 2_500;
 
+export interface VideoFrame {
+  /** Small JPEG, or null when no frame could be read. */
+  blob: Blob | null;
+  /** Length from the video's metadata, when the browser read it. */
+  durationMs: number | null;
+}
+
 /**
- * One frame near the start of a video, as a small JPEG for My Uploads. The
+ * One frame near the start of a video, as a small JPEG for My Uploads, and its length. The
  * `<video>` element reads the file through an object URL, which streams from
  * disk: the video is never loaded into memory. If no frame arrives after the
  * seek (iPhone Safari), the video plays muted for a moment (allowed without
  * a tap) and the first frame shown is taken. Null when this browser cannot
  * play it (e.g. HEVC on some Android phones) or it takes too long.
  */
-export function grabVideoFrame(file: Blob, maxSide = PREVIEW_MAX_SIDE, timeoutMs = 10_000): Promise<Blob | null> {
+export function grabVideoFrame(file: Blob, maxSide = PREVIEW_MAX_SIDE, timeoutMs = 10_000): Promise<VideoFrame> {
   return new Promise((resolve) => {
     const url = URL.createObjectURL(file);
     const video = document.createElement('video');
@@ -41,11 +48,13 @@ export function grabVideoFrame(file: Blob, maxSide = PREVIEW_MAX_SIDE, timeoutMs
       done = true;
       clearTimeout(timer);
       clearTimeout(nudgeTimer);
+      // Read before the reset below, which clears it.
+      const seconds = video.duration;
       video.pause();
       video.removeAttribute('src');
       video.load();
       URL.revokeObjectURL(url);
-      resolve(blob);
+      resolve({ blob, durationMs: Number.isFinite(seconds) && seconds > 0 ? Math.round(seconds * 1000) : null });
     };
     const draw = () => {
       if (drawing || done) return;

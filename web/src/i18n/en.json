@@ -198,11 +198,9 @@
     "title": "My Uploads",
     "note": "This list belongs to this phone and browser.",
     "empty": "Nothing uploaded for this event yet.",
-    "back": "Back to the menu",
     "photo": "Photo",
     "video": "Video",
     "audio": "Voice recording",
-    "play": "Play video",
     "playFailed": "This video can't be played on this phone.",
     "status": {
       "waiting": "Waiting to send",
@@ -222,12 +220,9 @@
     "actionFailed": "That did not work. Check your connection, then try again.",
     "serverError": "Items on the server could not be loaded right now. Items on this phone are still shown.",
     "openButton": "My Uploads",
-    "legendName": "Name",
-    "icons": {
-      "private": "Private. Tap to make it Public",
-      "public": "Public. Tap to make it Private",
-      "nameShown": "Name shown. Tap to hide it",
-      "nameHidden": "No name. Tap to show your name"
-    }
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "showName": "Show my name",
+    "waitingLine": "{{count}} waiting"
   }
 }
