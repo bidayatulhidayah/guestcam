@@ -23,12 +23,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 - Snap Gambar can also record a video with the phone's own camera, at full quality and any length (up to 4 GB). The video is saved on the phone first; one over 50 MB asks whether to send now or later on wifi.
 - After choosing "Teruskan di sini" inside Instagram, Facebook and similar apps, a small "Buka dalam Chrome" or "Buka dalam Safari" link stays at the top of every screen.
 - The code, error and help screens have a small "Kembali" link.
+- "Aa" in the top row of every screen switches the text size between Biasa and Besar (25% larger); the choice is remembered on the phone. Pinch-zoom always works.
 - Every upload under way shows a progress circle: in Muat Naik Saya the file being sent shows its percentage over its preview and the files waiting their turn show a turning circle; the menu and the Snap Gambar screen show the circle with the percentage and how many are left.
 - Tap a video in Muat Naik Saya to play it: the copy on the phone before it is sent, the guest's own uploaded video after.
 - The Snap Gambar screen has a small "Muat Naik Saya (n)" link under the Gambar and Video buttons, with the number of the guest's items.
 
 ### Changed
 
+- Cleaner, standard app sizes on every screen: 16 px text, 13-14 px labels, 48 px buttons and tighter spacing (was 18 px text and 64 px buttons). Sizes follow the phone's own text-size setting.
 - The event link opens faster on slow phones and networks: on a slow 4G connection the name screen appears about 1.4 seconds sooner, and less code loads before the first screen.
 - App updates reach guests who keep the menu open: a new version is applied when they come back to the app, never while a photo is being saved or a gallery upload still needs the picked file.
 - The QR link shows the name screen right away (about 2.5 s on a slow 4G phone, was about 4.5 s) while the code is checked in the background; the couple's names appear from the next screen.

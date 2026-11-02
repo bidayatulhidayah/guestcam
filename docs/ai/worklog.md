@@ -48,6 +48,77 @@ Rules:
 
 ---
 
+## 2026-11-02 22:29 — Clean standard UI sizes and "Aa" text size (D-092); My Uploads grid mockup
+
+- **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
+- **Version / branch:** v0.1 (+ unreleased) / `docs/ui-sizing` (from `main` after PR #13)
+- **Phase:** Phase 1 (target v0.2), design rule change by the founder
+- **Goal:** Hidayah: "aesthetic and clean UI comes first". Record the new sizing rules before building anything else, apply them to existing screens with an "Aa" Biasa / Besar text size, keep contrast checks passing, then show a mockup of the Google Photos-style Muat Naik Saya redesign.
+
+### What changed and why
+- **Recorded first** (commit `037fb53`):
+  - AGENTS.md: rule 1 and the Design section.
+  - design.md: type table, layout, icons, the My Uploads exception sizes, contrast rule, and two new Banned items (oversized "senior mode" UI; px fonts or blocked zoom).
+  - spec.md principles.
+  - memory.md: D-092, with D-030's sizing marked superseded.
+  - CLAUDE.md only imports AGENTS.md, so no change.
+- **Type scale (index.css), all rem:** label 13, caption 14, body and buttons 16, title 24, couple names 32 (was 15/18/20/28/40).
+- **Components:**
+  - Buttons and text fields are 48 px (were 64). Tiles 96 px (were 128). Icons 24 px.
+  - Screen margins 16 px on a 4 px grid. The top-row toggles are 44 px.
+  - Icons and the progress circle are drawn in rem, so they grow with "Aa" Besar (seen in a screenshot: px icons stayed small).
+- **"Aa" text size:** `lib/device/textSize.ts` and `TextSizeToggle` in the RootLayout top row, next to the language button, so it is one tap from the name screen and the menu.
+  - Besar sets `html[data-text-size=large]` to 125%. It is applied before the first render in `main.tsx`.
+  - Saved through `localJson` (try/catch; Biasa when storage is blocked).
+  - Strings `textSize.*` in ms/en.
+- **Checks:** there was no automated contrast check yet. `web/tests/contrast.test.ts` reads `tokens.css` and checks 9 text pairs (including the accent tint) for 4.5:1. `web/tests/viewport.test.ts` checks that the viewport never blocks pinch-zoom (it did not before either).
+- **Screens checked** in headless Chrome against the emulators (seeded demo space): name screen, menu, Snap screen, and the menu at Besar.
+- **My Uploads redesign mockup:** a private claude.ai artifact (https://claude.ai/artifact/QHmfYx2QsSZ9tc7fn4Cgf6).
+  - A 3-column, 2 px-gap grid grouped by day, with 13-14 px day headings.
+  - Marks on the photos: sent check, percentage circle, waiting circle, "!", lock only on Peribadi, video length.
+  - Tapping an item opens it with Peribadi/Awam, "Tunjuk nama saya" and Padam as 48 px controls with words. The same grid is shown at Besar.
+  - Hidayah's written brief for this redesign never reached this session, so the mockup follows the instruction text and "Google Photos-style". Waiting for her comments and the brief.
+
+### Files touched
+| File | Change |
+| --- | --- |
+| `AGENTS.md`, `docs/product/design.md`, `docs/product/spec.md`, `docs/ai/memory.md` | modified: D-092 rules |
+| `web/src/styles/index.css`, `web/src/main.tsx` | modified: type scale, Besar root size, apply on start |
+| `web/src/lib/device/textSize.ts`, `web/src/components/ui/TextSizeToggle.tsx` | added |
+| `web/src/components/ui/*` (Button, Tile, TextField, Screen, Icon, ProgressRing, LanguageToggle, index) | modified: sizes |
+| `web/src/app/*` (RootLayout, Footer, NotFoundPage, DevIndexPage) and feature screens (alias, my events, privacy, queue status, menu, my uploads) | modified: sizes and spacing |
+| `web/src/i18n/ms.json`, `en.json` | modified: `textSize.*` |
+| `web/tests/contrast.test.ts`, `web/tests/viewport.test.ts` | added |
+| `CHANGELOG.md`, `docs/ai/worklog.md` | modified |
+
+### Commands run and results
+| Command | Result |
+| --- | --- |
+| `npm run typecheck` | clean |
+| `npm test` | shared 46, web 65 (+10: 9 contrast pairs, 1 viewport), emulators 86 passed |
+| `npm run build` | built; entry unchanged; `ui` chunk +0.4 KB gzip |
+| Emulator walk-through (headless Chrome, `firebase emulators:exec`) | 4 screens rendered; px icons at Besar fixed (rem) |
+| `npm run deploy:preview` | same channel, expires 2026-11-09 |
+
+### Decisions
+- D-092. Besar = 125% (Hidayah's range was 112.5-125%; 125% is clearly larger).
+
+### Problems, risks, open questions
+- The Google Photos-style brief for My Uploads is missing in this session; asked Hidayah to resend it.
+- Not yet seen on a real phone at the new sizes.
+
+### Next steps
+- [ ] Hidayah: comments on the mockup, and the brief; then build the My Uploads redesign on `feat/uploads-grid`.
+- [ ] PR for `docs/ui-sizing` when Hidayah says so; phone check of the new sizes and "Aa".
+- [ ] Theme templates (D-087).
+
+### Commits
+- `037fb53` docs(design): clean standard UI sizes and the "Aa" text size (D-092)
+- `bc4db37` feat(ui): clean standard sizes and the "Aa" Biasa / Besar text size (D-092)
+- docs commit with this entry
+
+---
+
 ## 2026-11-02 00:18 — My Uploads: tap a video to play it; video previews on iPhone
 
 - **Agent / model:** Claude Code (Claude Opus 5.5), VS Code extension, Windows
